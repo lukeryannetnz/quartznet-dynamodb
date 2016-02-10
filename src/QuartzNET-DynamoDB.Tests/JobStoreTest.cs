@@ -39,9 +39,9 @@ namespace Quartz.DynamoDB.Tests
     /// </summary>
     public class JobStoreTest
     {
-        private IJobStore fJobStore;
-        private JobDetailImpl fJobDetail;
-        private SampleSignaler fSignaler;
+        private readonly IJobStore fJobStore;
+        private readonly JobDetailImpl fJobDetail;
+        private readonly SampleSignaler fSignaler;
 
         public JobStoreTest()
         {

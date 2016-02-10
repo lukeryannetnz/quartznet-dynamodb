@@ -5,6 +5,13 @@ using Quartz.Spi;
 
 namespace Quartz.DynamoDB
 {
+    /// <summary>
+    /// This class implements a <see cref="IJobStore" /> that
+    /// utilizes Amazon DynamoDB as its storage device.
+    /// <para>
+    /// </para>
+    /// <author>Luke Ryan</author>
+    /// </summary>
     public class JobStore : IJobStore
     {
         public void Initialize(ITypeLoadHelper loadHelper, ISchedulerSignaler signaler)

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
@@ -11,17 +10,15 @@ namespace Quartz.DynamoDB
     /// </summary>
     internal class DynamoBootstrapper
     {
-        internal void BootStrap()
+        internal void BootStrap(IAmazonDynamoDB client)
         {
-            var client = AmazonDynamoDbClientFactory.Create();
-
-            if (!JobDetailTableExists(client, "JobDetail"))
+            if (!JobDetailTableExists(client, DynamoConfiguration.JobDetailTableName))
             {
                 CreateJobDetailTable(client);
             }
         }
 
-        private bool JobDetailTableExists(AmazonDynamoDBClient client, string tableName)
+        private bool JobDetailTableExists(IAmazonDynamoDB client, string tableName)
         {
             string lastEvaluatedTableName = null;
 
@@ -35,24 +32,24 @@ namespace Quartz.DynamoDB
                 };
 
                 var response = client.ListTables(request);
-                
+
                 if (response.TableNames.Contains(tableName))
                 {
                     return true;
                 }
-                
+
                 lastEvaluatedTableName = response.LastEvaluatedTableName;
             }
 
             return false;
         }
 
-        private static void CreateJobDetailTable(AmazonDynamoDBClient client)
+        private static void CreateJobDetailTable(IAmazonDynamoDB client)
         {
-// Build a 'CreateTableRequest' for the new table
+            // Build a 'CreateTableRequest' for the new table
             CreateTableRequest createRequest = new CreateTableRequest
             {
-                TableName = "JobDetail",
+                TableName = DynamoConfiguration.JobDetailTableName,
                 AttributeDefinitions = new List<AttributeDefinition>()
                 {
                     new AttributeDefinition

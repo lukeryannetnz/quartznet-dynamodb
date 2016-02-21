@@ -47,7 +47,8 @@ namespace Quartz.DynamoDB.Tests
         {
             fJobStore = new JobStore();
             fSignaler = new SampleSignaler();
-            fJobStore.Initialize(null, fSignaler);
+            ITypeLoadHelper loadHelper = new SimpleTypeLoadHelper();
+            fJobStore.Initialize(loadHelper, fSignaler);
             fJobStore.SchedulerStarted();
 
             fJobDetail = new JobDetailImpl("job1", "jobGroup1", typeof(NoOpJob));

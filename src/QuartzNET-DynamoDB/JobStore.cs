@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
+using Quartz.DynamoDB.DataModel;
 using Quartz.Impl.Matchers;
 using Quartz.Spi;
 
@@ -14,9 +18,20 @@ namespace Quartz.DynamoDB
     /// </summary>
     public class JobStore : IJobStore
     {
+        private IAmazonDynamoDB _client;
+        private ITypeLoadHelper _loadHelper;
+
         public void Initialize(ITypeLoadHelper loadHelper, ISchedulerSignaler signaler)
         {
-            new DynamoBootstrapper().BootStrap();
+            _client = AmazonDynamoDbClientFactory.Create();
+            new DynamoBootstrapper().BootStrap(_client);
+
+            if (loadHelper == null)
+            {
+                throw new ArgumentNullException(nameof(loadHelper));
+            }
+
+            _loadHelper = loadHelper;
         }
 
         public void SchedulerStarted()
@@ -35,7 +50,7 @@ namespace Quartz.DynamoDB
 
         public void Shutdown()
         {
-            throw new NotImplementedException();
+            _client.Dispose();
         }
 
         public void StoreJobAndTrigger(IJobDetail newJob, IOperableTrigger newTrigger)
@@ -55,6 +70,11 @@ namespace Quartz.DynamoDB
 
         public void StoreJob(IJobDetail newJob, bool replaceExisting)
         {
+            var context = new DynamoDBContext(_client);
+
+            DynamoJobDetail job = DynamoJobDetail.Clone(newJob);
+
+            context.Save(job);
         }
 
         public void StoreJobsAndTriggers(IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs, bool replace)
@@ -74,7 +94,9 @@ namespace Quartz.DynamoDB
 
         public IJobDetail RetrieveJob(JobKey jobKey)
         {
-            return null;
+            var context = new DynamoDBContext(_client);
+
+            return context.Load<DynamoJobDetail>(jobKey.Group, jobKey.Name);
         }
 
         public void StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting)

@@ -46,6 +46,10 @@
       <HintPath>packages\Common.Logging.Core.3.0.0\lib\net40\Common.Logging.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Quartz, Version=2.3.3.0, Culture=neutral, PublicKeyToken=f6b8c98a402cc8a4, processorArchitecture=MSIL">
       <HintPath>packages\Quartz.2.3.3\lib\net40\Quartz.dll</HintPath>
       <Private>True</Private>
@@ -65,7 +69,11 @@
     </Compile>
     <Compile Include="DynamoBootstrapper.cs" />
     <Compile Include="AmazonDynamoDbClientFactory.cs" />
+    <Compile Include="DynamoConfiguration.cs" />
+    <Compile Include="DataModel\DynamoJobDetail.cs" />
+    <Compile Include="DataModel\JobDataMapConverter.cs" />
     <Compile Include="JobStore.cs" />
+    <Compile Include="DataModel\JobTypeConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

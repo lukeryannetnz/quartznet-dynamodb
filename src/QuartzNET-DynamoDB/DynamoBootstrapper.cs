@@ -1,0 +1,97 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
+
+namespace Quartz.DynamoDB
+{
+    /// <summary>
+    /// Bootstraps dynamo db to the required state. Ensures tables exist etc.
+    /// </summary>
+    internal class DynamoBootstrapper
+    {
+        internal void BootStrap()
+        {
+            var client = AmazonDynamoDbClientFactory.Create();
+
+            if (!JobDetailTableExists(client, "JobDetail"))
+            {
+                CreateJobDetailTable(client);
+            }
+        }
+
+        private bool JobDetailTableExists(AmazonDynamoDBClient client, string tableName)
+        {
+            string lastEvaluatedTableName = null;
+
+            while (lastEvaluatedTableName == null)
+            {
+                // Create a request object to specify optional parameters.
+                var request = new ListTablesRequest
+                {
+                    Limit = 10, // Page size.
+                    ExclusiveStartTableName = lastEvaluatedTableName
+                };
+
+                var response = client.ListTables(request);
+                
+                if (response.TableNames.Contains(tableName))
+                {
+                    return true;
+                }
+                
+                lastEvaluatedTableName = response.LastEvaluatedTableName;
+            }
+
+            return false;
+        }
+
+        private static void CreateJobDetailTable(AmazonDynamoDBClient client)
+        {
+// Build a 'CreateTableRequest' for the new table
+            CreateTableRequest createRequest = new CreateTableRequest
+            {
+                TableName = "JobDetail",
+                AttributeDefinitions = new List<AttributeDefinition>()
+                {
+                    new AttributeDefinition
+                    {
+                        AttributeName = "Group",
+                        AttributeType = "S"
+                    },
+                    new AttributeDefinition
+                    {
+                        AttributeName = "Name",
+                        AttributeType = "S"
+                    }
+                },
+                KeySchema = new List<KeySchemaElement>()
+                {
+                    new KeySchemaElement
+                    {
+                        AttributeName = "Group",
+                        KeyType = "HASH"
+                    },
+                    new KeySchemaElement
+                    {
+                        AttributeName = "Name",
+                        KeyType = "RANGE"
+                    }
+                }
+            };
+
+            // Provisioned-throughput settings are required even though
+            // the local test version of DynamoDB ignores them
+            createRequest.ProvisionedThroughput = new ProvisionedThroughput(1, 1);
+
+            // Using the DynamoDB client, make a synchronous CreateTable request
+            CreateTableResponse createResponse;
+            createResponse = client.CreateTable(createRequest);
+
+            // Report the status of the new table...
+            Debug.WriteLine("\n\n Created the \"JobDetail\" table successfully!\n    Status of the new table: '{0}'",
+                createResponse.TableDescription.TableStatus);
+        }
+    }
+}

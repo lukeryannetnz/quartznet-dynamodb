@@ -266,35 +266,31 @@ namespace Quartz.DynamoDB.Tests
         [Fact]
         public void TestRetrieveJob_NoJobFound()
         {
-            RAMJobStore store = new RAMJobStore();
-            IJobDetail job = store.RetrieveJob(new JobKey("not", "existing"));
+            IJobDetail job = fJobStore.RetrieveJob(new JobKey("not", "existing"));
             Assert.Null(job);
         }
 
         [Fact]
         public void TestRetrieveTrigger_NoTriggerFound()
         {
-            RAMJobStore store = new RAMJobStore();
-            IOperableTrigger trigger = store.RetrieveTrigger(new TriggerKey("not", "existing"));
+            IOperableTrigger trigger = fJobStore.RetrieveTrigger(new TriggerKey("not", "existing"));
             Assert.Null(trigger);
         }
 
         [Fact]
         public void testStoreAndRetrieveJobs()
         {
-            RAMJobStore store = new RAMJobStore();
-
             // Store jobs.
             for (int i = 0; i < 10; i++)
             {
                 IJobDetail job = JobBuilder.Create<NoOpJob>().WithIdentity("job" + i).Build();
-                store.StoreJob(job, false);
+                fJobStore.StoreJob(job, false);
             }
             // Retrieve jobs.
             for (int i = 0; i < 10; i++)
             {
                 JobKey jobKey = JobKey.Create("job" + i);
-                IJobDetail storedJob = store.RetrieveJob(jobKey);
+                IJobDetail storedJob = fJobStore.RetrieveJob(jobKey);
                 Assert.Equal(jobKey, storedJob.Key);
             }
         }
@@ -302,26 +298,24 @@ namespace Quartz.DynamoDB.Tests
         [Fact]
         public void TestStoreAndRetrieveTriggers()
         {
-            RAMJobStore store = new RAMJobStore();
-
             // Store jobs and triggers.
             for (int i = 0; i < 10; i++)
             {
                 IJobDetail job = JobBuilder.Create<NoOpJob>().WithIdentity("job" + i).Build();
-                store.StoreJob(job, true);
+                fJobStore.StoreJob(job, true);
                 SimpleScheduleBuilder schedule = SimpleScheduleBuilder.Create();
                 ITrigger trigger = TriggerBuilder.Create().WithIdentity("job" + i).WithSchedule(schedule).ForJob(job).Build();
-                store.StoreTrigger((IOperableTrigger)trigger, true);
+                fJobStore.StoreTrigger((IOperableTrigger)trigger, true);
             }
             // Retrieve job and trigger.
             for (int i = 0; i < 10; i++)
             {
                 JobKey jobKey = JobKey.Create("job" + i);
-                IJobDetail storedJob = store.RetrieveJob(jobKey);
+                IJobDetail storedJob = fJobStore.RetrieveJob(jobKey);
                 Assert.Equal(jobKey, storedJob.Key);
 
                 TriggerKey triggerKey = new TriggerKey("job" + i);
-                ITrigger storedTrigger = store.RetrieveTrigger(triggerKey);
+                ITrigger storedTrigger = fJobStore.RetrieveTrigger(triggerKey);
                 Assert.Equal(triggerKey, storedTrigger.Key);
             }
         }
@@ -333,7 +327,7 @@ namespace Quartz.DynamoDB.Tests
             ITypeLoadHelper loadHelper = new SimpleTypeLoadHelper();
             loadHelper.Initialize();
 
-            RAMJobStore store = new RAMJobStore();
+            IJobStore store = new JobStore();
             store.Initialize(loadHelper, schedSignaler);
 
             // Setup: Store jobs and triggers.
@@ -375,7 +369,7 @@ namespace Quartz.DynamoDB.Tests
             ITypeLoadHelper loadHelper = new SimpleTypeLoadHelper();
             loadHelper.Initialize();
 
-            RAMJobStore store = new RAMJobStore();
+            IJobStore store = new JobStore();
             store.Initialize(loadHelper, schedSignaler);
 
             // Setup: Store jobs and triggers.

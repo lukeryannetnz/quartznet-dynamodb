@@ -16,12 +16,11 @@ namespace Quartz.DynamoDB
     {
         public void Initialize(ITypeLoadHelper loadHelper, ISchedulerSignaler signaler)
         {
-            throw new NotImplementedException();
+            new DynamoBootstrapper().BootStrap();
         }
 
         public void SchedulerStarted()
         {
-            throw new NotImplementedException();
         }
 
         public void SchedulerPaused()
@@ -56,7 +55,6 @@ namespace Quartz.DynamoDB
 
         public void StoreJob(IJobDetail newJob, bool replaceExisting)
         {
-            throw new NotImplementedException();
         }
 
         public void StoreJobsAndTriggers(IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs, bool replace)
@@ -76,7 +74,7 @@ namespace Quartz.DynamoDB
 
         public IJobDetail RetrieveJob(JobKey jobKey)
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         public void StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting)

@@ -4,7 +4,7 @@ using System.Linq;
 using Quartz.DynamoDB.DataModel;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Unit
 {
     public class JobDataMapConverterTests
     {

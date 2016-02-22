@@ -30,7 +30,7 @@ using Quartz.Simpl;
 using Quartz.Spi;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration
 {
     /// <summary>
     ///  Unit test for JobStore. 

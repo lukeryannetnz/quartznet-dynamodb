@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -71,6 +72,11 @@ namespace Quartz.DynamoDB
         public void StoreJob(IJobDetail newJob, bool replaceExisting)
         {
             var context = new DynamoDBContext(_client);
+
+            if (!replaceExisting && context.Load<DynamoJobDetail>(newJob.Key.Group, newJob.Key.Name) != null)
+            {
+                throw new ArgumentException("Job with that key already exists.", nameof(newJob));
+            }
 
             DynamoJobDetail job = DynamoJobDetail.Clone(newJob);
 

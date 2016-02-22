@@ -53,7 +53,7 @@ namespace Quartz.DynamoDB.Tests.Integration
 
             fJobDetail = new JobDetailImpl("job1", "jobGroup1", typeof(NoOpJob));
             fJobDetail.Durable = true;
-            fJobStore.StoreJob(fJobDetail, false);
+            fJobStore.StoreJob(fJobDetail, true);
         }
 
         [Fact]
@@ -285,7 +285,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             for (int i = 0; i < 10; i++)
             {
                 IJobDetail job = JobBuilder.Create<NoOpJob>().WithIdentity("job" + i).Build();
-                fJobStore.StoreJob(job, false);
+                fJobStore.StoreJob(job, true);
             }
             // Retrieve jobs.
             for (int i = 0; i < 10; i++)
@@ -294,6 +294,34 @@ namespace Quartz.DynamoDB.Tests.Integration
                 IJobDetail storedJob = fJobStore.RetrieveJob(jobKey);
                 Assert.Equal(jobKey, storedJob.Key);
             }
+        }
+
+        /// <summary>
+        /// Storing the same job twice with replaceExisting false the second time throws an exception.
+        /// </summary>
+        [Fact]
+        public void TestStoreExistingJobsThrowsException()
+        {
+            // Store jobs.
+            IJobDetail job = JobBuilder.Create<NoOpJob>().WithIdentity("job" + 0).Build();
+            fJobStore.StoreJob(job, true);
+            Assert.Throws<ArgumentException>(() => fJobStore.StoreJob(job, false));
+        }
+
+        /// <summary>
+        /// Storing the same job twice with replaceExisting true does not throw an exception.
+        /// </summary>
+        [Fact]
+        public void TestStoreExistingJobsOverwrite()
+        {
+            // Store jobs.
+            IJobDetail job = JobBuilder.Create<NoOpJob>().WithIdentity("job" + 0).Build();
+            fJobStore.StoreJob(job, true);
+            fJobStore.StoreJob(job, true);
+
+            JobKey jobKey = JobKey.Create("job" + 0);
+            IJobDetail storedJob = fJobStore.RetrieveJob(jobKey);
+            Assert.Equal(jobKey, storedJob.Key);
         }
 
         [Fact]

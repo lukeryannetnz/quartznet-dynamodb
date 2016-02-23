@@ -67,10 +67,15 @@
     <Compile Include="..\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="DynamoDocumentExtensions.cs" />
+    <Compile Include="DataModel\DynamoTrigger.cs" />
+    <Compile Include="DataModel\JobDetailConverter.cs" />
+    <Compile Include="DataModel\JobKeyConverter.cs" />
+    <Compile Include="DataModel\TriggerConverter.cs" />
     <Compile Include="DynamoBootstrapper.cs" />
-    <Compile Include="AmazonDynamoDbClientFactory.cs" />
+    <Compile Include="DynamoDbClientFactory.cs" />
     <Compile Include="DynamoConfiguration.cs" />
-    <Compile Include="DataModel\DynamoJobDetail.cs" />
+    <Compile Include="DataModel\DynamoJob.cs" />
     <Compile Include="DataModel\JobDataMapConverter.cs" />
     <Compile Include="JobStore.cs" />
     <Compile Include="DataModel\JobTypeConverter.cs" />

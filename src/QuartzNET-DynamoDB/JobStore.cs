@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using Quartz.DynamoDB.DataModel;
 using Quartz.Impl.Matchers;
 using Quartz.Spi;
@@ -24,7 +22,7 @@ namespace Quartz.DynamoDB
 
         public void Initialize(ITypeLoadHelper loadHelper, ISchedulerSignaler signaler)
         {
-            _client = AmazonDynamoDbClientFactory.Create();
+            _client = DynamoDbClientFactory.Create();
             new DynamoBootstrapper().BootStrap(_client);
 
             if (loadHelper == null)
@@ -73,12 +71,12 @@ namespace Quartz.DynamoDB
         {
             var context = new DynamoDBContext(_client);
 
-            if (!replaceExisting && context.Load<DynamoJobDetail>(newJob.Key.Group, newJob.Key.Name) != null)
+            if (!replaceExisting && context.Load<DynamoJob>(newJob.Key.Group, newJob.Key.Name) != null)
             {
                 throw new ArgumentException("Job with that key already exists.", nameof(newJob));
             }
 
-            DynamoJobDetail job = DynamoJobDetail.Clone(newJob);
+            DynamoJob job = new DynamoJob(newJob);
 
             context.Save(job);
         }
@@ -102,12 +100,22 @@ namespace Quartz.DynamoDB
         {
             var context = new DynamoDBContext(_client);
 
-            return context.Load<DynamoJobDetail>(jobKey.Group, jobKey.Name);
+            DynamoJob record = context.Load<DynamoJob>(jobKey.Group, jobKey.Name);
+            return record?.Job;
         }
 
         public void StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting)
         {
-            throw new NotImplementedException();
+            var context = new DynamoDBContext(_client);
+
+            if (!replaceExisting && context.Load<DynamoJob>(newTrigger.Key.Group, newTrigger.Key.Name) != null)
+            {
+                throw new ArgumentException("Trigger with that key already exists.", nameof(newTrigger));
+            }
+
+            DynamoTrigger trigger = new DynamoTrigger(newTrigger);
+
+            context.Save(trigger);
         }
 
         public bool RemoveTrigger(TriggerKey triggerKey)
@@ -127,7 +135,10 @@ namespace Quartz.DynamoDB
 
         public IOperableTrigger RetrieveTrigger(TriggerKey triggerKey)
         {
-            throw new NotImplementedException();
+            var context = new DynamoDBContext(_client);
+
+            var record = context.Load<DynamoTrigger>(triggerKey.Group, triggerKey.Name);
+            return record?.Trigger;
         }
 
         public bool CalendarExists(string calName)

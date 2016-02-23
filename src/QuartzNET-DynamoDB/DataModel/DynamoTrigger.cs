@@ -3,6 +3,9 @@ using Quartz.Spi;
 
 namespace Quartz.DynamoDB.DataModel
 {
+    /// <summary>
+    /// An wrapper class for a Quartz Trigger instance that can be serialized and stored in Amazon DynamoDB.
+    /// </summary>
     [DynamoDBTable("Trigger")]
     public class DynamoTrigger
     {

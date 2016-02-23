@@ -3,7 +3,7 @@
 namespace Quartz.DynamoDB.DataModel
 {
     /// <summary>
-    /// An wrapper class for a JobDetail instance that can be serialized and stored in Amazon DynamoDB.
+    /// An wrapper class for a Quartz JobDetail instance that can be serialized and stored in Amazon DynamoDB.
     /// </summary>
     [DynamoDBTable("JobDetail")]
 

@@ -6,7 +6,7 @@ using Quartz.Impl.Triggers;
 namespace Quartz.DynamoDB.DataModel
 {
     /// <summary>
-    /// A converter from quartz Trigger objects to dyanmo Document and back.
+    /// A converter from quartz Trigger objects to dynamo Document and back.
     /// </summary>
     public class TriggerConverter : IPropertyConverter
     {

@@ -5,7 +5,7 @@ using Amazon.DynamoDBv2.DocumentModel;
 namespace Quartz.DynamoDB.DataModel
 {
     /// <summary>
-    /// A converter from quartz JobKey to dyanmo Document and back.
+    /// A converter from quartz JobKey to dynamo Document and back.
     /// </summary>
     public class JobKeyConverter : IPropertyConverter
     {

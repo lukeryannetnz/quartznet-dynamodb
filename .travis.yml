@@ -1,2 +1,2 @@
 language: csharp
-solution: QuartzNET-DynamoDB.sln
+solution: src/QuartzNET-DynamoDB.sln

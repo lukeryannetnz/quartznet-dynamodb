@@ -34,8 +34,12 @@ namespace Quartz.DynamoDB.DataModel
             //doc["JobDataMap"] = trigger.JobDataMap; //todo: flatten
             doc["MisfireInstruction"] = trigger.MisfireInstruction;
             doc["FireInstanceId"] = trigger.FireInstanceId ?? string.Empty;
-            //doc["EndTimeUtc"] = trigger.EndTimeUtc;
-            //doc["StartTimeUtc"] = trigger.StartTimeUtc;
+            doc["StartTimeUtc"] = trigger.StartTimeUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz");
+            if (trigger.EndTimeUtc.HasValue)
+            {
+                doc["EndTimeUtc"] = trigger.EndTimeUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz");
+            }
+
             doc["Priority"] = trigger.Priority;
 
             if (value is CalendarIntervalTriggerImpl)
@@ -81,8 +85,11 @@ namespace Quartz.DynamoDB.DataModel
             else if (value is SimpleTriggerImpl)
             {
                 SimpleTriggerImpl t = (SimpleTriggerImpl)value;
-                doc["nextFireTimeUtc"] = t.GetNextFireTimeUtc().GetValueOrDefault().ToString();
-                doc["previousFireTimeUtc"] = t.GetPreviousFireTimeUtc().GetValueOrDefault().ToString();
+                //doc["nextFireTimeUtc"] = t.GetNextFireTimeUtc().GetValueOrDefault().ToString();
+                //doc["previousFireTimeUtc"] = t.GetPreviousFireTimeUtc().GetValueOrDefault().ToString();
+                doc["RepeatCount"] = t.RepeatCount;
+                doc["RepeatInterval"] = t.RepeatInterval.Ticks;
+                doc["TimesTriggered"] = t.TimesTriggered;
                 doc["Type"] = "SimpleTriggerImpl";
             }
 
@@ -113,34 +120,39 @@ namespace Quartz.DynamoDB.DataModel
 
                 case "DailyTimeIntervalTriggerImpl":
                     {
-                        var dailytrigger = new DailyTimeIntervalTriggerImpl();
-                        trigger = dailytrigger;
+                        var dailyTrigger = new DailyTimeIntervalTriggerImpl();
+                        trigger = dailyTrigger;
 
                         var daysOfWeek = doc["DaysOfWeek"]
                                 .AsListOfString()
                                 .Select(dow => (DayOfWeek)Enum.Parse(typeof(DayOfWeek), dow));
 
-                        dailytrigger.DaysOfWeek = new HashSet<DayOfWeek>(daysOfWeek);
+                        dailyTrigger.DaysOfWeek = new HashSet<DayOfWeek>(daysOfWeek);
 
                         int endTimeOfDayHour = doc["EndTimeOfDay_Hour"].AsInt();
                         int endTimeOfDayMin = doc["EndTimeOfDay_Minute"].AsInt();
                         int endTimeOfDaySec = doc["EndTimeOfDay_Second"].AsInt();
-                        dailytrigger.EndTimeOfDay = new TimeOfDay(endTimeOfDayHour, endTimeOfDayMin, endTimeOfDaySec);
-                        dailytrigger.RepeatCount = doc["RepeatCount"].AsInt();
-                        dailytrigger.RepeatInterval = doc["RepeatInterval"].AsInt();
-                        dailytrigger.RepeatIntervalUnit = (IntervalUnit) doc["RepeatIntervalUnit"].AsInt();
+                        dailyTrigger.EndTimeOfDay = new TimeOfDay(endTimeOfDayHour, endTimeOfDayMin, endTimeOfDaySec);
+                        dailyTrigger.RepeatCount = doc["RepeatCount"].AsInt();
+                        dailyTrigger.RepeatInterval = doc["RepeatInterval"].AsInt();
+                        dailyTrigger.RepeatIntervalUnit = (IntervalUnit)doc["RepeatIntervalUnit"].AsInt();
                         int startTimeOfDayHour = doc["StartTimeOfDay_Hour"].AsInt();
                         int startTimeOfDayMin = doc["StartTimeOfDay_Minute"].AsInt();
                         int startTimeOfDaySec = doc["StartTimeOfDay_Second"].AsInt();
-                        dailytrigger.StartTimeOfDay = new TimeOfDay(startTimeOfDayHour, startTimeOfDayMin, startTimeOfDaySec);
-                        dailytrigger.TimesTriggered = doc["TimesTriggered"].AsInt();
-                        dailytrigger.TimeZone = TimeZoneInfo.FromSerializedString(doc["TimeZone"]);
+                        dailyTrigger.StartTimeOfDay = new TimeOfDay(startTimeOfDayHour, startTimeOfDayMin, startTimeOfDaySec);
+                        dailyTrigger.TimesTriggered = doc["TimesTriggered"].AsInt();
+                        dailyTrigger.TimeZone = TimeZoneInfo.FromSerializedString(doc["TimeZone"]);
                         break;
                     }
 
                 case "SimpleTriggerImpl":
                     {
-                        trigger = new SimpleTriggerImpl();
+                        var simpleTrigger = new SimpleTriggerImpl();
+                        trigger = simpleTrigger;
+
+                        simpleTrigger.RepeatCount = doc["RepeatCount"].AsInt();
+                        simpleTrigger.RepeatInterval = new TimeSpan(doc["RepeatInterval"].AsLong());
+                        simpleTrigger.TimesTriggered = doc["TimesTriggered"].AsInt();
                         break;
                     }
                 default:
@@ -160,8 +172,13 @@ namespace Quartz.DynamoDB.DataModel
             //doc["JobDataMap"] = trigger.JobDataMap; //todo: flatten
             trigger.MisfireInstruction = doc["MisfireInstruction"].AsInt();
             trigger.FireInstanceId = doc.TryGetStringValueOtherwiseReturnDefault("FireInstanceId");
-            //doc["EndTimeUtc"] = trigger.EndTimeUtc;
-            //doc["StartTimeUtc"] = trigger.StartTimeUtc;
+            
+            trigger.StartTimeUtc = DateTimeOffset.Parse(doc["StartTimeUtc"]);
+            DynamoDBEntry value;
+            if (doc.TryGetValue("EndTimeUtc", out value))
+            {
+                trigger.EndTimeUtc = DateTimeOffset.Parse(value);
+            }
             trigger.Priority = doc["Priority"].AsInt();
 
             return trigger;

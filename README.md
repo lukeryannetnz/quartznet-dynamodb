@@ -1,7 +1,7 @@
 # quartznet-dynamo
 Amazon DynamoDB jobstore for Quartz.NET
 
-![Travis build status](https://travis-ci.org/lukeryannetnz/quartznet-dynamodb.svg?branch=master) [View build output](https://travis-ci.org/lukeryannetnz/quartznet-dynamodb)
+![Travis build status](https://travis-ci.org/lukeryannetnz/quartznet-dynamodb.svg?branch=master) [Builds by Travis-CI](https://travis-ci.org/lukeryannetnz/quartznet-dynamodb)
 
 ##Overview
 

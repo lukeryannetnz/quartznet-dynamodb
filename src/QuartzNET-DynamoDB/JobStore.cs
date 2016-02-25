@@ -73,7 +73,7 @@ namespace Quartz.DynamoDB
 
             if (!replaceExisting && context.Load<DynamoJob>(newJob.Key.Group, newJob.Key.Name) != null)
             {
-                throw new JobPersistenceException("Job with that key already exists.");
+                throw new ObjectAlreadyExistsException("Job with that key already exists.");
             }
 
             DynamoJob job = new DynamoJob(newJob);
@@ -110,7 +110,7 @@ namespace Quartz.DynamoDB
 
             if (!replaceExisting && context.Load<DynamoJob>(newTrigger.Key.Group, newTrigger.Key.Name) != null)
             {
-                throw new JobPersistenceException("Trigger with that key already exists.");
+                throw new ObjectAlreadyExistsException("Trigger with that key already exists.");
             }
 
             DynamoTrigger trigger = new DynamoTrigger(newTrigger);

@@ -59,8 +59,6 @@ namespace Quartz.DynamoDB.DataModel
                 CronTriggerImpl t = (CronTriggerImpl)value;
                 doc["CronExpressionString"] = t.CronExpressionString;
                 doc["TimeZone"] = t.TimeZone.ToSerializedString();
-                doc["nextFireTimeUtc"] = t.GetNextFireTimeUtc().GetValueOrDefault().ToString();
-                doc["previousFireTimeUtc"] = t.GetPreviousFireTimeUtc().GetValueOrDefault().ToString();
                 doc["Type"] = "CronTriggerImpl";
             }
 
@@ -125,6 +123,7 @@ namespace Quartz.DynamoDB.DataModel
                 case "CronTriggerImpl":
                     {
                         trigger = new CronTriggerImpl();
+                        //todo: support CronTrigger
                         break;
                     }
 

@@ -12,6 +12,8 @@ namespace Quartz.DynamoDB.DataModel
     /// </summary>
     public class TriggerConverter : IPropertyConverter
     {
+        private readonly JobDataMapConverter _jobDataMapConverter = new JobDataMapConverter();
+
         public DynamoDBEntry ToEntry(object value)
         {
             if (!(value is AbstractTrigger))
@@ -26,12 +28,11 @@ namespace Quartz.DynamoDB.DataModel
             doc["Group"] = trigger.Group ?? string.Empty;
             doc["JobName"] = trigger.JobName ?? string.Empty;
             doc["JobGroup"] = trigger.JobGroup ?? string.Empty;
-            //doc["JobKey"] = trigger.JobKey; //todo flatten
             doc["Name"] = trigger.Name ?? string.Empty;
             doc["Group"] = trigger.Group ?? string.Empty;
             doc["Description"] = trigger.Description ?? string.Empty;
             doc["CalendarName"] = trigger.CalendarName ?? string.Empty;
-            //doc["JobDataMap"] = trigger.JobDataMap; //todo: flatten
+            doc["JobDataMap"] = _jobDataMapConverter.ToEntry(trigger.JobDataMap);
             doc["MisfireInstruction"] = trigger.MisfireInstruction;
             doc["FireInstanceId"] = trigger.FireInstanceId ?? string.Empty;
             doc["StartTimeUtc"] = trigger.StartTimeUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz");
@@ -45,7 +46,6 @@ namespace Quartz.DynamoDB.DataModel
             if (value is CalendarIntervalTriggerImpl)
             {
                 CalendarIntervalTriggerImpl t = (CalendarIntervalTriggerImpl)value;
-                //doc["complete"] = t.Com
                 doc["nextFireTimeUtc"] = t.GetNextFireTimeUtc().GetValueOrDefault().ToString();
                 doc["previousFireTimeUtc"] = t.GetPreviousFireTimeUtc().GetValueOrDefault().ToString();
                 doc["Type"] = "CalendarIntervalTriggerImpl";
@@ -85,8 +85,6 @@ namespace Quartz.DynamoDB.DataModel
             else if (value is SimpleTriggerImpl)
             {
                 SimpleTriggerImpl t = (SimpleTriggerImpl)value;
-                //doc["nextFireTimeUtc"] = t.GetNextFireTimeUtc().GetValueOrDefault().ToString();
-                //doc["previousFireTimeUtc"] = t.GetPreviousFireTimeUtc().GetValueOrDefault().ToString();
                 doc["RepeatCount"] = t.RepeatCount;
                 doc["RepeatInterval"] = t.RepeatInterval.Ticks;
                 doc["TimesTriggered"] = t.TimesTriggered;
@@ -105,7 +103,9 @@ namespace Quartz.DynamoDB.DataModel
             }
 
             AbstractTrigger trigger;
-            switch (doc["Type"])
+
+            string type = doc.TryGetStringValueOtherwiseReturnDefault("Type");
+            switch (type)
             {
                 case "CalendarIntervalTriggerImpl":
                     {
@@ -157,22 +157,22 @@ namespace Quartz.DynamoDB.DataModel
                     }
                 default:
                     {
-                        throw new Exception("Unexpected trigger type encountered.");
+                        trigger = new SimpleTriggerImpl();
+                        break;
                     }
             }
             trigger.Name = doc.TryGetStringValueOtherwiseReturnDefault("Name");
             trigger.Group = doc.TryGetStringValueOtherwiseReturnDefault("Group");
             trigger.JobName = doc.TryGetStringValueOtherwiseReturnDefault("JobName");
             trigger.JobGroup = doc.TryGetStringValueOtherwiseReturnDefault("JobGroup");
-            //doc["JobKey"] = trigger.JobKey; //todo flatten
             trigger.Name = doc.TryGetStringValueOtherwiseReturnDefault("Name");
             trigger.Group = doc.TryGetStringValueOtherwiseReturnDefault("Group");
             trigger.Description = doc.TryGetStringValueOtherwiseReturnDefault("Description");
             trigger.CalendarName = doc.TryGetStringValueOtherwiseReturnDefault("CalendarName");
-            //doc["JobDataMap"] = trigger.JobDataMap; //todo: flatten
+            trigger.JobDataMap = (JobDataMap)_jobDataMapConverter.FromEntry(doc["JobDataMap"]);
             trigger.MisfireInstruction = doc["MisfireInstruction"].AsInt();
             trigger.FireInstanceId = doc.TryGetStringValueOtherwiseReturnDefault("FireInstanceId");
-            
+
             trigger.StartTimeUtc = DateTimeOffset.Parse(doc["StartTimeUtc"]);
             DynamoDBEntry value;
             if (doc.TryGetValue("EndTimeUtc", out value))

@@ -46,8 +46,11 @@ namespace Quartz.DynamoDB.DataModel
             if (value is CalendarIntervalTriggerImpl)
             {
                 CalendarIntervalTriggerImpl t = (CalendarIntervalTriggerImpl)value;
-                doc["nextFireTimeUtc"] = t.GetNextFireTimeUtc().GetValueOrDefault().ToString();
-                doc["previousFireTimeUtc"] = t.GetPreviousFireTimeUtc().GetValueOrDefault().ToString();
+                doc["PreserveHourOfDayAcrossDaylightSavings"] = t.PreserveHourOfDayAcrossDaylightSavings;
+                doc["RepeatInterval"] = t.RepeatInterval;
+                doc["RepeatIntervalUnit"] = (int)t.RepeatIntervalUnit;
+                doc["TimesTriggered"] = t.TimesTriggered;
+                doc["TimeZone"] = t.TimeZone.ToSerializedString();
                 doc["Type"] = "CalendarIntervalTriggerImpl";
             }
 
@@ -109,7 +112,14 @@ namespace Quartz.DynamoDB.DataModel
             {
                 case "CalendarIntervalTriggerImpl":
                     {
-                        trigger = new CalendarIntervalTriggerImpl();
+                        var calendarTrigger = new CalendarIntervalTriggerImpl();
+                        trigger = calendarTrigger;
+
+                        calendarTrigger.PreserveHourOfDayAcrossDaylightSavings = doc["PreserveHourOfDayAcrossDaylightSavings"].AsBoolean();
+                        calendarTrigger.RepeatInterval = doc["RepeatInterval"].AsInt();
+                        calendarTrigger.RepeatIntervalUnit = (IntervalUnit)doc["RepeatIntervalUnit"].AsInt();
+                        calendarTrigger.TimesTriggered = doc["TimesTriggered"].AsInt();
+                        calendarTrigger.TimeZone = TimeZoneInfo.FromSerializedString(doc["TimeZone"]);
                         break;
                     }
                 case "CronTriggerImpl":

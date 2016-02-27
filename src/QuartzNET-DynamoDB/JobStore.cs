@@ -384,9 +384,9 @@ namespace Quartz.DynamoDB
                 }
             }
 
-            List<IOperableTrigger> result = new List<IOperableTrigger>();
-            Collection.ISet<JobKey> acquiredJobKeysForNoConcurrentExec = new Collection.HashSet<JobKey>();
-            //DateTimeOffset? firstAcquiredTriggerFireTime = null;
+            //List<IOperableTrigger> result = new List<IOperableTrigger>();
+            //Collection.ISet<JobKey> acquiredJobKeysForNoConcurrentExec = new Collection.HashSet<JobKey>();
+            ////DateTimeOffset? firstAcquiredTriggerFireTime = null;
 
             //var candidates = this.Triggers.FindAs<Spi.IOperableTrigger>(
             //    Query.And(

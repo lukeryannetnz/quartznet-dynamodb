@@ -39,8 +39,6 @@ namespace Quartz.DynamoDB.DataModel
         [DynamoDBProperty(typeof(TriggerConverter))]
         public IOperableTrigger Trigger { get; set; }
 
-        public string State { get; set; }
-
         [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
         public DateTimeOffset? NextFireTimeUtc
         {
@@ -54,6 +52,12 @@ namespace Quartz.DynamoDB.DataModel
         /// TODO: is this correct?
         /// </summary>
         public string SchedulerInstanceId { get; set; }
+
+        /// <summary>
+        /// The current state of this trigger. Generally a value from the Quartz.TriggerState
+        /// enum but occasionally an internal value including: Waiting, PausedAndBlocked.
+        /// </summary>
+        public string State { get; set; }
 
         /// <summary>
         /// Returns the State property as the TriggerState enumeration required by the JobStore contract.

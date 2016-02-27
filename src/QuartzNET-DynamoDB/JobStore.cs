@@ -359,7 +359,7 @@ namespace Quartz.DynamoDB
 
             _context.Save(scheduler);
 
-            
+
             ScanCondition expiredCondition = new ScanCondition("Expires", ScanOperator.LessThan, SystemTime.Now().UtcDateTime.ToUnixEpochTime());
             var expiredSchedulers = _context.Scan<DynamoScheduler>(expiredCondition);
 
@@ -367,7 +367,7 @@ namespace Quartz.DynamoDB
             {
                 _context.Delete(dynamoScheduler);
             }
-            
+
             var activeSchedulers = _context.Scan<DynamoScheduler>();
             //IEnumerable<BsonValue> activeInstances = this.Schedulers.Distinct("_id");
 
@@ -375,7 +375,7 @@ namespace Quartz.DynamoDB
             //todo: this will be slow. do the query based on an index.
             foreach (var trigger in _context.Scan<DynamoTrigger>())
             {
-                if(!activeSchedulers.Select(s => s.InstanceId).Contains(trigger.SchedulerInstanceId))
+                if (!activeSchedulers.Select(s => s.InstanceId).Contains(trigger.SchedulerInstanceId))
                 {
                     trigger.SchedulerInstanceId = string.Empty;
                     trigger.State = "Waiting";
@@ -386,89 +386,93 @@ namespace Quartz.DynamoDB
 
             List<IOperableTrigger> result = new List<IOperableTrigger>();
             Collection.ISet<JobKey> acquiredJobKeysForNoConcurrentExec = new Collection.HashSet<JobKey>();
-            //DateTimeOffset? firstAcquiredTriggerFireTime = null;
+            DateTimeOffset? firstAcquiredTriggerFireTime = null;
 
+            var waitingStateCondition = new ScanCondition("State", ScanOperator.Equal, "Waiting");
+            var dueToFireCondition = new ScanCondition("NextFireTimeUtc", ScanOperator.LessThanOrEqual, (noLaterThan + timeWindow).UtcDateTime);
+            var candidates = _context.Scan<DynamoTrigger>(waitingStateCondition, dueToFireCondition);
             //var candidates = this.Triggers.FindAs<Spi.IOperableTrigger>(
             //    Query.And(
             //        Query.EQ("State", "Waiting"),
             //        Query.LTE("nextFireTimeUtc", (noLaterThan + timeWindow).UtcDateTime)))
             //    .OrderBy(t => t.GetNextFireTimeUtc()).ThenByDescending(t => t.Priority);
 
-            //foreach (IOperableTrigger trigger in candidates)
-            //{
-            //    if (trigger.GetNextFireTimeUtc() == null)
-            //    {
-            //        continue;
-            //    }
+            foreach (var trigger in candidates)
+            {
+                if (trigger.Trigger.GetNextFireTimeUtc() == null)
+                {
+                    continue;
+                }
 
-            //    // it's possible that we've selected triggers way outside of the max fire ahead time for batches 
-            //    // (up to idleWaitTime + fireAheadTime) so we need to make sure not to include such triggers.  
-            //    // So we select from the first next trigger to fire up until the max fire ahead time after that...
-            //    // which will perfectly honor the fireAheadTime window because the no firing will occur until
-            //    // the first acquired trigger's fire time arrives.
-            //    if (firstAcquiredTriggerFireTime != null
-            //        && trigger.GetNextFireTimeUtc() > (firstAcquiredTriggerFireTime.Value + timeWindow))
-            //    {
-            //        break;
-            //    }
+                // it's possible that we've selected triggers way outside of the max fire ahead time for batches 
+                // (up to idleWaitTime + fireAheadTime) so we need to make sure not to include such triggers.  
+                // So we select from the first next trigger to fire up until the max fire ahead time after that...
+                // which will perfectly honor the fireAheadTime window because the no firing will occur until
+                // the first acquired trigger's fire time arrives.
+                if (firstAcquiredTriggerFireTime != null
+                    && trigger.Trigger.GetNextFireTimeUtc() > (firstAcquiredTriggerFireTime.Value + timeWindow))
+                {
+                    break;
+                }
 
-            //    if (this.ApplyMisfire(trigger))
-            //    {
-            //        if (trigger.GetNextFireTimeUtc() == null
-            //            || trigger.GetNextFireTimeUtc() > noLaterThan + timeWindow)
-            //        {
-            //            continue;
-            //        }
-            //    }
+                if (this.ApplyMisfire(trigger.Trigger))
+                {
+                    if (trigger.Trigger.GetNextFireTimeUtc() == null
+                        || trigger.Trigger.GetNextFireTimeUtc() > noLaterThan + timeWindow)
+                    {
+                        continue;
+                    }
+                }
 
-            //    // If trigger's job is set as @DisallowConcurrentExecution, and it has already been added to result, then
-            //    // put it back into the timeTriggers set and continue to search for next trigger.
-            //    JobKey jobKey = trigger.JobKey;
-            //    IJobDetail job = this.Jobs.FindOneByIdAs<IJobDetail>(jobKey.ToBsonDocument());
+                // If trigger's job is set as @DisallowConcurrentExecution, and it has already been added to result, then
+                // put it back into the timeTriggers set and continue to search for next trigger.
+                JobKey jobKey = trigger.Trigger.JobKey;
+                IJobDetail job = RetrieveJob(jobKey);
 
-            //    if (job.ConcurrentExecutionDisallowed)
-            //    {
-            //        if (acquiredJobKeysForNoConcurrentExec.Contains(jobKey))
-            //        {
-            //            continue; // go to next trigger in store.
-            //        }
-            //        else
-            //        {
-            //            acquiredJobKeysForNoConcurrentExec.Add(jobKey);
-            //        }
-            //    }
+                if (job.ConcurrentExecutionDisallowed)
+                {
+                    if (acquiredJobKeysForNoConcurrentExec.Contains(jobKey))
+                    {
+                        continue; // go to next trigger in store.
+                    }
+                    else
+                    {
+                        acquiredJobKeysForNoConcurrentExec.Add(jobKey);
+                    }
+                }
 
-            //    trigger.FireInstanceId = this.GetFiredTriggerRecordId();
-            //    var acquired = this.Triggers.FindAndModify(
-            //        Query.And(
-            //            Query.EQ("_id", trigger.Key.ToBsonDocument()),
-            //            Query.EQ("State", "Waiting")),
-            //        SortBy.Null,
-            //        Update.Set("State", "Acquired")
-            //            .Set("SchedulerInstanceId", this.instanceId)
-            //            .Set("FireInstanceId", trigger.FireInstanceId));
+                trigger.FireInstanceId = this.GetFiredTriggerRecordId();
+                var acquired = this.Triggers.FindAndModify(
+                    Query.And(
+                        Query.EQ("_id", trigger.Key.ToBsonDocument()),
+                        Query.EQ("State", "Waiting")),
+                    SortBy.Null,
+                    Update.Set("State", "Acquired")
+                        .Set("SchedulerInstanceId", this.instanceId)
+                        .Set("FireInstanceId", trigger.FireInstanceId));
 
-            //    if (acquired.ModifiedDocument != null)
-            //    {
-            //        result.Add(trigger);
+                //    if (acquired.ModifiedDocument != null)
+                //    {
+                //        result.Add(trigger);
 
-            //        if (firstAcquiredTriggerFireTime == null)
-            //        {
-            //            firstAcquiredTriggerFireTime = trigger.GetNextFireTimeUtc();
-            //        }
-            //    }
+                //        if (firstAcquiredTriggerFireTime == null)
+                //        {
+                //            firstAcquiredTriggerFireTime = trigger.GetNextFireTimeUtc();
+                //        }
+                //    }
 
-            //    if (result.Count == maxCount)
-            //    {
-            //        break;
-            //    }
-            //}
+                //    if (result.Count == maxCount)
+                //    {
+                //        break;
+                //    }
+                //}
 
-            //return result;
-            //}
+                //return result;
+            }
 
             throw new NotImplementedException();
         }
+
 
         public void ReleaseAcquiredTrigger(IOperableTrigger trigger)
         {

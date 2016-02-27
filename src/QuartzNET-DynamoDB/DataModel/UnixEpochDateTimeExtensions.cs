@@ -12,8 +12,8 @@ namespace Quartz.DynamoDB.DataModel
         /// <summary>
         /// Converts the DateTime to unix epoch time. 
         /// </summary>
-        /// <param name="datetime"></param>
-        /// <returns></returns>
+        /// <param name="datetime">The date time. If local, will be converted to UTC internally.</param>
+        /// <returns>The numeber of seconds since 1/1/1970 00:00:00</returns>
         public static int ToUnixEpochTime(this DateTime datetime)
         {
             var utc = datetime.ToUniversalTime();

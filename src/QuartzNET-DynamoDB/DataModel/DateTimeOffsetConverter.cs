@@ -20,7 +20,7 @@ namespace Quartz.DynamoDB.DataModel
         public DynamoDBEntry ToEntry(object value)
         {
             DateTimeOffset? offset = value as DateTimeOffset?;
-            if (!offset.HasValue)
+            if (offset == null || !offset.HasValue)
             {
                 return null;
             }

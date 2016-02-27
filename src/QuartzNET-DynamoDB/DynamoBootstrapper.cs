@@ -166,7 +166,7 @@ namespace Quartz.DynamoDB
                     },
                        new AttributeDefinition
                     {
-                        AttributeName = "Expires",
+                        AttributeName = "ExpiresUtcEpoch",
                         AttributeType = "N"
                     }
                 },
@@ -179,7 +179,7 @@ namespace Quartz.DynamoDB
                     },
                       new KeySchemaElement
                     {
-                        AttributeName = "Expires",
+                        AttributeName = "ExpiresUtcEpoch",
                         KeyType = "RANGE"
                     }
                 }

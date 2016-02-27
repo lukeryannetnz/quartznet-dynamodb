@@ -13,6 +13,8 @@ namespace Quartz.DynamoDB.DataModel
     [DynamoDBTable("Trigger")]
     public class DynamoTrigger
     {
+        private readonly DateTimeOffsetConverter converter = new DateTimeOffsetConverter();
+
         public DynamoTrigger()
         {
             State = "Waiting";
@@ -39,14 +41,49 @@ namespace Quartz.DynamoDB.DataModel
         [DynamoDBProperty(typeof(TriggerConverter))]
         public IOperableTrigger Trigger { get; set; }
 
-        public string State { get; set; }
-
-        [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
-        public DateTimeOffset? NextFireTimeUtc
+        /// <summary>
+        /// Gets the next fire time as a unix epoch value in UTC timezone.
+        /// 
+        /// Data model scan conditions are only supported for simple properties, 
+        /// not those that require converters so for now I've buried the converter inside this property.
+        /// This may be the straw that breaks the camels back and causes me to move away from the
+        /// DataModel to only using the DocumentModel.
+        /// </summary>
+        public int? NextFireTimeUtcEpoch
         {
-            get { return Trigger.GetNextFireTimeUtc(); }
+            get
+            {
+                var value = converter.ToEntry(Trigger.GetNextFireTimeUtc());
+
+                if (value == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return (int)value;
+                }
+            }
             set
             { }
+        }
+
+        /// <summary>
+        /// Gets the next fire time as a DateTimeOffset value in UTC timezone.
+        /// Ignored so it isn't stored, this is just here for conversion convenience.
+        /// </summary>
+        [DynamoDBIgnore]
+        public DateTimeOffset? NextFireTimeUtc
+        {
+            get
+            {
+                if(!NextFireTimeUtcEpoch.HasValue)
+                {
+                    return null;
+                }
+
+                return (DateTimeOffset) converter.FromEntry(NextFireTimeUtcEpoch);
+            }
         }
 
         /// <summary>
@@ -54,6 +91,12 @@ namespace Quartz.DynamoDB.DataModel
         /// TODO: is this correct?
         /// </summary>
         public string SchedulerInstanceId { get; set; }
+
+        /// <summary>
+        /// The current state of this trigger. Generally a value from the Quartz.TriggerState
+        /// enum but occasionally an internal value including: Waiting, PausedAndBlocked.
+        /// </summary>
+        public string State { get; set; }
 
         /// <summary>
         /// Returns the State property as the TriggerState enumeration required by the JobStore contract.
@@ -96,5 +139,14 @@ namespace Quartz.DynamoDB.DataModel
                 }
             }
         }
+
+        // Commenting out for now as the current implementation of optimistic locking doesn't seem to give feedback when the write isn't successful!
+
+        ///// <summary>
+        ///// Property to store version number for optimistic locking.
+        ///// <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/VersionSupportHLAPI.html"/>
+        ///// </summary>
+        //[DynamoDBVersion]
+        //public int? Version { get; set; }
     }
 }

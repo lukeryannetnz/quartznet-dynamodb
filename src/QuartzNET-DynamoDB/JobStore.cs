@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
 using Quartz.DynamoDB.DataModel;
 using Quartz.Impl.Matchers;
 using Quartz.Spi;
@@ -21,22 +25,42 @@ namespace Quartz.DynamoDB
         //todo: think about thread safety.
 
         private DynamoDBContext _context;
-        //private ITypeLoadHelper _loadHelper;
+        private AmazonDynamoDBClient _client;
         private string _instanceId;
         //private string _instanceName;
 
+        /// <summary>
+        /// Tracks if dispose has been called to detect redundant (multiple) dispose calls.
+        /// </summary>
+        private bool _disposedValue = false;
+
+        private TimeSpan _misfireThreshold;
+
+        private ISchedulerSignaler _signaler;
+
         public void Initialize(ITypeLoadHelper loadHelper, ISchedulerSignaler signaler)
         {
-            var client = DynamoDbClientFactory.Create();
-            _context = new DynamoDBContext(client);
-            new DynamoBootstrapper().BootStrap(client);
-
             if (loadHelper == null)
             {
                 throw new ArgumentNullException(nameof(loadHelper));
             }
+            if (signaler == null)
+            {
+                throw new ArgumentNullException(nameof(signaler));
+            }
+
+            _client = DynamoDbClientFactory.Create();
+            _context = new DynamoDBContext(_client);
+            new DynamoBootstrapper().BootStrap(_client);
 
             //_loadHelper = loadHelper;
+            _signaler = signaler;
+
+            // We should have had an instance id assigned by now, but if we haven't assign one.
+            if (string.IsNullOrEmpty(InstanceId))
+            {
+                InstanceId = Guid.NewGuid().ToString();
+            }
         }
 
         public void SchedulerStarted()
@@ -307,7 +331,7 @@ namespace Quartz.DynamoDB
             record.State = "Waiting";
             //}
 
-            //this.ApplyMisfire(trigger);
+            //this.ApplyMisfireIfNecessary(trigger);
 
             _context.Save(record, new DynamoDBOperationConfig());
         }
@@ -342,6 +366,24 @@ namespace Quartz.DynamoDB
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// A counter for fired trigger records.
+        /// TODO: put something here that explains what this does.
+        /// </summary>
+        private static long _ftrCtr = SystemTime.UtcNow().Ticks;
+
+        
+
+        /// <summary>
+        /// Gets the fired trigger record id.
+        /// </summary>
+        /// <returns>The fired trigger record id.</returns>
+        protected virtual string GetFiredTriggerRecordId()
+        {
+            long value = Interlocked.Increment(ref _ftrCtr);
+            return Convert.ToString(value, CultureInfo.InvariantCulture);
+        }
+
         public IList<IOperableTrigger> AcquireNextTriggers(DateTimeOffset noLaterThan, int maxCount, TimeSpan timeWindow)
         {
             // multiple instances management
@@ -353,21 +395,23 @@ namespace Quartz.DynamoDB
             var scheduler = new DynamoScheduler
             {
                 InstanceId = _instanceId,
-                Expires = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
+                ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
                 State = "Running"
             };
 
             _context.Save(scheduler);
 
-            
-            ScanCondition expiredCondition = new ScanCondition("Expires", ScanOperator.LessThan, SystemTime.Now().UtcDateTime.ToUnixEpochTime());
+            int epochNow = SystemTime.Now().UtcDateTime.ToUnixEpochTime();
+
+            ScanCondition expiredCondition = new ScanCondition("ExpiresUtcEpoch", ScanOperator.LessThan,
+               epochNow);
             var expiredSchedulers = _context.Scan<DynamoScheduler>(expiredCondition);
 
             foreach (var dynamoScheduler in expiredSchedulers)
             {
                 _context.Delete(dynamoScheduler);
             }
-            
+
             var activeSchedulers = _context.Scan<DynamoScheduler>();
             //IEnumerable<BsonValue> activeInstances = this.Schedulers.Distinct("_id");
 
@@ -375,7 +419,7 @@ namespace Quartz.DynamoDB
             //todo: this will be slow. do the query based on an index.
             foreach (var trigger in _context.Scan<DynamoTrigger>())
             {
-                if(!activeSchedulers.Select(s => s.InstanceId).Contains(trigger.SchedulerInstanceId))
+                if (!string.IsNullOrEmpty(trigger.SchedulerInstanceId) && !activeSchedulers.Select(s => s.InstanceId).Contains(trigger.SchedulerInstanceId))
                 {
                     trigger.SchedulerInstanceId = string.Empty;
                     trigger.State = "Waiting";
@@ -386,67 +430,113 @@ namespace Quartz.DynamoDB
 
             //List<IOperableTrigger> result = new List<IOperableTrigger>();
             //Collection.ISet<JobKey> acquiredJobKeysForNoConcurrentExec = new Collection.HashSet<JobKey>();
-            ////DateTimeOffset? firstAcquiredTriggerFireTime = null;
+            DateTimeOffset? firstAcquiredTriggerFireTime = null;
 
+            var waitingStateCondition = new ScanCondition("State", ScanOperator.Equal, "Waiting");
+            var dueToFireCondition = new ScanCondition("NextFireTimeUtcEpoch", ScanOperator.LessThanOrEqual,
+                (noLaterThan + timeWindow).UtcDateTime.ToUnixEpochTime());
+            var candidates = _context.Scan<DynamoTrigger>(waitingStateCondition, dueToFireCondition);
             //var candidates = this.Triggers.FindAs<Spi.IOperableTrigger>(
             //    Query.And(
             //        Query.EQ("State", "Waiting"),
             //        Query.LTE("nextFireTimeUtc", (noLaterThan + timeWindow).UtcDateTime)))
             //    .OrderBy(t => t.GetNextFireTimeUtc()).ThenByDescending(t => t.Priority);
 
-            //foreach (IOperableTrigger trigger in candidates)
-            //{
-            //    if (trigger.GetNextFireTimeUtc() == null)
-            //    {
-            //        continue;
-            //    }
+            foreach (var trigger in candidates)
+            {
+                if (trigger.Trigger.GetNextFireTimeUtc() == null)
+                {
+                    continue;
+                }
 
-            //    // it's possible that we've selected triggers way outside of the max fire ahead time for batches 
-            //    // (up to idleWaitTime + fireAheadTime) so we need to make sure not to include such triggers.  
-            //    // So we select from the first next trigger to fire up until the max fire ahead time after that...
-            //    // which will perfectly honor the fireAheadTime window because the no firing will occur until
-            //    // the first acquired trigger's fire time arrives.
-            //    if (firstAcquiredTriggerFireTime != null
-            //        && trigger.GetNextFireTimeUtc() > (firstAcquiredTriggerFireTime.Value + timeWindow))
-            //    {
-            //        break;
-            //    }
+                // it's possible that we've selected triggers way outside of the max fire ahead time for batches 
+                // (up to idleWaitTime + fireAheadTime) so we need to make sure not to include such triggers.  
+                // So we select from the first next trigger to fire up until the max fire ahead time after that...
+                // which will perfectly honor the fireAheadTime window because the no firing will occur until
+                // the first acquired trigger's fire time arrives.
+                if (firstAcquiredTriggerFireTime != null
+                    && trigger.Trigger.GetNextFireTimeUtc() > (firstAcquiredTriggerFireTime.Value + timeWindow))
+                {
+                    break;
+                }
 
-            //    if (this.ApplyMisfire(trigger))
-            //    {
-            //        if (trigger.GetNextFireTimeUtc() == null
-            //            || trigger.GetNextFireTimeUtc() > noLaterThan + timeWindow)
-            //        {
-            //            continue;
-            //        }
-            //    }
+                if (this.ApplyMisfireIfNecessary(trigger))
+                {
+                    if (trigger.Trigger.GetNextFireTimeUtc() == null
+                        || trigger.Trigger.GetNextFireTimeUtc() > noLaterThan + timeWindow)
+                    {
+                        continue;
+                    }
+                }
 
-            //    // If trigger's job is set as @DisallowConcurrentExecution, and it has already been added to result, then
-            //    // put it back into the timeTriggers set and continue to search for next trigger.
-            //    JobKey jobKey = trigger.JobKey;
-            //    IJobDetail job = this.Jobs.FindOneByIdAs<IJobDetail>(jobKey.ToBsonDocument());
+                // If trigger's job is set as @DisallowConcurrentExecution, and it has already been added to result, then
+                // put it back into the timeTriggers set and continue to search for next trigger.
+                JobKey jobKey = trigger.Trigger.JobKey;
+                IJobDetail job = RetrieveJob(jobKey);
 
-            //    if (job.ConcurrentExecutionDisallowed)
-            //    {
-            //        if (acquiredJobKeysForNoConcurrentExec.Contains(jobKey))
-            //        {
-            //            continue; // go to next trigger in store.
-            //        }
-            //        else
-            //        {
-            //            acquiredJobKeysForNoConcurrentExec.Add(jobKey);
-            //        }
-            //    }
+                if (job.ConcurrentExecutionDisallowed)
+                {
+                    if (acquiredJobKeysForNoConcurrentExec.Contains(jobKey))
+                    {
+                        continue; // go to next trigger in store.
+                    }
+                    else
+                    {
+                        acquiredJobKeysForNoConcurrentExec.Add(jobKey);
+                    }
+                }
 
-            //    trigger.FireInstanceId = this.GetFiredTriggerRecordId();
-            //    var acquired = this.Triggers.FindAndModify(
-            //        Query.And(
-            //            Query.EQ("_id", trigger.Key.ToBsonDocument()),
-            //            Query.EQ("State", "Waiting")),
-            //        SortBy.Null,
-            //        Update.Set("State", "Acquired")
-            //            .Set("SchedulerInstanceId", this.instanceId)
-            //            .Set("FireInstanceId", trigger.FireInstanceId));
+
+                // Do this using the lower level Document Model (rather than object model) as Object Model
+                // support for conditional updates (optimistic locking) doesn't provide adequate feedback when
+                // an update is successful (or not).s
+
+                // Only grab a trigger if the state is still waiting (another scheduler hasn't grabbed it meanwhile)
+                // See dynamo docs for more details on conditions http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html
+                UpdateItemOperationConfig conditionalUpdate = new UpdateItemOperationConfig();
+                conditionalUpdate.ConditionalExpression = new Expression
+                {
+                    ExpressionStatement = "Name = :name and Group = :group and State = :state",
+                    ExpressionAttributeValues =
+                    {
+                        [":name"] = trigger.Name,
+                        [":group"] = trigger.Group,
+                        [":state"] = "Waiting"
+                    }
+                };
+
+                trigger.Trigger.FireInstanceId = this.GetFiredTriggerRecordId();
+                trigger.SchedulerInstanceId = InstanceId;
+                trigger.State = "Acquired";
+
+                Table triggerTable = Table.LoadTable(_client, DynamoConfiguration.TriggerTableName);
+                bool acquiredTrigger = triggerTable.TryUpdateItem((Document)(new TriggerConverter().ToEntry(trigger)), conditionalUpdate);
+
+                //var acquired = this.Triggers.FindAndModify(
+                //    Query.And(
+                //        Query.EQ("_id", trigger.Key.ToBsonDocument()),
+                //        Query.EQ("State", "Waiting")),
+                //    SortBy.Null,
+                //    Update.Set("State", "Acquired")
+                //        .Set("SchedulerInstanceId", this.instanceId)
+                //        .Set("FireInstanceId", trigger.FireInstanceId));
+
+                if (acquiredTrigger)
+                {
+                    result.Add(trigger.Trigger);
+
+                    if (firstAcquiredTriggerFireTime == null)
+                    {
+                        firstAcquiredTriggerFireTime = trigger.Trigger.GetNextFireTimeUtc();
+                    }
+                }
+
+                if (result.Count == maxCount)
+                {
+                    break;
+                }
+            }
+
 
             //    if (acquired.ModifiedDocument != null)
             //    {
@@ -464,10 +554,56 @@ namespace Quartz.DynamoDB
             //    }
             //}
 
-            //return result;
-            //}
+            return result;
+        }
 
-            throw new NotImplementedException();
+        /// <summary>
+        /// Checks if the given triggers NextFireTime is older than now + the misfire threshold.
+        /// If it is, applies the misfire and updates the record in the DB.
+        /// TODO: come back and test this.
+        /// </summary>
+        /// <param name="trigger">The trigger.</param>
+        /// <returns>True if the trigger misfired, false if it didn't.</returns>
+        protected virtual bool ApplyMisfireIfNecessary(DynamoTrigger trigger)
+        {
+            DateTimeOffset misfireTime = SystemTime.UtcNow();
+            if (MisfireThreshold > TimeSpan.Zero)
+            {
+                misfireTime = misfireTime.AddMilliseconds(-1*MisfireThreshold.TotalMilliseconds);
+            }
+
+            DateTimeOffset? tnft = trigger.Trigger.GetNextFireTimeUtc();
+            if (!tnft.HasValue || tnft.Value > misfireTime
+                || trigger.Trigger.MisfireInstruction == MisfireInstruction.IgnoreMisfirePolicy)
+            {
+                // If this trigger has no misfire instruction or the next fire time is within our misfire threshold.
+                return false;
+            }
+
+            ICalendar cal = null;
+            if (trigger.Trigger.CalendarName != null)
+            {
+                cal = this.RetrieveCalendar(trigger.Trigger.CalendarName);
+            }
+
+            _signaler.NotifyTriggerListenersMisfired(trigger.Trigger);
+
+            trigger.Trigger.UpdateAfterMisfire(cal);
+            this.StoreTrigger(trigger.Trigger, true);
+
+            if (!trigger.Trigger.GetNextFireTimeUtc().HasValue)
+            {
+                trigger.State = "Complete";
+                _context.Save(trigger);
+
+                _signaler.NotifySchedulerListenersFinalized(trigger.Trigger);
+            }
+            else if (tnft.Equals(trigger.Trigger.GetNextFireTimeUtc()))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public void ReleaseAcquiredTrigger(IOperableTrigger trigger)
@@ -486,6 +622,25 @@ namespace Quartz.DynamoDB
             throw new NotImplementedException();
         }
 
+        /// <summary> 
+        /// The time span by which a trigger must have missed its
+        /// next-fire-time, in order for it to be considered "misfired" and thus
+        /// have its misfire instruction applied.
+        /// </summary>
+        [TimeSpanParseRule(TimeSpanParseRule.Milliseconds)]
+        public virtual TimeSpan MisfireThreshold
+        {
+            get { return _misfireThreshold; }
+            set
+            {
+                if (value.TotalMilliseconds < 1)
+                {
+                    throw new ArgumentException("Misfirethreashold must be larger than 0");
+                }
+                _misfireThreshold = value;
+            }
+        }
+
         public bool SupportsPersistence { get; }
         public long EstimatedTimeToReleaseAndAcquireTrigger { get; }
         public bool Clustered { get; }
@@ -496,6 +651,7 @@ namespace Quartz.DynamoDB
         /// </summary>
         public virtual string InstanceId
         {
+            get { return _instanceId; }
             set { this._instanceId = value; }
         }
 
@@ -515,18 +671,17 @@ namespace Quartz.DynamoDB
         public int ThreadPoolSize { get; set; }
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 if (disposing)
                 {
                     _context.Dispose();
                 }
 
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 
@@ -536,6 +691,7 @@ namespace Quartz.DynamoDB
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
         }
+
         #endregion
     }
 }

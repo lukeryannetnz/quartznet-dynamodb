@@ -6,6 +6,7 @@ using System.Threading;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
 using Quartz.DynamoDB.DataModel;
 using Quartz.Impl.Matchers;
 using Quartz.Spi;
@@ -24,7 +25,12 @@ namespace Quartz.DynamoDB
         //todo: think about thread safety.
 
         private DynamoDBContext _context;
+<<<<<<< HEAD
+        //private ITypeLoadHelper _loadHelper;
+=======
         private AmazonDynamoDBClient _client;
+        private ITypeLoadHelper _loadHelper;
+>>>>>>> at
         private string _instanceId;
         //private string _instanceName;
 
@@ -52,7 +58,10 @@ namespace Quartz.DynamoDB
             _context = new DynamoDBContext(_client);
             new DynamoBootstrapper().BootStrap(_client);
 
+<<<<<<< HEAD
             //_loadHelper = loadHelper;
+=======
+            _loadHelper = loadHelper;
             _signaler = signaler;
 
             // We should have had an instance id assigned by now, but if we haven't assign one.
@@ -60,6 +69,7 @@ namespace Quartz.DynamoDB
             {
                 InstanceId = Guid.NewGuid().ToString();
             }
+>>>>>>> at
         }
 
         public void SchedulerStarted()
@@ -427,9 +437,15 @@ namespace Quartz.DynamoDB
                 }
             }
 
+<<<<<<< HEAD
+            //List<IOperableTrigger> result = new List<IOperableTrigger>();
+            //Collection.ISet<JobKey> acquiredJobKeysForNoConcurrentExec = new Collection.HashSet<JobKey>();
+            ////DateTimeOffset? firstAcquiredTriggerFireTime = null;
+=======
             List<IOperableTrigger> result = new List<IOperableTrigger>();
             Collection.ISet<JobKey> acquiredJobKeysForNoConcurrentExec = new Collection.HashSet<JobKey>();
             DateTimeOffset? firstAcquiredTriggerFireTime = null;
+>>>>>>> at
 
             var waitingStateCondition = new ScanCondition("State", ScanOperator.Equal, "Waiting");
             var dueToFireCondition = new ScanCondition("NextFireTimeUtcEpoch", ScanOperator.LessThanOrEqual,

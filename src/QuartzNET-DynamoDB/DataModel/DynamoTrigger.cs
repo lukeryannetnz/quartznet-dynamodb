@@ -41,6 +41,20 @@ namespace Quartz.DynamoDB.DataModel
 
         public string State { get; set; }
 
+        [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
+        public DateTimeOffset? NextFireTimeUtc
+        {
+            get { return Trigger.GetNextFireTimeUtc(); }
+            set
+            { }
+        }
+
+        /// <summary>
+        /// The scheduler instance currently working on this trigger.
+        /// TODO: is this correct?
+        /// </summary>
+        public string SchedulerInstanceId { get; set; }
+
         /// <summary>
         /// Returns the State property as the TriggerState enumeration required by the JobStore contract.
         /// </summary>
@@ -82,11 +96,5 @@ namespace Quartz.DynamoDB.DataModel
                 }
             }
         }
-
-        /// <summary>
-        /// The scheduler instance currently working on this trigger.
-        /// TODO: is this correct?
-        /// </summary>
-        public string SchedulerInstanceId { get; set; }
     }
 }

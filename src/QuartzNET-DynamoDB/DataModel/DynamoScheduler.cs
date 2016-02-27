@@ -12,8 +12,8 @@ namespace Quartz.DynamoDB.DataModel
         [DynamoDBHashKey]
         public string InstanceId { get; set; }
 
-        [DynamoDBProperty(typeof(DateTimeConverter))]
-        public DateTime Expires { get; set; }
+        [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
+        public DateTimeOffset Expires { get; set; }
 
         public string State { get; set; }
     }

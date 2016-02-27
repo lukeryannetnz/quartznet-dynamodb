@@ -65,7 +65,6 @@ namespace Quartz.DynamoDB.DataModel
             else if (value is DailyTimeIntervalTriggerImpl)
             {
                 DailyTimeIntervalTriggerImpl t = (DailyTimeIntervalTriggerImpl)value;
-                doc["nextFireTimeUtc"] = t.GetNextFireTimeUtc().GetValueOrDefault().ToString();
                 doc["previousFireTimeUtc"] = t.GetPreviousFireTimeUtc().GetValueOrDefault().ToString();
                 doc["DaysOfWeek"] = t.DaysOfWeek.Select(dow => dow.ToString()).ToList();
                 doc["EndTimeOfDay_Hour"] = t.EndTimeOfDay.Hour;

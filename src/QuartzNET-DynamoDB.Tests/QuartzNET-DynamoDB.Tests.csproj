@@ -82,6 +82,7 @@
     <Compile Include="..\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Unit\DynamoTriggerTests.cs" />
     <Compile Include="Unit\JobDataMapConverterTests.cs" />
     <Compile Include="Integration\JobStoreTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
 using Quartz.DynamoDB.DataModel;
 using Quartz.Impl.Matchers;
 using Quartz.Spi;
@@ -14,7 +16,7 @@ namespace Quartz.DynamoDB
     /// </para>
     /// <author>Luke Ryan</author>
     /// </summary>
-    public class JobStore : IJobStore
+    public class JobStore : IJobStore, IDisposable
     {
         //todo: think about thread safety.
 
@@ -53,7 +55,7 @@ namespace Quartz.DynamoDB
 
         public void Shutdown()
         {
-            _context.Dispose();
+            Dispose();
         }
 
         public void StoreJobAndTrigger(IJobDetail newJob, IOperableTrigger newTrigger)
@@ -79,7 +81,7 @@ namespace Quartz.DynamoDB
             }
 
             DynamoJob job = new DynamoJob(newJob);
-            
+
             _context.Save(job);
         }
 
@@ -114,7 +116,8 @@ namespace Quartz.DynamoDB
 
             if (RetrieveJob(newTrigger.JobKey) == null)
             {
-                throw new JobPersistenceException("The job (" + newTrigger.JobKey + ") referenced by the trigger does not exist.");
+                throw new JobPersistenceException("The job (" + newTrigger.JobKey +
+                                                  ") referenced by the trigger does not exist.");
             }
 
             DynamoTrigger trigger = new DynamoTrigger(newTrigger);
@@ -258,7 +261,7 @@ namespace Quartz.DynamoDB
             {
                 record.State = "Paused";
             }
-            
+
             _context.Save(record, new DynamoDBOperationConfig());
         }
 
@@ -301,7 +304,7 @@ namespace Quartz.DynamoDB
             //}
             //else
             //{
-                record.State = "Waiting";
+            record.State = "Waiting";
             //}
 
             //this.ApplyMisfire(trigger);
@@ -341,6 +344,129 @@ namespace Quartz.DynamoDB
 
         public IList<IOperableTrigger> AcquireNextTriggers(DateTimeOffset noLaterThan, int maxCount, TimeSpan timeWindow)
         {
+            // multiple instances management
+            //this.Schedulers.Save(new BsonDocument()
+            //    .SetElement(new BsonElement("_id", this.instanceId))
+            //    .SetElement(new BsonElement("Expires", (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime))
+            //    .SetElement(new BsonElement("State", "Running")));
+
+            var scheduler = new DynamoScheduler
+            {
+                InstanceId = _instanceId,
+                Expires = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
+                State = "Running"
+            };
+
+            _context.Save(scheduler);
+
+            
+            ScanCondition expiredCondition = new ScanCondition("Expires", ScanOperator.LessThan, SystemTime.Now().UtcDateTime.ToUnixEpochTime());
+            var expiredSchedulers = _context.Scan<DynamoScheduler>(expiredCondition);
+
+            foreach (var dynamoScheduler in expiredSchedulers)
+            {
+                _context.Delete(dynamoScheduler);
+            }
+            
+            var activeSchedulers = _context.Scan<DynamoScheduler>();
+            //IEnumerable<BsonValue> activeInstances = this.Schedulers.Distinct("_id");
+
+            // Reset the state of any triggers that are associated with non-active schedulers.
+            //todo: this will be slow. do the query based on an index.
+            foreach (var trigger in _context.Scan<DynamoTrigger>())
+            {
+                if(!activeSchedulers.Select(s => s.InstanceId).Contains(trigger.SchedulerInstanceId))
+                {
+                    trigger.SchedulerInstanceId = string.Empty;
+                    trigger.State = "Waiting";
+
+                    _context.Save(trigger);
+                }
+            }
+
+            List<IOperableTrigger> result = new List<IOperableTrigger>();
+            Collection.ISet<JobKey> acquiredJobKeysForNoConcurrentExec = new Collection.HashSet<JobKey>();
+            //DateTimeOffset? firstAcquiredTriggerFireTime = null;
+
+            //var candidates = this.Triggers.FindAs<Spi.IOperableTrigger>(
+            //    Query.And(
+            //        Query.EQ("State", "Waiting"),
+            //        Query.LTE("nextFireTimeUtc", (noLaterThan + timeWindow).UtcDateTime)))
+            //    .OrderBy(t => t.GetNextFireTimeUtc()).ThenByDescending(t => t.Priority);
+
+            //foreach (IOperableTrigger trigger in candidates)
+            //{
+            //    if (trigger.GetNextFireTimeUtc() == null)
+            //    {
+            //        continue;
+            //    }
+
+            //    // it's possible that we've selected triggers way outside of the max fire ahead time for batches 
+            //    // (up to idleWaitTime + fireAheadTime) so we need to make sure not to include such triggers.  
+            //    // So we select from the first next trigger to fire up until the max fire ahead time after that...
+            //    // which will perfectly honor the fireAheadTime window because the no firing will occur until
+            //    // the first acquired trigger's fire time arrives.
+            //    if (firstAcquiredTriggerFireTime != null
+            //        && trigger.GetNextFireTimeUtc() > (firstAcquiredTriggerFireTime.Value + timeWindow))
+            //    {
+            //        break;
+            //    }
+
+            //    if (this.ApplyMisfire(trigger))
+            //    {
+            //        if (trigger.GetNextFireTimeUtc() == null
+            //            || trigger.GetNextFireTimeUtc() > noLaterThan + timeWindow)
+            //        {
+            //            continue;
+            //        }
+            //    }
+
+            //    // If trigger's job is set as @DisallowConcurrentExecution, and it has already been added to result, then
+            //    // put it back into the timeTriggers set and continue to search for next trigger.
+            //    JobKey jobKey = trigger.JobKey;
+            //    IJobDetail job = this.Jobs.FindOneByIdAs<IJobDetail>(jobKey.ToBsonDocument());
+
+            //    if (job.ConcurrentExecutionDisallowed)
+            //    {
+            //        if (acquiredJobKeysForNoConcurrentExec.Contains(jobKey))
+            //        {
+            //            continue; // go to next trigger in store.
+            //        }
+            //        else
+            //        {
+            //            acquiredJobKeysForNoConcurrentExec.Add(jobKey);
+            //        }
+            //    }
+
+            //    trigger.FireInstanceId = this.GetFiredTriggerRecordId();
+            //    var acquired = this.Triggers.FindAndModify(
+            //        Query.And(
+            //            Query.EQ("_id", trigger.Key.ToBsonDocument()),
+            //            Query.EQ("State", "Waiting")),
+            //        SortBy.Null,
+            //        Update.Set("State", "Acquired")
+            //            .Set("SchedulerInstanceId", this.instanceId)
+            //            .Set("FireInstanceId", trigger.FireInstanceId));
+
+            //    if (acquired.ModifiedDocument != null)
+            //    {
+            //        result.Add(trigger);
+
+            //        if (firstAcquiredTriggerFireTime == null)
+            //        {
+            //            firstAcquiredTriggerFireTime = trigger.GetNextFireTimeUtc();
+            //        }
+            //    }
+
+            //    if (result.Count == maxCount)
+            //    {
+            //        break;
+            //    }
+            //}
+
+            //return result;
+            //}
+
             throw new NotImplementedException();
         }
 
@@ -363,6 +489,7 @@ namespace Quartz.DynamoDB
         public bool SupportsPersistence { get; }
         public long EstimatedTimeToReleaseAndAcquireTrigger { get; }
         public bool Clustered { get; }
+
         /// <summary>
         /// Inform the <see cref="IJobStore" /> of the Scheduler instance's Id, 
         /// prior to initialize being invoked.
@@ -380,6 +507,31 @@ namespace Quartz.DynamoDB
         {
             set { this._instanceName = value; }
         }
+
         public int ThreadPoolSize { get; set; }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    _context.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
+        #endregion
     }
 }

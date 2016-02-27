@@ -10,23 +10,35 @@ namespace Quartz.DynamoDB.DataModel
     /// </summary>
     public class DateTimeConverter : IPropertyConverter
     {
-        private readonly DateTime _epochTime = new DateTime(1970, 1, 1);
 
         public DynamoDBEntry ToEntry(object value)
         {
             DateTime dt = (DateTime)value;
-
-            TimeSpan t = dt - _epochTime;
-            int secondsSinceEpoch = (int)t.TotalSeconds;
-
-            return secondsSinceEpoch;
+            
+            return dt.ToUnixEpochTime();
         }
 
         public object FromEntry(DynamoDBEntry entry)
         {
             int secondsSinceEpoch = entry.AsInt();
 
-            return _epochTime.AddSeconds(secondsSinceEpoch);
+            return UnixEpochDateTimeExtensions.EpochTime.AddSeconds(secondsSinceEpoch);
+        }
+    }
+
+    /// <summary>
+    /// DateTime helpers for UnixEpoch time.
+    /// </summary>
+    public static class UnixEpochDateTimeExtensions
+    {
+        public static readonly DateTime EpochTime = new DateTime(1970, 1, 1);
+
+        public static int ToUnixEpochTime(this DateTime datetime)
+        {
+            TimeSpan t = datetime - EpochTime;
+            int secondsSinceEpoch = (int)t.TotalSeconds;
+
+            return secondsSinceEpoch;
         }
     }
 }

@@ -37,6 +37,7 @@ namespace Quartz.DynamoDB.Tests.Integration
     /// <author>These tests were submitted to Quartz.NET for the RAMJobStoreTest by Johannes Zillmann as part of issue QUARTZ-306.</author>
     /// <author>Luke Ryan - Adapted to test the Dynamo DB store.</author>
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "This is a test class. No need to implement dispose.")]
     public class JobStoreTest
     {
         private readonly IJobStore fJobStore;

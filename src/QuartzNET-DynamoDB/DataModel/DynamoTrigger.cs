@@ -82,5 +82,11 @@ namespace Quartz.DynamoDB.DataModel
                 }
             }
         }
+
+        /// <summary>
+        /// The scheduler instance currently working on this trigger.
+        /// TODO: is this correct?
+        /// </summary>
+        public string SchedulerInstanceId { get; set; }
     }
 }

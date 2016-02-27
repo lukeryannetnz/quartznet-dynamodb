@@ -21,5 +21,18 @@ namespace Quartz.DynamoDB.Tests.Unit
             var result = sut.FromEntry(epochTime);
             Assert.Equal(xmas2015, (DateTime)result);
         }
+
+        [Fact]
+        public void PreEpochDateSerializesCorrectly()
+        {
+            DateTime ninthOctoberNineteenSixtyNine = new DateTime(1969, 10, 09, 07, 59, 59);
+            var sut = new DateTimeConverter();
+
+            var epochTime = sut.ToEntry(ninthOctoberNineteenSixtyNine);
+            Assert.Equal(-7228801, epochTime.AsInt());
+
+            var result = sut.FromEntry(epochTime);
+            Assert.Equal(ninthOctoberNineteenSixtyNine, (DateTime)result);
+        }
     }
 }

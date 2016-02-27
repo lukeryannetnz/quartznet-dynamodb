@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Quartz.DynamoDB.DataModel;
 using Quartz.Impl.Matchers;
@@ -280,7 +279,34 @@ namespace Quartz.DynamoDB
 
         public void ResumeTrigger(TriggerKey triggerKey)
         {
-            throw new NotImplementedException();
+            //IOperableTrigger trigger = this.Triggers.FindOneByIdAs<IOperableTrigger>(triggerKey.ToBsonDocument());
+            var record = _context.Load<DynamoTrigger>(triggerKey.Group, triggerKey.Name);
+
+            // does the trigger exist?
+            if (record == null)
+            {
+                return;
+            }
+
+            // if the trigger is not paused resuming it does not make sense...
+            if (record.State != "Paused" &&
+                record.State != "PausedAndBlocked")
+            {
+                return;
+            }
+
+            //if (this.BlockedJobs.FindOneByIdAs<BsonDocument>(trigger.JobKey.ToBsonDocument()) != null)
+            //{
+            //    triggerState["State"] = "Blocked";
+            //}
+            //else
+            //{
+                record.State = "Waiting";
+            //}
+
+            //this.ApplyMisfire(trigger);
+
+            _context.Save(record, new DynamoDBOperationConfig());
         }
 
         public IList<string> ResumeTriggers(GroupMatcher<TriggerKey> matcher)

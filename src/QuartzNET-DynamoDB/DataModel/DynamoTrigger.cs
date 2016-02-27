@@ -1,4 +1,8 @@
-﻿using Amazon.DynamoDBv2.DataModel;
+﻿using System;
+using System.Diagnostics;
+using System.Runtime.Remoting.Channels;
+using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
 using Quartz.Spi;
 
 namespace Quartz.DynamoDB.DataModel
@@ -11,9 +15,10 @@ namespace Quartz.DynamoDB.DataModel
     {
         public DynamoTrigger()
         {
+            State = "Waiting";
         }
 
-        public DynamoTrigger(IOperableTrigger trigger)
+        public DynamoTrigger(IOperableTrigger trigger) : this()
         {
             Trigger = trigger;
         }
@@ -31,7 +36,51 @@ namespace Quartz.DynamoDB.DataModel
             set { }
         }
 
-        [DynamoDBProperty(typeof (TriggerConverter))]
+        [DynamoDBProperty(typeof(TriggerConverter))]
         public IOperableTrigger Trigger { get; set; }
+
+        public string State { get; set; }
+
+        /// <summary>
+        /// Returns the State property as the TriggerState enumeration required by the JobStore contract.
+        /// </summary>
+        [DynamoDBIgnore]
+        public TriggerState TriggerState
+        {
+            get
+            {
+                switch (State)
+                {
+                    case "":
+                        {
+                            return TriggerState.None;
+                        }
+                    case "Complete":
+                        {
+                            return TriggerState.Complete;
+                        }
+                    case "Paused":
+                        {
+                            return TriggerState.Paused;
+                        }
+                    case "PausedAndBlocked":
+                        {
+                            return TriggerState.Paused;
+                        }
+                    case "Blocked":
+                        {
+                            return TriggerState.Blocked;
+                        }
+                    case "Error":
+                        {
+                            return TriggerState.Error;
+                        }
+                    default:
+                        {
+                            return TriggerState.Normal;
+                        }
+                }
+            }
+        }
     }
 }

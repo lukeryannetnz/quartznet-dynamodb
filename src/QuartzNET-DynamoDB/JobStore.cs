@@ -17,13 +17,18 @@ namespace Quartz.DynamoDB
     /// </summary>
     public class JobStore : IJobStore
     {
-        private IAmazonDynamoDB _client;
+        //todo: think about thread safety.
+
+        private DynamoDBContext _context;
         private ITypeLoadHelper _loadHelper;
+        private string _instanceId;
+        private string _instanceName;
 
         public void Initialize(ITypeLoadHelper loadHelper, ISchedulerSignaler signaler)
         {
-            _client = DynamoDbClientFactory.Create();
-            new DynamoBootstrapper().BootStrap(_client);
+            var client = DynamoDbClientFactory.Create();
+            _context = new DynamoDBContext(client);
+            new DynamoBootstrapper().BootStrap(client);
 
             if (loadHelper == null)
             {
@@ -49,7 +54,7 @@ namespace Quartz.DynamoDB
 
         public void Shutdown()
         {
-            _client.Dispose();
+            _context.Dispose();
         }
 
         public void StoreJobAndTrigger(IJobDetail newJob, IOperableTrigger newTrigger)
@@ -69,19 +74,18 @@ namespace Quartz.DynamoDB
 
         public void StoreJob(IJobDetail newJob, bool replaceExisting)
         {
-            var context = new DynamoDBContext(_client);
-
-            if (!replaceExisting && context.Load<DynamoJob>(newJob.Key.Group, newJob.Key.Name) != null)
+            if (!replaceExisting && _context.Load<DynamoJob>(newJob.Key.Group, newJob.Key.Name) != null)
             {
                 throw new ObjectAlreadyExistsException(newJob);
             }
 
             DynamoJob job = new DynamoJob(newJob);
-
-            context.Save(job);
+            
+            _context.Save(job);
         }
 
-        public void StoreJobsAndTriggers(IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs, bool replace)
+        public void StoreJobsAndTriggers(IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs,
+            bool replace)
         {
             throw new NotImplementedException();
         }
@@ -98,24 +102,40 @@ namespace Quartz.DynamoDB
 
         public IJobDetail RetrieveJob(JobKey jobKey)
         {
-            var context = new DynamoDBContext(_client);
-
-            DynamoJob record = context.Load<DynamoJob>(jobKey.Group, jobKey.Name);
+            DynamoJob record = _context.Load<DynamoJob>(jobKey.Group, jobKey.Name);
             return record?.Job;
         }
 
         public void StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting)
         {
-            var context = new DynamoDBContext(_client);
-
-            if (!replaceExisting && context.Load<DynamoJob>(newTrigger.Key.Group, newTrigger.Key.Name) != null)
+            if (!replaceExisting && _context.Load<DynamoJob>(newTrigger.Key.Group, newTrigger.Key.Name) != null)
             {
                 throw new ObjectAlreadyExistsException(newTrigger);
             }
 
+            if (RetrieveJob(newTrigger.JobKey) == null)
+            {
+                throw new JobPersistenceException("The job (" + newTrigger.JobKey + ") referenced by the trigger does not exist.");
+            }
+
             DynamoTrigger trigger = new DynamoTrigger(newTrigger);
 
-            context.Save(trigger);
+            //if (this.PausedTriggerGroups.FindOneByIdAs<BsonDocument>(newTrigger.Key.Group) != null
+            //    || this.PausedJobGroups.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.Group) != null)
+            //{
+            //    state = "Paused";
+            //    if (this.BlockedJobs.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.ToBsonDocument()) != null)
+            //    {
+            //        state = "PausedAndBlocked";
+            //    }
+            //}
+            //else if (this.BlockedJobs.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.ToBsonDocument()) != null)
+            //{
+            //    state = "Blocked";
+            //}
+
+
+            _context.Save(trigger);
         }
 
         public bool RemoveTrigger(TriggerKey triggerKey)
@@ -135,9 +155,7 @@ namespace Quartz.DynamoDB
 
         public IOperableTrigger RetrieveTrigger(TriggerKey triggerKey)
         {
-            var context = new DynamoDBContext(_client);
-
-            var record = context.Load<DynamoTrigger>(triggerKey.Group, triggerKey.Name);
+            var record = _context.Load<DynamoTrigger>(triggerKey.Group, triggerKey.Name);
             return record?.Trigger;
         }
 
@@ -223,12 +241,26 @@ namespace Quartz.DynamoDB
 
         public TriggerState GetTriggerState(TriggerKey triggerKey)
         {
-            throw new NotImplementedException();
+            var record = _context.Load<DynamoTrigger>(triggerKey.Group, triggerKey.Name);
+
+            //todo: consider if we need paused and blocked
+            return record?.TriggerState ?? TriggerState.None;
         }
 
         public void PauseTrigger(TriggerKey triggerKey)
         {
-            throw new NotImplementedException();
+            var record = _context.Load<DynamoTrigger>(triggerKey.Group, triggerKey.Name);
+
+            if (record.TriggerState == TriggerState.Blocked)
+            {
+                record.State = "PausedAndBlocked";
+            }
+            else
+            {
+                record.State = "Paused";
+            }
+            
+            _context.Save(record, new DynamoDBOperationConfig());
         }
 
         public Collection.ISet<string> PauseTriggers(GroupMatcher<TriggerKey> matcher)
@@ -296,7 +328,8 @@ namespace Quartz.DynamoDB
             throw new NotImplementedException();
         }
 
-        public void TriggeredJobComplete(IOperableTrigger trigger, IJobDetail jobDetail, SchedulerInstruction triggerInstCode)
+        public void TriggeredJobComplete(IOperableTrigger trigger, IJobDetail jobDetail,
+            SchedulerInstruction triggerInstCode)
         {
             throw new NotImplementedException();
         }
@@ -304,8 +337,23 @@ namespace Quartz.DynamoDB
         public bool SupportsPersistence { get; }
         public long EstimatedTimeToReleaseAndAcquireTrigger { get; }
         public bool Clustered { get; }
-        public string InstanceId { get; set; }
-        public string InstanceName { get; set; }
+        /// <summary>
+        /// Inform the <see cref="IJobStore" /> of the Scheduler instance's Id, 
+        /// prior to initialize being invoked.
+        /// </summary>
+        public virtual string InstanceId
+        {
+            set { this._instanceId = value; }
+        }
+
+        /// <summary>
+        /// Inform the <see cref="IJobStore" /> of the Scheduler instance's name, 
+        /// prior to initialize being invoked.
+        /// </summary>
+        public virtual string InstanceName
+        {
+            set { this._instanceName = value; }
+        }
         public int ThreadPoolSize { get; set; }
     }
 }

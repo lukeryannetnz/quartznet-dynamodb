@@ -13,7 +13,7 @@ namespace Quartz.DynamoDB.DataModel
         {
         }
 
-        public DynamoJob(IJobDetail trigger)
+        public DynamoJob(IJobDetail trigger) : this()
         {
             Job = trigger;
         }

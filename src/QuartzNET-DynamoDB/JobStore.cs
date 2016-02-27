@@ -21,9 +21,9 @@ namespace Quartz.DynamoDB
         //todo: think about thread safety.
 
         private DynamoDBContext _context;
-        private ITypeLoadHelper _loadHelper;
+        //private ITypeLoadHelper _loadHelper;
         private string _instanceId;
-        private string _instanceName;
+        //private string _instanceName;
 
         public void Initialize(ITypeLoadHelper loadHelper, ISchedulerSignaler signaler)
         {
@@ -36,7 +36,7 @@ namespace Quartz.DynamoDB
                 throw new ArgumentNullException(nameof(loadHelper));
             }
 
-            _loadHelper = loadHelper;
+            //_loadHelper = loadHelper;
         }
 
         public void SchedulerStarted()
@@ -505,7 +505,11 @@ namespace Quartz.DynamoDB
         /// </summary>
         public virtual string InstanceName
         {
-            set { this._instanceName = value; }
+            set
+            {
+                throw new NotImplementedException();
+                //this._instanceName = value;
+            }
         }
 
         public int ThreadPoolSize { get; set; }

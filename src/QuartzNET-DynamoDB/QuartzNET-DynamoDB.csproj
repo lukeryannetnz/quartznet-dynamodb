@@ -67,6 +67,7 @@
     <Compile Include="..\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="DataModel\DynamoScheduler.cs" />
     <Compile Include="DynamoDocumentExtensions.cs" />
     <Compile Include="DataModel\DynamoTrigger.cs" />
     <Compile Include="DataModel\JobDetailConverter.cs" />

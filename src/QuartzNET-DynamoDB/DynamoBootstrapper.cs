@@ -21,6 +21,11 @@ namespace Quartz.DynamoDB
             {
                 CreateTriggerTable(client);
             }
+
+            if (!TableExists(client, DynamoConfiguration.SchedulerTableName))
+            {
+                CreateSchedulerTable(client);
+            }
         }
 
         private bool TableExists(IAmazonDynamoDB client, string tableName)
@@ -142,6 +147,44 @@ namespace Quartz.DynamoDB
 
             // Report the status of the new table...
             Debug.WriteLine("\n\n Created the \"Trigger\" table successfully!\n    Status of the new table: '{0}'",
+                createResponse.TableDescription.TableStatus);
+        }
+
+
+        private void CreateSchedulerTable(IAmazonDynamoDB client)
+        {
+            // Build a 'CreateTableRequest' for the new table
+            CreateTableRequest createRequest = new CreateTableRequest
+            {
+                TableName = DynamoConfiguration.SchedulerTableName,
+                AttributeDefinitions = new List<AttributeDefinition>()
+                {
+                    new AttributeDefinition
+                    {
+                        AttributeName = "InstanceId",
+                        AttributeType = "S"
+                    }
+                },
+                KeySchema = new List<KeySchemaElement>()
+                {
+                    new KeySchemaElement
+                    {
+                        AttributeName = "InstanceId",
+                        KeyType = "HASH"
+                    }
+                }
+            };
+
+            // Provisioned-throughput settings are required even though
+            // the local test version of DynamoDB ignores them
+            createRequest.ProvisionedThroughput = new ProvisionedThroughput(1, 1);
+
+            // Using the DynamoDB client, make a synchronous CreateTable request
+            CreateTableResponse createResponse;
+            createResponse = client.CreateTable(createRequest);
+
+            // Report the status of the new table...
+            Debug.WriteLine("\n\n Created the \"Scheduler\" table successfully!\n    Status of the new table: '{0}'",
                 createResponse.TableDescription.TableStatus);
         }
 

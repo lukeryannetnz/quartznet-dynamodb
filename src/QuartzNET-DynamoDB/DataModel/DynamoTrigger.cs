@@ -49,7 +49,8 @@ namespace Quartz.DynamoDB.DataModel
         /// This may be the straw that breaks the camels back and causes me to move away from the
         /// DataModel to only using the DocumentModel.
         /// </summary>
-        public int? NextFireTimeUtcEpoch
+        [DynamoDBProperty]
+        public string NextFireTimeUtcEpoch
         {
             get
             {
@@ -57,15 +58,24 @@ namespace Quartz.DynamoDB.DataModel
 
                 if (value == null)
                 {
-                    return null;
+                    return string.Empty;
                 }
                 else
                 {
-                    return (int)value;
+                    return value.AsString();
                 }
             }
             set
-            { }
+            {
+                if (value != null)
+                {
+                    var offset = (DateTimeOffset)converter.FromEntry(value);
+                    if (offset != null)
+                    {
+                        Trigger.SetNextFireTimeUtc(offset);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -77,7 +87,7 @@ namespace Quartz.DynamoDB.DataModel
         {
             get
             {
-                if(!NextFireTimeUtcEpoch.HasValue)
+                if(!string.IsNullOrWhiteSpace(NextFireTimeUtcEpoch))
                 {
                     return null;
                 }

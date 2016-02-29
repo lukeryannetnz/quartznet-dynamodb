@@ -9,6 +9,8 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Quartz.DynamoDB.DataModel;
 using Quartz.Impl.Matchers;
 using Quartz.Spi;
+using Amazon.DynamoDBv2.Model;
+using System.Net;
 
 namespace Quartz.DynamoDB
 {
@@ -104,8 +106,12 @@ namespace Quartz.DynamoDB
             }
 
             DynamoJob job = new DynamoJob(newJob);
+            var response = _client.PutItem(new PutItemRequest(DynamoConfiguration.JobDetailTableName, job.ToDynamo()));
 
-            _context.Save(job);
+            if(response.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new JobPersistenceException(string.Format("Non 200 status code returned from Dynamo: {0}", response));
+            }
         }
 
         public void StoreJobsAndTriggers(IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs,
@@ -126,8 +132,22 @@ namespace Quartz.DynamoDB
 
         public IJobDetail RetrieveJob(JobKey jobKey)
         {
-            DynamoJob record = _context.Load<DynamoJob>(jobKey.Group, jobKey.Name);
-            return record?.Job;
+            var request = new GetItemRequest(
+                DynamoConfiguration.JobDetailTableName, 
+                new Dictionary<string, AttributeValue>
+                {
+                    { "Name", new AttributeValue() { S = jobKey.Name } },
+                    { "Group", new AttributeValue() { S = jobKey.Group } }
+                });
+
+            var response = _client.GetItem(request);
+
+            if(response.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new JobPersistenceException($"Non 200 response code received when querying dynamo {response.ToString()}");
+            }
+
+            return response.IsItemSet ? new DynamoJob(response.Item).Job : null;
         }
 
         public void StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting)
@@ -432,8 +452,8 @@ namespace Quartz.DynamoDB
             DateTimeOffset? firstAcquiredTriggerFireTime = null;
 
             var waitingStateCondition = new ScanCondition("State", ScanOperator.Equal, "Waiting");
-            var dueToFireCondition = new ScanCondition("NextFireTimeUtcEpoch", ScanOperator.LessThanOrEqual,
-                (noLaterThan + timeWindow).UtcDateTime.ToUnixEpochTime());
+            string maxNextFireTime = (noLaterThan + timeWindow).UtcDateTime.ToUnixEpochTime().ToString();
+            var dueToFireCondition = new ScanCondition("NextFireTimeUtcEpoch", ScanOperator.LessThanOrEqual, maxNextFireTime);
             var candidates = _context.Scan<DynamoTrigger>(waitingStateCondition, dueToFireCondition);
             //var candidates = this.Triggers.FindAs<Spi.IOperableTrigger>(
             //    Query.And(

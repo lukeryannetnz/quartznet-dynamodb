@@ -1,37 +1,58 @@
-﻿using Amazon.DynamoDBv2.DataModel;
+﻿using System;
+using System.Collections.Generic;
+using Amazon.DynamoDBv2.Model;
+using Quartz.Impl;
+using Quartz.Simpl;
 
 namespace Quartz.DynamoDB.DataModel
 {
     /// <summary>
     /// An wrapper class for a Quartz JobDetail instance that can be serialized and stored in Amazon DynamoDB.
     /// </summary>
-    [DynamoDBTable("JobDetail")]
-
-    public class DynamoJob
+    internal class DynamoJob
     {
-        public DynamoJob()
+        private readonly SimpleTypeLoadHelper _typeHelper = new SimpleTypeLoadHelper();
+
+        internal DynamoJob(IJobDetail job)
         {
+            this.Job = job;
         }
 
-        public DynamoJob(IJobDetail trigger) : this()
+        public DynamoJob(Dictionary<string, AttributeValue> record)
         {
-            Job = trigger;
+            JobDetailImpl job = new JobDetailImpl();
+            job.Key = new JobKey(record["Name"].S, record["Group"].S);
+            job.Description = record["Description"].NULL ? string.Empty : record["Description"].S;
+            job.JobType = _typeHelper.LoadType(record["JobType"].S);
+            //JobDataMap = job.JobDataMap,
+            job.Durable = record["Durable"].BOOL;
+            job.RequestsRecovery = record["RequestsRecovery"].BOOL;
+
+            Job = job;
         }
 
-        [DynamoDBHashKey]
-        public string Group
+        internal IJobDetail Job { get; private set; }
+
+        internal Dictionary<string, AttributeValue> ToDynamo()
         {
-            get { return Job.Key.Group; }
-            set { }
+            Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
+            
+            record.Add("Name", new AttributeValue { S = Job.Key.Name });
+            record.Add("Group", new AttributeValue { S = Job.Key.Group });
+            record.Add("Description", string.IsNullOrWhiteSpace(Job.Description) ? new AttributeValue { NULL = true } : new AttributeValue { S = Job.Description });
+            record.Add("JobType", new AttributeValue { S = GetStorableJobTypeName(Job.JobType) });
+            //JobDataMap = job.JobDataMap,
+            record.Add("Durable", new AttributeValue { BOOL = Job.Durable });
+            record.Add("PersistJobDataAfterExecution", new AttributeValue { BOOL = Job.PersistJobDataAfterExecution });
+            record.Add("ConcurrentExecutionDisallowed", new AttributeValue { BOOL = Job.ConcurrentExecutionDisallowed });
+            record.Add("RequestsRecovery", new AttributeValue { BOOL = Job.RequestsRecovery });
+
+            return record;
         }
 
-        public string Name
+        private static string GetStorableJobTypeName(System.Type jobType)
         {
-            get { return Job.Key.Name; }
-            set { }
+            return jobType.FullName + ", " + jobType.Assembly.GetName().Name;
         }
-
-        [DynamoDBProperty(typeof(JobDetailConverter))]
-        public IJobDetail Job { get; set; }
     }
 }

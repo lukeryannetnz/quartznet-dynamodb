@@ -71,6 +71,7 @@
     <Compile Include="..\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="DataModel\AttributeValueHelper.cs" />
     <Compile Include="DataModel\DateTimeOffsetConverter.cs" />
     <Compile Include="DataModel\DynamoScheduler.cs" />
     <Compile Include="DataModel\UnixEpochDateTimeExtensions.cs" />

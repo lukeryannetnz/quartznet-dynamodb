@@ -179,8 +179,12 @@ namespace Quartz.DynamoDB
             //    state = "Blocked";
             //}
 
+            var response = _client.PutItem(DynamoConfiguration.TriggerTableName, trigger.ToDynamo());
 
-            _context.Save(trigger);
+            if (response.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new JobPersistenceException(string.Format("Non 200 status code returned from Dynamo: {0}", response));
+            }
         }
 
         public bool RemoveTrigger(TriggerKey triggerKey)
@@ -518,8 +522,8 @@ namespace Quartz.DynamoDB
                     ExpressionStatement = "Name = :name and Group = :group and State = :state",
                     ExpressionAttributeValues =
                     {
-                        [":name"] = trigger.Name,
-                        [":group"] = trigger.Group,
+                        [":name"] = trigger.Trigger.Name,
+                        [":group"] = trigger.Trigger.Group,
                         [":state"] = "Waiting"
                     }
                 };

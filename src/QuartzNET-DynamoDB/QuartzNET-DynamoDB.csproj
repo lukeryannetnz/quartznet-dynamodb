@@ -83,7 +83,6 @@
     <Compile Include="DataModel\DynamoJob.cs" />
     <Compile Include="DataModel\JobDataMapConverter.cs" />
     <Compile Include="JobStore.cs" />
-    <Compile Include="DataModel\JobTypeConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

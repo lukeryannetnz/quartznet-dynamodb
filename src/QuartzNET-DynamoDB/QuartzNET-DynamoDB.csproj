@@ -76,7 +76,6 @@
     <Compile Include="DataModel\UnixEpochDateTimeExtensions.cs" />
     <Compile Include="DynamoDocumentExtensions.cs" />
     <Compile Include="DataModel\DynamoTrigger.cs" />
-    <Compile Include="DataModel\JobKeyConverter.cs" />
     <Compile Include="DataModel\TriggerConverter.cs" />
     <Compile Include="DynamoBootstrapper.cs" />
     <Compile Include="DynamoDbClientFactory.cs" />

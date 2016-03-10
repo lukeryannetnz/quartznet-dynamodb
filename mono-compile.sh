@@ -1,0 +1,1 @@
+xbuild ./src/QuartzNET-DynamoDB.sln 

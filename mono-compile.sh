@@ -1,1 +1,1 @@
-xbuild ./src/QuartzNET-DynamoDB.sln 
+xbuild ./src/QuartzNET-DynamoDB.sln /p:Configuration=Release

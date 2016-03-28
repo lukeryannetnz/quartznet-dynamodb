@@ -21,7 +21,9 @@ If you're using windows/visual studio 2015 src/QuartzNET-DynamoDB.sln is what yo
 ####OSX/Linux
 If you're using linux/osx this library compiles under mono. Our build infrastructure (travis-ci) uses a debian. Check out http://www.mono-project.com/. You'll want to install mono and make sure it's in your path as a minimum.
 There are some shell scripts to help you with common tasks if you're that way inclined:
+
 `./mono-nugetpackagerestore.sh` Restores nuget packages by invoking nuget.exe via mono
+
 `./mono-compile.sh` Compiles the solution in release configuration using mono xbuild.
 
 ###Testing

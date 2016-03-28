@@ -33,9 +33,10 @@ using Xunit;
 namespace Quartz.DynamoDB.Tests.Integration
 {
     /// <summary>
-    ///  Unit test for JobStore. 
+    /// Integration test for JobStore. 
     /// <author>These tests were submitted to Quartz.NET for the RAMJobStoreTest by Johannes Zillmann as part of issue QUARTZ-306.</author>
     /// <author>Luke Ryan - Adapted to test the Dynamo DB store.</author>
+	/// Note: These are integration tests and require connectivity to a dynamo instance. See <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Tools.DynamoDBLocal.html"/> for information on running dynamo locally.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "This is a test class. No need to implement dispose.")]
     public class JobStoreTest
@@ -57,8 +58,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.StoreJob(fJobDetail, true);
         }
 
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void TestAcquireNextTrigger()
         {
             DateTimeOffset d = DateBuilder.EvenMinuteDateAfterNow();
@@ -87,7 +87,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             Assert.Equal(trigger3, fJobStore.AcquireNextTriggers(firstFireTime.AddSeconds(10), 1, TimeSpan.FromMilliseconds(1))[0]);
         }
 
-        //[Fact] [Trait("Category", "Integration")]
+        [Fact] [Trait("Category", "Integration")]
         public void TestAcquireNextTriggerBatch()
         {
             DateTimeOffset d = DateBuilder.EvenMinuteDateAfterNow();
@@ -172,8 +172,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.ReleaseAcquiredTrigger(trigger3);
         }
 
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void TestTriggerStates()
         {
             IOperableTrigger trigger = new SimpleTriggerImpl("trigger1", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, DateTimeOffset.Now.AddSeconds(100), DateTimeOffset.Now.AddSeconds(200), 2, TimeSpan.FromSeconds(2));
@@ -196,8 +195,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             Assert.Equal(0, fJobStore.AcquireNextTriggers(trigger.GetNextFireTimeUtc().Value.AddSeconds(10), 1, TimeSpan.FromMilliseconds(1)).Count);
         }
 
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void TestRemoveCalendarWhenTriggersPresent()
         {
             // QRTZNET-29
@@ -211,8 +209,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.RemoveCalendar("cal");
         }
 
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void TestStoreTriggerReplacesTrigger()
         {
             string jobName = "StoreTriggerReplacesTrigger";
@@ -246,8 +243,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             Assert.True(exceptionRaised, "an attempt to store duplicate trigger succeeded");
         }
 
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void PauseJobGroupPausesNewJob()
         {
             string jobName1 = "PauseJobGroupPausesNewJob";
@@ -270,24 +266,21 @@ namespace Quartz.DynamoDB.Tests.Integration
             Assert.Equal(TriggerState.Paused, fJobStore.GetTriggerState(tr.Key));
         }
 
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void TestRetrieveJob_NoJobFound()
         {
             IJobDetail job = fJobStore.RetrieveJob(new JobKey("not", "existing"));
             Assert.Null(job);
         }
 
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void TestRetrieveTrigger_NoTriggerFound()
         {
             IOperableTrigger trigger = fJobStore.RetrieveTrigger(new TriggerKey("not", "existing"));
             Assert.Null(trigger);
         }
 
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void testStoreAndRetrieveJobs()
         {
             // Store jobs.
@@ -308,8 +301,7 @@ namespace Quartz.DynamoDB.Tests.Integration
         /// <summary>
         /// Storing the same job twice with replaceExisting false the second time throws an exception.
         /// </summary>
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void TestStoreExistingJobsThrowsException()
         {
             // Store jobs.
@@ -321,8 +313,7 @@ namespace Quartz.DynamoDB.Tests.Integration
         /// <summary>
         /// Storing the same job twice with replaceExisting true does not throw an exception.
         /// </summary>
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void TestStoreExistingJobsOverwrite()
         {
             // Store jobs.
@@ -335,8 +326,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             Assert.Equal(jobKey, storedJob.Key);
         }
 
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void TestStoreAndRetrieveTriggers()
         {
             // Store jobs and triggers.
@@ -361,8 +351,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             }
         }
 
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void TestAcquireTriggers()
         {
             ISchedulerSignaler schedSignaler = new SampleSignaler();
@@ -404,8 +393,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             }
         }
 
-        //[Fact] [Trait("Category", "Integration")]
-
+        [Fact] [Trait("Category", "Integration")]
         public void TestAcquireTriggersInBatch()
         {
             ISchedulerSignaler schedSignaler = new SampleSignaler();

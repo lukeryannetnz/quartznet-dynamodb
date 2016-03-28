@@ -1,2 +1,5 @@
 language: csharp
 solution: src/QuartzNET-DynamoDB.sln
+script:
+  - xbuild /p:Configuration=Release src/QuartzNET-DynamoDB.sln
+  - mono ../mono-test.sh

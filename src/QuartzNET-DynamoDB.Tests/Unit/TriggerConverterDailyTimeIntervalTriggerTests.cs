@@ -116,7 +116,7 @@ namespace Quartz.DynamoDB.Tests.Unit
             var serialized = sut.ToEntry(trigger);
             IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)sut.FromEntry(serialized);
 
-            Assert.Equal(trigger.TimeZone, result.TimeZone);
+			Assert.Equal(trigger.TimeZone.DisplayName, result.TimeZone.DisplayName);
         }
 
         private static DailyTimeIntervalTriggerImpl CreateDailyTimeIntervalTrigger()

@@ -44,6 +44,7 @@ namespace Quartz.DynamoDB.Tests.Integration
         private readonly IJobStore fJobStore;
         private readonly JobDetailImpl fJobDetail;
         private readonly SampleSignaler fSignaler;
+		private readonly string testIdentifier = DateTime.UtcNow.Ticks.ToString();
 
         public JobStoreTest()
         {
@@ -212,12 +213,12 @@ namespace Quartz.DynamoDB.Tests.Integration
         [Fact] [Trait("Category", "Integration")]
         public void TestStoreTriggerReplacesTrigger()
         {
-            string jobName = "StoreTriggerReplacesTrigger";
+			string jobName = "StoreTriggerReplacesTrigger" + testIdentifier;
             string jobGroup = "StoreTriggerReplacesTriggerGroup";
             JobDetailImpl detail = new JobDetailImpl(jobName, jobGroup, typeof(NoOpJob));
             fJobStore.StoreJob(detail, false);
 
-            string trName = "StoreTriggerReplacesTrigger";
+			string trName = "StoreTriggerReplacesTrigger" + testIdentifier;
             string trGroup = "StoreTriggerReplacesTriggerGroup";
             IOperableTrigger tr = new SimpleTriggerImpl(trName, trGroup, DateTimeOffset.Now);
             tr.JobKey = new JobKey(jobName, jobGroup);
@@ -226,7 +227,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.StoreTrigger(tr, false);
             Assert.Equal(tr, fJobStore.RetrieveTrigger(new TriggerKey(trName, trGroup)));
 
-            tr.CalendarName = "NonExistingCalendar";
+			tr.CalendarName = "NonExistingCalendar" + testIdentifier;
             fJobStore.StoreTrigger(tr, true);
             Assert.Equal(tr, fJobStore.RetrieveTrigger(new TriggerKey(trName, trGroup)));
             Assert.Equal(tr.CalendarName, fJobStore.RetrieveTrigger(new TriggerKey(trName, trGroup)).CalendarName);

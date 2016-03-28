@@ -11,7 +11,8 @@ namespace Quartz.DynamoDB.Tests.Unit
     /// </summary>
     public class TriggerConverterDailyTimeIntervalTriggerTests
     {
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void DaysOfWeekSerializesCorrectly()
         {
             TriggerConverter sut = new TriggerConverter();
@@ -26,7 +27,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Contains(DayOfWeek.Saturday, trigger.DaysOfWeek);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void EndTimeOfDaySerializesCorrectly()
         {
             TriggerConverter sut = new TriggerConverter();
@@ -38,7 +40,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.EndTimeOfDay, result.EndTimeOfDay);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void RepeatCountSerializesCorrectly()
         {
             TriggerConverter sut = new TriggerConverter();
@@ -51,7 +54,8 @@ namespace Quartz.DynamoDB.Tests.Unit
         }
 
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void RepeatIntervalSerializesCorrectly()
         {
             TriggerConverter sut = new TriggerConverter();
@@ -63,7 +67,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.RepeatInterval, result.RepeatInterval);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void RepeatIntervalUnitSerializesCorrectly()
         {
             TriggerConverter sut = new TriggerConverter();
@@ -75,7 +80,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.RepeatIntervalUnit, result.RepeatIntervalUnit);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void StartTimeOfDaySerializesCorrectly()
         {
             TriggerConverter sut = new TriggerConverter();
@@ -87,7 +93,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.StartTimeOfDay, result.StartTimeOfDay);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void TimesTriggeredSerializesCorrectly()
         {
             TriggerConverter sut = new TriggerConverter();
@@ -99,7 +106,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.TimesTriggered, result.TimesTriggered);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void DailyTimeIntervalTimeZoneSerializesCorrectly()
         {
             TriggerConverter sut = new TriggerConverter();
@@ -113,12 +121,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         private static DailyTimeIntervalTriggerImpl CreateDailyTimeIntervalTrigger()
         {
-            var nzTimeZone = TimeZoneInfo.FindSystemTimeZoneById("New Zealand Standard Time");
             var jobKey = new JobKey("test");
             DailyTimeIntervalTriggerImpl trigger = (DailyTimeIntervalTriggerImpl)TriggerBuilder.Create()
                 .ForJob(jobKey)
                 .WithSimpleSchedule()
-                .WithDailyTimeIntervalSchedule(x => x.InTimeZone(nzTimeZone).OnEveryDay()
+				.WithDailyTimeIntervalSchedule(x => x.OnEveryDay()
                     .StartingDailyAt(new TimeOfDay(10, 10))
                     .EndingDailyAt(new TimeOfDay(10, 20)))
 

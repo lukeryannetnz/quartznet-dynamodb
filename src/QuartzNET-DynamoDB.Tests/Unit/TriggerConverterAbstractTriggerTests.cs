@@ -12,7 +12,8 @@ namespace Quartz.DynamoDB.Tests.Unit
     /// </summary>
     public class TriggerConverterAbstractTriggerTests
     {
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void KeySerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -25,7 +26,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.Key.Group, result.Key.Group);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void JobKeySerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -38,7 +40,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.JobKey.Group, result.JobKey.Group);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void CalendarNameSerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -50,7 +53,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.CalendarName, result.CalendarName);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void DescriptionSerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -63,7 +67,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.Description, result.Description);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void FireInstanceIdSerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -76,7 +81,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.FireInstanceId, result.FireInstanceId);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void GroupSerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -89,7 +95,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.Group, result.Group);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void JobDataMapSerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -106,7 +113,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.JobDataMap.Values.First(), result.JobDataMap.Values.First());
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void JobGroupSerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -118,7 +126,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.JobGroup, result.JobGroup);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void JobNameSerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -130,7 +139,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.JobName, result.JobName);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void MisfireInstructionSerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -142,7 +152,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.MisfireInstruction, result.MisfireInstruction);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void NameSerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -154,7 +165,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.Name, result.Name);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void PrioritySerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -166,7 +178,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.Priority, result.Priority);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void EndTimeUtcSerializesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -179,7 +192,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.EndTimeUtc, result.EndTimeUtc);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void StartTimeUtcSerializesCorrectly()
         {
             var sut = new TriggerConverter();

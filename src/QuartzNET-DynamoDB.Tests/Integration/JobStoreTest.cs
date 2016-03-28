@@ -57,7 +57,8 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.StoreJob(fJobDetail, true);
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void TestAcquireNextTrigger()
         {
             DateTimeOffset d = DateBuilder.EvenMinuteDateAfterNow();
@@ -86,7 +87,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             Assert.Equal(trigger3, fJobStore.AcquireNextTriggers(firstFireTime.AddSeconds(10), 1, TimeSpan.FromMilliseconds(1))[0]);
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
         public void TestAcquireNextTriggerBatch()
         {
             DateTimeOffset d = DateBuilder.EvenMinuteDateAfterNow();
@@ -171,7 +172,8 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.ReleaseAcquiredTrigger(trigger3);
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void TestTriggerStates()
         {
             IOperableTrigger trigger = new SimpleTriggerImpl("trigger1", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, DateTimeOffset.Now.AddSeconds(100), DateTimeOffset.Now.AddSeconds(200), 2, TimeSpan.FromSeconds(2));
@@ -194,7 +196,8 @@ namespace Quartz.DynamoDB.Tests.Integration
             Assert.Equal(0, fJobStore.AcquireNextTriggers(trigger.GetNextFireTimeUtc().Value.AddSeconds(10), 1, TimeSpan.FromMilliseconds(1)).Count);
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void TestRemoveCalendarWhenTriggersPresent()
         {
             // QRTZNET-29
@@ -208,7 +211,8 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.RemoveCalendar("cal");
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void TestStoreTriggerReplacesTrigger()
         {
             string jobName = "StoreTriggerReplacesTrigger";
@@ -242,7 +246,8 @@ namespace Quartz.DynamoDB.Tests.Integration
             Assert.True(exceptionRaised, "an attempt to store duplicate trigger succeeded");
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void PauseJobGroupPausesNewJob()
         {
             string jobName1 = "PauseJobGroupPausesNewJob";
@@ -265,21 +270,24 @@ namespace Quartz.DynamoDB.Tests.Integration
             Assert.Equal(TriggerState.Paused, fJobStore.GetTriggerState(tr.Key));
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void TestRetrieveJob_NoJobFound()
         {
             IJobDetail job = fJobStore.RetrieveJob(new JobKey("not", "existing"));
             Assert.Null(job);
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void TestRetrieveTrigger_NoTriggerFound()
         {
             IOperableTrigger trigger = fJobStore.RetrieveTrigger(new TriggerKey("not", "existing"));
             Assert.Null(trigger);
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void testStoreAndRetrieveJobs()
         {
             // Store jobs.
@@ -300,7 +308,8 @@ namespace Quartz.DynamoDB.Tests.Integration
         /// <summary>
         /// Storing the same job twice with replaceExisting false the second time throws an exception.
         /// </summary>
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void TestStoreExistingJobsThrowsException()
         {
             // Store jobs.
@@ -312,7 +321,8 @@ namespace Quartz.DynamoDB.Tests.Integration
         /// <summary>
         /// Storing the same job twice with replaceExisting true does not throw an exception.
         /// </summary>
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void TestStoreExistingJobsOverwrite()
         {
             // Store jobs.
@@ -325,7 +335,8 @@ namespace Quartz.DynamoDB.Tests.Integration
             Assert.Equal(jobKey, storedJob.Key);
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void TestStoreAndRetrieveTriggers()
         {
             // Store jobs and triggers.
@@ -350,7 +361,8 @@ namespace Quartz.DynamoDB.Tests.Integration
             }
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void TestAcquireTriggers()
         {
             ISchedulerSignaler schedSignaler = new SampleSignaler();
@@ -392,7 +404,8 @@ namespace Quartz.DynamoDB.Tests.Integration
             }
         }
 
-        [Fact]
+        //[Fact] [Trait("Category", "Integration")]
+
         public void TestAcquireTriggersInBatch()
         {
             ISchedulerSignaler schedSignaler = new SampleSignaler();

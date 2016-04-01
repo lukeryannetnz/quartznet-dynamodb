@@ -100,7 +100,9 @@ namespace Quartz.DynamoDB
 
         public void StoreJob(IJobDetail newJob, bool replaceExisting)
         {
-            if (!replaceExisting && _context.Load<DynamoJob>(newJob.Key.Group, newJob.Key.Name) != null)
+			//TODO: replace all Load() object API calls with low level API. do a better job than below:
+			//if (!replaceExisting && _context.Load<DynamoJob>(newJob.Key.Group, newJob.Key.Name) != null)
+			if (!replaceExisting && _client.GetItem (new GetItemRequest (){ TableName = DynamoConfiguration.JobDetailTableName, Key = new Dictionary<string, AttributeValue> { {"Group", new AttributeValue(){ S = newJob.Key.Group}}, {"Name", new AttributeValue(){ S = newJob.Key.Name}} }}).Item.Any())
             {
                 throw new ObjectAlreadyExistsException(newJob);
             }

@@ -119,7 +119,6 @@ namespace Quartz.DynamoDB.DataModel
             Trigger.Priority = int.Parse(item["Priority"].N);
         }
 
-        [DynamoDBProperty(typeof(TriggerConverter))]
         public AbstractTrigger Trigger { get; set; }
 
         /// <summary>

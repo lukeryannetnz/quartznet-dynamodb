@@ -12,11 +12,11 @@ namespace Quartz.DynamoDB.Tests.Unit
         [Fact]
         public void RepeatCountSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             SimpleTriggerImpl trigger = CreateSimpleTrigger();
 
-            var serialized = sut.ToEntry(trigger);
-            SimpleTriggerImpl result = (SimpleTriggerImpl)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).;
+            SimpleTriggerImpl result = (SimpleTriggerImpl)serialized.(serialized);
 
             Assert.Equal(trigger.RepeatCount, result.RepeatCount);
         }
@@ -24,10 +24,10 @@ namespace Quartz.DynamoDB.Tests.Unit
         [Fact]
         public void RepeatIntervalSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             SimpleTriggerImpl trigger = CreateSimpleTrigger();
 
-            var serialized = sut.ToEntry(trigger);
+            var serialized = new DynamoTrigger(trigger);
             SimpleTriggerImpl result = (SimpleTriggerImpl)sut.FromEntry(serialized);
 
             Assert.Equal(trigger.RepeatInterval, result.RepeatInterval);
@@ -36,11 +36,11 @@ namespace Quartz.DynamoDB.Tests.Unit
         [Fact]
         public void TimesTriggeredSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             SimpleTriggerImpl trigger = CreateSimpleTrigger();
             trigger.TimesTriggered = 9;
 
-            var serialized = sut.ToEntry(trigger);
+            var serialized = new DynamoTrigger(trigger);
             SimpleTriggerImpl result = (SimpleTriggerImpl)sut.FromEntry(serialized);
 
             Assert.Equal(trigger.TimesTriggered, result.TimesTriggered);
@@ -49,10 +49,10 @@ namespace Quartz.DynamoDB.Tests.Unit
         [Fact]
         public void FinalFireTimeUtcSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             SimpleTriggerImpl trigger = CreateSimpleTrigger();
 
-            var serialized = sut.ToEntry(trigger);
+            var serialized = new DynamoTrigger(trigger);
             SimpleTriggerImpl result = (SimpleTriggerImpl)sut.FromEntry(serialized);
 
             Assert.Equal(trigger.FinalFireTimeUtc, result.FinalFireTimeUtc);

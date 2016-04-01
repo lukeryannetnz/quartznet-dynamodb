@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.Model;
 using Amazon.DynamoDBv2.DocumentModel;
 using Newtonsoft.Json;
 using Quartz.Simpl;
@@ -11,49 +12,53 @@ namespace Quartz.DynamoDB.DataModel
     /// Coverts a JobDataMap object to a dynamo db type.
     /// Uses the NewtonSoft JSON serializer and type reflection to serialize objects to strings. Could no doubt be improved.
     /// </summary>
-    public class JobDataMapConverter : IPropertyConverter
+    public class JobDataMapConverter
     {
         private readonly SimpleTypeLoadHelper _typeHelper = new SimpleTypeLoadHelper();
 
-        public DynamoDBEntry ToEntry(object value)
+		public AttributeValue ToEntry(JobDataMap dataMap)
         {
-            JobDataMap dataMap = value as JobDataMap;
-
             if (dataMap == null)
             {
-                throw new ArgumentException("must be of type JobKey", nameof(value));
+				throw new ArgumentNullException("dataMap");
             }
 
-            var serializedData = new Dictionary<string, DynamoDBEntry>();
+			var serializedData = new AttributeValue () 
+			{
+				M = new Dictionary<string, AttributeValue>()
+			};
 
             foreach (KeyValuePair<string, object> keyValuePair in dataMap)
             {
                 string o = JsonConvert.SerializeObject(keyValuePair.Value);
-                Document doc = new Document();
-                doc["object"] = o;
-                doc["type"] = GetStorableJobTypeName(keyValuePair.Value.GetType());
-                serializedData.Add(keyValuePair.Key, doc);
+                string type = GetStorableJobTypeName(keyValuePair.Value.GetType());
+				serializedData.M.Add (keyValuePair.Key, new AttributeValue () { 
+					M = new Dictionary<string, AttributeValue> () {
+						{ "type", new AttributeValue (){ S = type } },
+						{ "object", new AttributeValue () { S = o } }
+					}
+				});
             }
 
-            return new Document(serializedData);
+			return serializedData;
         }
 
-        public object FromEntry(DynamoDBEntry entry)
+		public JobDataMap FromEntry(AttributeValue entry)
         {
-            Document document = entry as Document;
-
-            if (document == null)
+			if (entry == null)
             {
-                throw new ArgumentException("must be of type Document", nameof(entry));
+				throw new ArgumentNullException(nameof(entry));
             }
 
             IDictionary<string, object> deserializedData = new Dictionary<string, object>();
 
-            foreach (KeyValuePair<string, DynamoDBEntry> keyValuePair in document)
+
+
+			foreach (var keyValuePair in entry.M)
             {
-                Document doc = (Document)keyValuePair.Value;
-                Type t = _typeHelper.LoadType(doc["type"]);
-                object o = JsonConvert.DeserializeObject(doc["object"], t);
+				var type = keyValuePair.Value.M["type"].S;
+                Type t = _typeHelper.LoadType(type);
+				object o = JsonConvert.DeserializeObject(keyValuePair.Value.M["object"].S, t);
                 deserializedData.Add(keyValuePair.Key, o);
             }
 

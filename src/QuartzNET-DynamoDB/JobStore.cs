@@ -106,7 +106,8 @@ namespace Quartz.DynamoDB
             }
 
             DynamoJob job = new DynamoJob(newJob);
-            var response = _client.PutItem(new PutItemRequest(DynamoConfiguration.JobDetailTableName, job.ToDynamo()));
+			var dictionary = job.ToDynamo();
+            var response = _client.PutItem(new PutItemRequest(DynamoConfiguration.JobDetailTableName, dictionary));
 
             if(response.HttpStatusCode != HttpStatusCode.OK)
             {

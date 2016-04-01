@@ -23,6 +23,11 @@ namespace Quartz.DynamoDB.DataModel
 				throw new ArgumentNullException("dataMap");
             }
 
+			if (dataMap.Count == 0) 
+			{
+				return new AttributeValue(){ NULL = true };
+			}
+
 			var serializedData = new AttributeValue () 
 			{
 				M = new Dictionary<string, AttributeValue>()

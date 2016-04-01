@@ -8,8 +8,8 @@ namespace Quartz.DynamoDB.Tests.Unit
 {
     public class JobDataMapConverterTests
     {
-        [Fact] [Trait("Category", "Unit")]
-
+        [Fact] 
+		[Trait("Category", "Unit")]
         public void StringsConvertSuccessfully()
         {
             JobDataMap input = new JobDataMap();
@@ -28,8 +28,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             }
         }
 
-        [Fact] [Trait("Category", "Unit")]
-
+        [Fact] 
+		[Trait("Category", "Unit")]
         public void ComplexObjectConvertsSuccessfully()
         {
             JobDataMap input = new JobDataMap();
@@ -63,8 +63,19 @@ namespace Quartz.DynamoDB.Tests.Unit
                 Assert.Equal(left.Name, right.Name);
                 Assert.Equal(left.Quantity, right.Quantity);
             }
-
         }
+
+		[Fact] 
+		[Trait("Category", "Unit")]
+		public void EmptyDataMapSerialisesSuccessfully()
+		{
+			JobDataMap input = new JobDataMap();
+
+			var sut = new JobDataMapConverter();
+			var d = sut.ToEntry(input);
+
+			Assert.True(d.NULL);
+		}
     }
 
     public class ComplexType

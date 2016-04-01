@@ -10,7 +10,8 @@ namespace Quartz.DynamoDB.Tests.Unit
     /// </summary>
     public class TriggerConverterCalendarIntervalTriggerTests
     {
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void RepeatIntervalUnitSerialisesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -22,7 +23,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.RepeatIntervalUnit, result.RepeatIntervalUnit);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void RepeatIntervalSerialisesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -34,7 +36,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.RepeatInterval, result.RepeatInterval);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void TimesTriggeredSerialisesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -46,7 +49,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.TimesTriggered, result.TimesTriggered);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void TimeZoneSerialisesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -55,10 +59,11 @@ namespace Quartz.DynamoDB.Tests.Unit
             var serialized = sut.ToEntry(trigger);
             CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)sut.FromEntry(serialized);
 
-            Assert.Equal(trigger.TimeZone, result.TimeZone);
+			Assert.Equal(trigger.TimeZone.DisplayName, result.TimeZone.DisplayName);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void MisfireInstructionSerialisesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -69,7 +74,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.MisfireInstruction, result.MisfireInstruction);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void PreserveHourOfDayAcrossDaylightSavingsSerialisesCorrectly()
         {
             var sut = new TriggerConverter();
@@ -81,7 +87,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.PreserveHourOfDayAcrossDaylightSavings, result.PreserveHourOfDayAcrossDaylightSavings);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void SkipDayIfHourDoesNotExistSerialisesCorrectly()
         {
             var sut = new TriggerConverter();

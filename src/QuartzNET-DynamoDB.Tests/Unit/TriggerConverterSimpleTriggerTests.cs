@@ -9,7 +9,8 @@ namespace Quartz.DynamoDB.Tests.Unit
     /// </summary>
     public class TriggerConverterSimpleTriggerTests
     {
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void RepeatCountSerializesCorrectly()
         {
             
@@ -21,7 +22,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.RepeatCount, result.RepeatCount);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void RepeatIntervalSerializesCorrectly()
         {
             
@@ -33,7 +35,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.RepeatInterval, result.RepeatInterval);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void TimesTriggeredSerializesCorrectly()
         {
             
@@ -46,7 +49,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.TimesTriggered, result.TimesTriggered);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void FinalFireTimeUtcSerializesCorrectly()
         {
             

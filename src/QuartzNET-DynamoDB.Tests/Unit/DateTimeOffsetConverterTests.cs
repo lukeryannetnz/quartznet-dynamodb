@@ -9,7 +9,8 @@ namespace Quartz.DynamoDB.Tests.Unit
     /// </summary>
     public class DateTimeOffsetConverterTests
     {
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void UtcChristmas2015SerializesCorrectly()
         {
             DateTimeOffset xmas2015 = new DateTime(2015, 12, 25, 0, 0, 0, DateTimeKind.Utc);
@@ -23,7 +24,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(xmas2015.Offset, ((DateTimeOffset)result).Offset);
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void UtcPreEpochDateSerializesCorrectly()
         {
             DateTimeOffset ninthOctoberNineteenSixtyNine = new DateTime(1969, 10, 09, 07, 59, 59, DateTimeKind.Utc);
@@ -42,7 +44,8 @@ namespace Quartz.DynamoDB.Tests.Unit
         /// the converter should convert the date/time to UTC and store it as UNIX Epoch. This means when retrieving
         /// back as a DateTimeOffset, the local timezone will be lost and the offset will be UTC.
         /// </summary>
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void LocalNowDateSerializesCorrectly()
         {
             DateTimeOffset localNow = DateTime.Now;

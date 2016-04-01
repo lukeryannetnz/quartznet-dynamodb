@@ -8,7 +8,8 @@ namespace Quartz.DynamoDB.Tests.Unit
 {
     public class JobDataMapConverterTests
     {
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void StringsConvertSuccessfully()
         {
             JobDataMap input = new JobDataMap();
@@ -27,7 +28,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             }
         }
 
-        [Fact]
+        [Fact] [Trait("Category", "Unit")]
+
         public void ComplexObjectConvertsSuccessfully()
         {
             JobDataMap input = new JobDataMap();

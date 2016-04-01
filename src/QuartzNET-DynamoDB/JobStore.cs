@@ -152,7 +152,7 @@ namespace Quartz.DynamoDB
 
         public void StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting)
         {
-            if (!replaceExisting && _context.Load<DynamoJob>(newTrigger.Key.Group, newTrigger.Key.Name) != null)
+			if (!replaceExisting && _context.Load<DynamoTrigger>(newTrigger.Key.Group, newTrigger.Key.Name) != null)
             {
                 throw new ObjectAlreadyExistsException(newTrigger);
             }

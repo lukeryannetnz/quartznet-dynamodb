@@ -5,9 +5,9 @@ using Xunit;
 namespace Quartz.DynamoDB.Tests.Unit
 {
     /// <summary>
-    /// Tests the Dynamo TriggerConverter for all attributes of the ISimpleTrigger trigger type.
+    /// Tests the DynamoTrigger serialisation for all attributes of the ISimpleTrigger trigger type.
     /// </summary>
-    public class TriggerConverterSimpleTriggerTests
+    public class TriggerSerialisationSimpleTriggerTests
     {
         [Fact] [Trait("Category", "Unit")]
 

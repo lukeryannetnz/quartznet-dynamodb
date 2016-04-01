@@ -6,9 +6,9 @@ using Xunit;
 namespace Quartz.DynamoDB.Tests.Unit
 {
     /// <summary>
-    /// Tests the Dynamo TriggerConverter for all attributes of the CalendarInteralTriggerImpl trigger type.
+    /// Tests the DynamoTrigger serialisation for all attributes of the CalendarInteralTriggerImpl trigger type.
     /// </summary>
-    public class TriggerConverterCalendarIntervalTriggerTests
+    public class TriggerSerialisationCalendarIntervalTriggerTests
     {
         [Fact] [Trait("Category", "Unit")]
 

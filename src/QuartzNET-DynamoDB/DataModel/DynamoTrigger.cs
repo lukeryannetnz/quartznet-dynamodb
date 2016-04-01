@@ -16,7 +16,8 @@ namespace Quartz.DynamoDB.DataModel
     /// </summary>
     public class DynamoTrigger
     {
-        private readonly DateTimeOffsetConverter converter = new DateTimeOffsetConverter();
+		private readonly DateTimeOffsetConverter dateTimeOffsetConverter = new DateTimeOffsetConverter();
+		private readonly JobDataMapConverter jobDataMapConverter = new JobDataMapConverter();
 
         public DynamoTrigger()
         {
@@ -107,7 +108,7 @@ namespace Quartz.DynamoDB.DataModel
             Trigger.JobGroup = item["JobGroup"].S;
             Trigger.Description = item["Description"].S;
             Trigger.CalendarName = item["CalendarName"].S;
-            //Trigger.JobDataMap = (JobDataMap)_jobDataMapConverter.FromEntry(item["JobDataMap"]);
+            Trigger.JobDataMap = (JobDataMap)jobDataMapConverter.FromEntry(item["JobDataMap"]);
             Trigger.MisfireInstruction = int.Parse(item["MisfireInstruction"].N);
             Trigger.FireInstanceId = item["FireInstanceId"].S;
 
@@ -134,7 +135,7 @@ namespace Quartz.DynamoDB.DataModel
         {
             get
             {
-                var value = converter.ToEntry(Trigger.GetNextFireTimeUtc());
+                var value = dateTimeOffsetConverter.ToEntry(Trigger.GetNextFireTimeUtc());
 
                 if (value == null)
                 {
@@ -149,7 +150,7 @@ namespace Quartz.DynamoDB.DataModel
             {
                 if (value != null)
                 {
-                    var offset = (DateTimeOffset)converter.FromEntry(value);
+                    var offset = (DateTimeOffset)dateTimeOffsetConverter.FromEntry(value);
 
 					Trigger.SetNextFireTimeUtc(offset);
                 }
@@ -169,7 +170,7 @@ namespace Quartz.DynamoDB.DataModel
                     return null;
                 }
 
-                return (DateTimeOffset)converter.FromEntry(NextFireTimeUtcEpoch);
+                return (DateTimeOffset)dateTimeOffsetConverter.FromEntry(NextFireTimeUtcEpoch);
             }
         }
 
@@ -236,7 +237,8 @@ namespace Quartz.DynamoDB.DataModel
             record.Add("JobGroup", AttributeValueHelper.StringOrNull(Trigger.JobGroup));
             record.Add("Description", AttributeValueHelper.StringOrNull(Trigger.Description));
             record.Add("CalendarName", AttributeValueHelper.StringOrNull(Trigger.CalendarName));
-            //record.Add("JobDataMap",  _jobDataMapConverter.ToEntry(Trigger.JobDataMap);
+
+			record.Add("JobDataMap", jobDataMapConverter.ToEntry(Trigger.JobDataMap));
             record.Add("MisfireInstruction", new AttributeValue() { N = Trigger.MisfireInstruction.ToString() });
             record.Add("FireInstanceId", AttributeValueHelper.StringOrNull(Trigger.FireInstanceId));
             record.Add("StartTimeUtc", AttributeValueHelper.StringOrNull(Trigger.StartTimeUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));

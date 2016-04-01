@@ -52,8 +52,6 @@ namespace Quartz.DynamoDB.DataModel
 
             IDictionary<string, object> deserializedData = new Dictionary<string, object>();
 
-
-
 			foreach (var keyValuePair in entry.M)
             {
 				var type = keyValuePair.Value.M["type"].S;

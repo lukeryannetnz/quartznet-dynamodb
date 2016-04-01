@@ -14,7 +14,6 @@ namespace Quartz.DynamoDB.DataModel
     /// <summary>
     /// An wrapper class for a Quartz Trigger instance that can be serialized and stored in Amazon DynamoDB.
     /// </summary>
-    [DynamoDBTable("Trigger")]
     public class DynamoTrigger
     {
         private readonly DateTimeOffsetConverter converter = new DateTimeOffsetConverter();
@@ -36,7 +35,9 @@ namespace Quartz.DynamoDB.DataModel
 
         public DynamoTrigger(Dictionary<string, AttributeValue> item)
         {
-            string type = item["Type"].S;
+			
+			string type = item.ContainsKey ("Type") ? item ["Type"].S : string.Empty;
+
             switch (type)
             {
                 case "CalendarIntervalTriggerImpl":
@@ -129,7 +130,6 @@ namespace Quartz.DynamoDB.DataModel
         /// This may be the straw that breaks the camels back and causes me to move away from the
         /// DataModel to only using the DocumentModel.
         /// </summary>
-        [DynamoDBProperty]
         public string NextFireTimeUtcEpoch
         {
             get
@@ -150,10 +150,8 @@ namespace Quartz.DynamoDB.DataModel
                 if (value != null)
                 {
                     var offset = (DateTimeOffset)converter.FromEntry(value);
-                    if (offset != null)
-                    {
-                        Trigger.SetNextFireTimeUtc(offset);
-                    }
+
+					Trigger.SetNextFireTimeUtc(offset);
                 }
             }
         }
@@ -162,7 +160,6 @@ namespace Quartz.DynamoDB.DataModel
         /// Gets the next fire time as a DateTimeOffset value in UTC timezone.
         /// Ignored so it isn't stored, this is just here for conversion convenience.
         /// </summary>
-        [DynamoDBIgnore]
         public DateTimeOffset? NextFireTimeUtc
         {
             get
@@ -191,7 +188,6 @@ namespace Quartz.DynamoDB.DataModel
         /// <summary>
         /// Returns the State property as the TriggerState enumeration required by the JobStore contract.
         /// </summary>
-        [DynamoDBIgnore]
         public TriggerState TriggerState
         {
             get
@@ -238,8 +234,6 @@ namespace Quartz.DynamoDB.DataModel
             record.Add("Group", AttributeValueHelper.StringOrNull(Trigger.Group));
             record.Add("JobName", AttributeValueHelper.StringOrNull(Trigger.JobName));
             record.Add("JobGroup", AttributeValueHelper.StringOrNull(Trigger.JobGroup));
-            record.Add("Name", AttributeValueHelper.StringOrNull(Trigger.Name));
-            record.Add("Group", AttributeValueHelper.StringOrNull(Trigger.Group));
             record.Add("Description", AttributeValueHelper.StringOrNull(Trigger.Description));
             record.Add("CalendarName", AttributeValueHelper.StringOrNull(Trigger.CalendarName));
             //record.Add("JobDataMap",  _jobDataMapConverter.ToEntry(Trigger.JobDataMap);

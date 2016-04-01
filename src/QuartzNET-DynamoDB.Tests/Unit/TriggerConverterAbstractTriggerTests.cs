@@ -16,11 +16,10 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void KeySerializesCorrectly()
         {
-            var sut = new TriggerConverter();
             var trigger = new TestTrigger();
 
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.Key.Name, result.Key.Name);
             Assert.Equal(trigger.Key.Group, result.Key.Group);
@@ -30,11 +29,10 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void JobKeySerializesCorrectly()
         {
-            var sut = new TriggerConverter();
-            var trigger = new TestTrigger();
+			var trigger = new TestTrigger();
 
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.JobKey.Name, result.JobKey.Name);
             Assert.Equal(trigger.JobKey.Group, result.JobKey.Group);
@@ -44,11 +42,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void CalendarNameSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
-            var trigger = new TestTrigger();
-            trigger.CalendarName = "Test calendar name";
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var trigger = new TestTrigger();
+			trigger.CalendarName = "Test calendar name";
+
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.CalendarName, result.CalendarName);
         }
@@ -57,12 +55,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void DescriptionSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
-            var trigger = new TestTrigger();
-            trigger.Description = "Test description";
+			var trigger = new TestTrigger();
+			trigger.Description = "Test description";
 
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.Description, result.Description);
         }
@@ -71,12 +68,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void FireInstanceIdSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
-            var trigger = new TestTrigger();
-            trigger.FireInstanceId = "Test id";
+			var trigger = new TestTrigger();
+			trigger.FireInstanceId = "Test id";
 
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.FireInstanceId, result.FireInstanceId);
         }
@@ -85,12 +81,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void GroupSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
-            var trigger = new TestTrigger();
-            trigger.Group = "Test group id";
+			var trigger = new TestTrigger();
+			trigger.Group = "Test group id";
 
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.Group, result.Group);
         }
@@ -99,14 +94,13 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void JobDataMapSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
-            var trigger = new TestTrigger();
-            IDictionary<string, object> jobData = new Dictionary<string, object>();
-            jobData.Add("key", "value");
-            trigger.JobDataMap = new JobDataMap(jobData);
+			var trigger = new TestTrigger();
+			IDictionary<string, object> jobData = new Dictionary<string, object>();
+			jobData.Add("key", "value");
+			trigger.JobDataMap = new JobDataMap(jobData);
 
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(1, result.JobDataMap.Count);
             Assert.Equal(trigger.JobDataMap.Keys.First(), result.JobDataMap.Keys.First());
@@ -117,11 +111,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void JobGroupSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
-            var trigger = new TestTrigger();
-            trigger.JobGroup = "Test job group name";
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var trigger = new TestTrigger();
+			trigger.JobGroup = "Test job group name";
+
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.JobGroup, result.JobGroup);
         }
@@ -130,11 +124,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void JobNameSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
-            var trigger = new TestTrigger();
-            trigger.JobName = "Test job  name";
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var trigger = new TestTrigger();
+			trigger.JobName = "Test job  name";
+
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.JobName, result.JobName);
         }
@@ -143,11 +137,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void MisfireInstructionSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = new TestTrigger();
             trigger.MisfireInstruction = 3;
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.MisfireInstruction, result.MisfireInstruction);
         }
@@ -156,11 +150,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void NameSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = new TestTrigger();
             trigger.Name = "Test name";
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.Name, result.Name);
         }
@@ -169,11 +163,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void PrioritySerializesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = new TestTrigger();
             trigger.Priority = 78;
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.Priority, result.Priority);
         }
@@ -182,12 +176,12 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void EndTimeUtcSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = new TestTrigger();
             trigger.EndTimeUtc = new DateTimeOffset(2015, 12, 25, 07, 30, 53, TimeSpan.Zero);
 
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.EndTimeUtc, result.EndTimeUtc);
         }
@@ -196,12 +190,12 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void StartTimeUtcSerializesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = new TestTrigger();
             trigger.StartTimeUtc = new DateTimeOffset(2015, 12, 25, 07, 30, 53, TimeSpan.Zero);
 
-            var serialized = sut.ToEntry(trigger);
-            AbstractTrigger result = (AbstractTrigger)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.StartTimeUtc, result.StartTimeUtc);
         }

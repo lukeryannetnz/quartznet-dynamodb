@@ -546,7 +546,7 @@ namespace Quartz.DynamoDB
                 trigger.SchedulerInstanceId = InstanceId;
                 trigger.State = "Acquired";
 
-                Table triggerTable = Table.LoadTable(_client, DynamoConfiguration.TriggerTableName);
+                //Table triggerTable = Table.LoadTable(_client, DynamoConfiguration.TriggerTableName);
                 //TODO: FIX ME
                 //bool acquiredTrigger = triggerTable.TryUpdateItem((Document)(new TriggerConverter().ToEntry(trigger)), conditionalUpdate);
 

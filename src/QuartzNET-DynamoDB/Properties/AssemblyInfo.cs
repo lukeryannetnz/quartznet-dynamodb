@@ -22,3 +22,5 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("0834342b-7512-487b-829b-572f140655e8")]
 
+[assembly: InternalsVisibleTo("QuartzNET-DynamoDB.Tests")]
+

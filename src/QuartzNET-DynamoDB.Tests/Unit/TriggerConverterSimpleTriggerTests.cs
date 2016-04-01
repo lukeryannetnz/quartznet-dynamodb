@@ -16,8 +16,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             
             SimpleTriggerImpl trigger = CreateSimpleTrigger();
 
-            var serialized = new DynamoTrigger(trigger).;
-            SimpleTriggerImpl result = (SimpleTriggerImpl)serialized.(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			SimpleTriggerImpl result = (SimpleTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.RepeatCount, result.RepeatCount);
         }
@@ -29,8 +29,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             
             SimpleTriggerImpl trigger = CreateSimpleTrigger();
 
-            var serialized = new DynamoTrigger(trigger);
-            SimpleTriggerImpl result = (SimpleTriggerImpl)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            SimpleTriggerImpl result = (SimpleTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.RepeatInterval, result.RepeatInterval);
         }
@@ -43,8 +43,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             SimpleTriggerImpl trigger = CreateSimpleTrigger();
             trigger.TimesTriggered = 9;
 
-            var serialized = new DynamoTrigger(trigger);
-            SimpleTriggerImpl result = (SimpleTriggerImpl)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            SimpleTriggerImpl result = (SimpleTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.TimesTriggered, result.TimesTriggered);
         }
@@ -56,8 +56,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             
             SimpleTriggerImpl trigger = CreateSimpleTrigger();
 
-            var serialized = new DynamoTrigger(trigger);
-            SimpleTriggerImpl result = (SimpleTriggerImpl)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            SimpleTriggerImpl result = (SimpleTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.FinalFireTimeUtc, result.FinalFireTimeUtc);
         }

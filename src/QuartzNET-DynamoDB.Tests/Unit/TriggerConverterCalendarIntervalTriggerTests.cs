@@ -14,11 +14,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void RepeatIntervalUnitSerialisesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = CreateTrigger();
 
-            var serialized = sut.ToEntry(trigger);
-            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)sut.FromEntry(serialized);
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.RepeatIntervalUnit, result.RepeatIntervalUnit);
         }
@@ -27,11 +27,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void RepeatIntervalSerialisesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = CreateTrigger();
 
-            var serialized = sut.ToEntry(trigger);
-            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.RepeatInterval, result.RepeatInterval);
         }
@@ -40,11 +40,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void TimesTriggeredSerialisesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = CreateTrigger();
             trigger.TimesTriggered = 13;
-            var serialized = sut.ToEntry(trigger);
-            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.TimesTriggered, result.TimesTriggered);
         }
@@ -53,11 +53,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void TimeZoneSerialisesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = CreateTrigger();
             trigger.TimeZone = TimeZoneInfo.Utc;
-            var serialized = sut.ToEntry(trigger);
-            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
 			Assert.Equal(trigger.TimeZone.DisplayName, result.TimeZone.DisplayName);
         }
@@ -66,10 +66,10 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void MisfireInstructionSerialisesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = CreateTrigger();
-            var serialized = sut.ToEntry(trigger);
-            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.MisfireInstruction, result.MisfireInstruction);
         }
@@ -78,11 +78,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void PreserveHourOfDayAcrossDaylightSavingsSerialisesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = CreateTrigger();
             trigger.PreserveHourOfDayAcrossDaylightSavings = true;
-            var serialized = sut.ToEntry(trigger);
-            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.PreserveHourOfDayAcrossDaylightSavings, result.PreserveHourOfDayAcrossDaylightSavings);
         }
@@ -91,11 +91,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void SkipDayIfHourDoesNotExistSerialisesCorrectly()
         {
-            var sut = new TriggerConverter();
+            
             var trigger = CreateTrigger();
             trigger.SkipDayIfHourDoesNotExist = true;
-            var serialized = sut.ToEntry(trigger);
-            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.PreserveHourOfDayAcrossDaylightSavings, result.SkipDayIfHourDoesNotExist);
         }

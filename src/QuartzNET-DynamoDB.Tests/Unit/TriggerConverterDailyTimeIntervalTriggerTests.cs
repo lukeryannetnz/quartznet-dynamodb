@@ -15,12 +15,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void DaysOfWeekSerializesCorrectly()
         {
-            TriggerConverter sut = new TriggerConverter();
             var trigger = CreateDailyTimeIntervalTrigger();
             trigger.DaysOfWeek = new HashSet<DayOfWeek>() { DayOfWeek.Wednesday, DayOfWeek.Saturday };
 
-            var serialized = sut.ToEntry(trigger);
-            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+			IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(2, result.DaysOfWeek.Count);
             Assert.Contains(DayOfWeek.Wednesday, trigger.DaysOfWeek);
@@ -31,11 +30,10 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void EndTimeOfDaySerializesCorrectly()
         {
-            TriggerConverter sut = new TriggerConverter();
             var trigger = CreateDailyTimeIntervalTrigger();
 
-            var serialized = sut.ToEntry(trigger);
-            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.EndTimeOfDay, result.EndTimeOfDay);
         }
@@ -44,11 +42,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void RepeatCountSerializesCorrectly()
         {
-            TriggerConverter sut = new TriggerConverter();
+            
             var trigger = CreateDailyTimeIntervalTrigger();
             trigger.RepeatCount = 3;
-            var serialized = sut.ToEntry(trigger);
-            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.RepeatCount, result.RepeatCount);
         }
@@ -58,11 +56,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void RepeatIntervalSerializesCorrectly()
         {
-            TriggerConverter sut = new TriggerConverter();
+            
             var trigger = CreateDailyTimeIntervalTrigger();
             trigger.RepeatInterval = 7;
-            var serialized = sut.ToEntry(trigger);
-            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.RepeatInterval, result.RepeatInterval);
         }
@@ -71,11 +69,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void RepeatIntervalUnitSerializesCorrectly()
         {
-            TriggerConverter sut = new TriggerConverter();
+            
             var trigger = CreateDailyTimeIntervalTrigger();
             trigger.RepeatIntervalUnit = IntervalUnit.Minute;
-            var serialized = sut.ToEntry(trigger);
-            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.RepeatIntervalUnit, result.RepeatIntervalUnit);
         }
@@ -84,11 +82,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void StartTimeOfDaySerializesCorrectly()
         {
-            TriggerConverter sut = new TriggerConverter();
+            
             var trigger = CreateDailyTimeIntervalTrigger();
             trigger.StartTimeOfDay = new TimeOfDay(01, 55, 38);
-            var serialized = sut.ToEntry(trigger);
-            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.StartTimeOfDay, result.StartTimeOfDay);
         }
@@ -97,11 +95,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void TimesTriggeredSerializesCorrectly()
         {
-            TriggerConverter sut = new TriggerConverter();
+            
             var trigger = CreateDailyTimeIntervalTrigger();
             trigger.TimesTriggered = 716;
-            var serialized = sut.ToEntry(trigger);
-            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.TimesTriggered, result.TimesTriggered);
         }
@@ -110,11 +108,11 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public void DailyTimeIntervalTimeZoneSerializesCorrectly()
         {
-            TriggerConverter sut = new TriggerConverter();
+            
             var trigger = CreateDailyTimeIntervalTrigger();
 
-            var serialized = sut.ToEntry(trigger);
-            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)sut.FromEntry(serialized);
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            IDailyTimeIntervalTrigger result = (IDailyTimeIntervalTrigger)new DynamoTrigger(serialized).Trigger;
 
 			Assert.Equal(trigger.TimeZone.DisplayName, result.TimeZone.DisplayName);
         }

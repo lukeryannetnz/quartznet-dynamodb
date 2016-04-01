@@ -12,7 +12,7 @@ using System.Linq;
 namespace Quartz.DynamoDB.DataModel
 {
     /// <summary>
-    /// An wrapper class for a Quartz Trigger instance that can be serialized and stored in Amazon DynamoDB.
+    /// A wrapper class for a Quartz Trigger instance that can be serialized and stored in Amazon DynamoDB.
     /// </summary>
     public class DynamoTrigger
     {
@@ -238,7 +238,7 @@ namespace Quartz.DynamoDB.DataModel
             record.Add("Description", AttributeValueHelper.StringOrNull(Trigger.Description));
             record.Add("CalendarName", AttributeValueHelper.StringOrNull(Trigger.CalendarName));
 
-			record.Add("JobDataMap", jobDataMapConverter.ToEntry(Trigger.JobDataMap));
+			record.Add("JobDataMap",jobDataMapConverter.ToEntry(Trigger.JobDataMap));
             record.Add("MisfireInstruction", new AttributeValue() { N = Trigger.MisfireInstruction.ToString() });
             record.Add("FireInstanceId", AttributeValueHelper.StringOrNull(Trigger.FireInstanceId));
             record.Add("StartTimeUtc", AttributeValueHelper.StringOrNull(Trigger.StartTimeUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));

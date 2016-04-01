@@ -9,29 +9,34 @@ namespace Quartz.DynamoDB.DataModel
     /// <summary>
     /// An wrapper class for a Quartz JobDetail instance that can be serialized and stored in Amazon DynamoDB.
     /// </summary>
-    internal class DynamoJob
+    public class DynamoJob
     {
         private readonly SimpleTypeLoadHelper _typeHelper = new SimpleTypeLoadHelper();
+		private readonly JobDataMapConverter jobDataMapConverter = new JobDataMapConverter();
+
+		public DynamoJob()
+		{
+		}
 
         internal DynamoJob(IJobDetail job)
         {
             this.Job = job;
         }
 
-        public DynamoJob(Dictionary<string, AttributeValue> record)
+        internal DynamoJob(Dictionary<string, AttributeValue> record)
         {
             JobDetailImpl job = new JobDetailImpl();
             job.Key = new JobKey(record["Name"].S, record["Group"].S);
             job.Description = record["Description"].NULL ? string.Empty : record["Description"].S;
             job.JobType = _typeHelper.LoadType(record["JobType"].S);
-            //JobDataMap = job.JobDataMap,
+			job.JobDataMap = (JobDataMap)jobDataMapConverter.FromEntry(record["JobDataMap"]);
             job.Durable = record["Durable"].BOOL;
             job.RequestsRecovery = record["RequestsRecovery"].BOOL;
 
             Job = job;
         }
 
-        internal IJobDetail Job { get; private set; }
+        public IJobDetail Job { get; private set; }
 
         internal Dictionary<string, AttributeValue> ToDynamo()
         {
@@ -41,7 +46,7 @@ namespace Quartz.DynamoDB.DataModel
             record.Add("Group", new AttributeValue { S = Job.Key.Group });
             record.Add("Description", string.IsNullOrWhiteSpace(Job.Description) ? new AttributeValue { NULL = true } : new AttributeValue { S = Job.Description });
             record.Add("JobType", new AttributeValue { S = GetStorableJobTypeName(Job.JobType) });
-            //JobDataMap = job.JobDataMap,
+			record.Add("JobDataMap",jobDataMapConverter.ToEntry(Job.JobDataMap));
             record.Add("Durable", new AttributeValue { BOOL = Job.Durable });
             record.Add("PersistJobDataAfterExecution", new AttributeValue { BOOL = Job.PersistJobDataAfterExecution });
             record.Add("ConcurrentExecutionDisallowed", new AttributeValue { BOOL = Job.ConcurrentExecutionDisallowed });

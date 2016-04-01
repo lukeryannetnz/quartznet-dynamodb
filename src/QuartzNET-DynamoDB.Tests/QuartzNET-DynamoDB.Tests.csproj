@@ -27,7 +27,7 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <CustomCommands>
       <CustomCommands>
-        <Command type="Execute" command="../packages/xunit.runner.console.2.1.0/tools/xunit.console.x86.exe ${TargetFile} -trait &quot;category=unit&quot;" />
+        <Command type="Execute" command="../packages/xunit.runner.console.2.1.0/tools/xunit.console.x86.exe ${TargetFile}" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>

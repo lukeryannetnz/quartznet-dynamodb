@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Quartz.DynamoDB.DataModel
+namespace Quartz.DynamoDB.DataModel.Storage
 {
     internal static class AttributeValueHelper
     {

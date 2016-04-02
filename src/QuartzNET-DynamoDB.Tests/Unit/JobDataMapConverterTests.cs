@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Quartz.DynamoDB.DataModel;
 using Xunit;
+using Quartz.DynamoDB.DataModel.Storage;
 
 namespace Quartz.DynamoDB.Tests.Unit
 {

@@ -6,7 +6,7 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Newtonsoft.Json;
 using Quartz.Simpl;
 
-namespace Quartz.DynamoDB.DataModel
+namespace Quartz.DynamoDB.DataModel.Storage
 {
     /// <summary>
     /// Coverts a JobDataMap object to a dynamo db type.

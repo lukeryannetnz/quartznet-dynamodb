@@ -11,6 +11,7 @@ using Quartz.Impl.Matchers;
 using Quartz.Spi;
 using Amazon.DynamoDBv2.Model;
 using System.Net;
+using Quartz.DynamoDB.DataModel.Storage;
 
 namespace Quartz.DynamoDB
 {

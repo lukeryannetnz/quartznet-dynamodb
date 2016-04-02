@@ -5,7 +5,7 @@ using Amazon.DynamoDBv2.Model;
 using System.Collections.Generic;
 using System.Net;
 
-namespace Quartz.DynamoDB
+namespace Quartz.DynamoDB.DataModel.Storage
 {
 	/// <summary>
 	/// Deals with storing and retrieving DynamoJobs from the Dynamo API.

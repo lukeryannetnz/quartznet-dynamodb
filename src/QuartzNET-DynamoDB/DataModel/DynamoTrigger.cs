@@ -8,6 +8,7 @@ using Amazon.DynamoDBv2.Model;
 using Quartz.Spi;
 using Quartz.Impl.Triggers;
 using System.Linq;
+using Quartz.DynamoDB.DataModel.Storage;
 
 namespace Quartz.DynamoDB.DataModel
 {

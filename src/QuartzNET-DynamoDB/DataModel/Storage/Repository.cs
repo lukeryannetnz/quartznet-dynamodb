@@ -5,13 +5,11 @@ using Quartz.DynamoDB.DataModel;
 using Amazon.DynamoDBv2.Model;
 using System.Collections.Generic;
 using Quartz.Util;
+using System.Net;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
-	/// <summary>
-	/// Deals with storing and retrieving DynamoTriggers from the Dynamo api.
-	/// </summary>
-	public class Repository<T, TKey> : IRepository<TKey, T> where T : IInitialiseFromDynamoRecord, IDynamoTableType, new()
+	public class Repository<T, TKey> : IRepository<T, TKey> where T : IInitialiseFromDynamoRecord, IConvertToDynamoRecord, IDynamoTableType, new()
 	{
 		private AmazonDynamoDBClient _client;
 
@@ -22,7 +20,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
 
 		public T Load(Key<TKey> key)
 		{
-			T entity = default(T);
+			T entity = new T();
 
 			if (key == null || string.IsNullOrWhiteSpace (key.Group) || string.IsNullOrWhiteSpace (key.Name)) 
 			{
@@ -41,12 +39,13 @@ namespace Quartz.DynamoDB.DataModel.Storage
 
 			var response = _client.GetItem (request);
 
-			if (response.IsItemSet)
+			if (response.IsItemSet) 
 			{
 				entity.InitialiseFromDynamoRecord (response.Item);
-			}	
+				return entity;
+			} 
 
-			return entity;
+			return default(T);
 		}
 
 		public void Store(T entity)
@@ -56,8 +55,8 @@ namespace Quartz.DynamoDB.DataModel.Storage
 				throw new ArgumentException ("Invalid job provided. Must have Job property set which must have Key property set.");
 			}
 
-			var dictionary = job.ToDynamo();
-			var response = _client.PutItem(new PutItemRequest(DynamoConfiguration.JobDetailTableName, dictionary));
+			var dictionary = entity.ToDynamo();
+			var response = _client.PutItem(new PutItemRequest(entity.DynamoTableName, dictionary));
 
 			if(response.HttpStatusCode != HttpStatusCode.OK)
 			{

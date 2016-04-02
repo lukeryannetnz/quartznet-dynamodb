@@ -10,7 +10,7 @@ namespace Quartz.DynamoDB.DataModel
     /// <summary>
     /// An wrapper class for a Quartz JobDetail instance that can be serialized and stored in Amazon DynamoDB.
     /// </summary>
-	public class DynamoJob : IInitialiseFromDynamoRecord, IDynamoTableType
+	public class DynamoJob : IInitialiseFromDynamoRecord, IConvertToDynamoRecord, IDynamoTableType
     {
         private readonly SimpleTypeLoadHelper _typeHelper = new SimpleTypeLoadHelper();
 		private readonly JobDataMapConverter jobDataMapConverter = new JobDataMapConverter();

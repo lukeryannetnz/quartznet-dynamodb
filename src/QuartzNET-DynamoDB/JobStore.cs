@@ -28,8 +28,8 @@ namespace Quartz.DynamoDB
 
         private DynamoDBContext _context;
         private AmazonDynamoDBClient _client;
-		private JobRepository _jobRepository;
-		private Repository<DynamoTrigger, TriggerKey> _triggerRepository;
+		private IRepository<DynamoJob, JobKey> _jobRepository;
+		private IRepository<DynamoTrigger, TriggerKey> _triggerRepository;
 
         private string _instanceId;
         //private string _instanceName;
@@ -56,7 +56,7 @@ namespace Quartz.DynamoDB
 
             _client = DynamoDbClientFactory.Create();
             _context = new DynamoDBContext(_client);
-			_jobRepository = new JobRepository (_client);
+			_jobRepository = new Repository<DynamoJob, JobKey> (_client);
 			_triggerRepository = new Repository<DynamoTrigger, TriggerKey> (_client);
             new DynamoBootstrapper().BootStrap(_client);
 

@@ -8,12 +8,12 @@ using Xunit;
 namespace Quartz.DynamoDB.Tests.Unit
 {
     /// <summary>
-    /// /// Tests the DynamoTrigger serialisation for all attributes of the AbstractTrigger trigger type.
+    /// Tests the DynamoTrigger serialisation for all attributes of the AbstractTrigger trigger type.
     /// </summary>
     public class TriggerSerialisationAbstractTriggerTests
     {
-        [Fact] [Trait("Category", "Unit")]
-
+        [Fact] 
+		[Trait("Category", "Unit")]
         public void KeySerializesCorrectly()
         {
             var trigger = new TestTrigger();

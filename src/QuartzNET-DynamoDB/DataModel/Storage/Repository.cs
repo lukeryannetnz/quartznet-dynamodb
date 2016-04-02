@@ -63,6 +63,41 @@ namespace Quartz.DynamoDB.DataModel.Storage
 				throw new JobPersistenceException($"Non 200 response code received from dynamo {response.ToString()}");
 			}
 		}
+
+		public IEnumerable<T> Scan(Dictionary<string,AttributeValue> expressionAttributeValues, string filterExpression)
+		{
+			T entity = new T();
+
+			var request = new ScanRequest
+			{
+				TableName = entity.DynamoTableName,
+			};
+
+			if (expressionAttributeValues != null) 
+			{
+				request.ExpressionAttributeValues = expressionAttributeValues;
+			}
+
+			if (!string.IsNullOrWhiteSpace (filterExpression)) 
+			{
+				request.FilterExpression = filterExpression;
+			}
+
+			var response = _client.Scan(request);
+			var result = response.Items;
+
+			List<T> matchedRecords = new List<T>();
+
+			foreach (Dictionary<string, AttributeValue> item in response.Items)
+			{
+				T value = new T ();
+				value.InitialiseFromDynamoRecord (item);
+
+				matchedRecords.Add (value);
+			}
+
+			return matchedRecords;
+		}
 	}
 }
 

@@ -143,57 +143,6 @@ namespace Quartz.DynamoDB.DataModel
         public AbstractTrigger Trigger { get; set; }
 
         /// <summary>
-        /// Gets the next fire time as a unix epoch value in UTC timezone.
-        /// 
-        /// Data model scan conditions are only supported for simple properties, 
-        /// not those that require converters so for now I've buried the converter inside this property.
-        /// This may be the straw that breaks the camels back and causes me to move away from the
-        /// DataModel to only using the DocumentModel.
-        /// </summary>
-//        public string NextFireTimeUtcEpoch
-//        {
-//            get
-//            {
-//                var value = dateTimeOffsetConverter.ToEntry(Trigger.GetNextFireTimeUtc());
-//
-//                if (value == null)
-//                {
-//                    return string.Empty;
-//                }
-//                else
-//                {
-//                    return value.AsString();
-//                }
-//            }
-//            set
-//            {
-//                if (value != null)
-//                {
-//                    var offset = (DateTimeOffset)dateTimeOffsetConverter.FromEntry(value);
-//
-//					Trigger.SetNextFireTimeUtc(offset);
-//                }
-//            }
-//        }
-
-        /// <summary>
-        /// Gets the next fire time as a DateTimeOffset value in UTC timezone.
-        /// Ignored so it isn't stored, this is just here for conversion convenience.
-        /// </summary>
-//        public DateTimeOffset? NextFireTimeUtc
-//        {
-//            get
-//            {
-//                if (!string.IsNullOrWhiteSpace(NextFireTimeUtcEpoch))
-//                {
-//                    return null;
-//                }
-//
-//                return (DateTimeOffset)dateTimeOffsetConverter.FromEntry(NextFireTimeUtcEpoch);
-//            }
-//        }
-
-        /// <summary>
         /// The scheduler instance currently working on this trigger.
         /// TODO: is this correct?
         /// </summary>

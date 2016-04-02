@@ -4,6 +4,7 @@ using Quartz.DynamoDB;
 using Quartz.DynamoDB.DataModel;
 using Amazon.DynamoDBv2.Model;
 using Quartz.Util;
+using System.Collections.Generic;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
@@ -23,6 +24,8 @@ namespace Quartz.DynamoDB.DataModel.Storage
 		/// </summary>
 		/// <param name="entity">Entity.</param>
 		void Store (T entity);
+
+		IEnumerable<T> Scan (Dictionary<string,AttributeValue> expressionAttributeValues, string filterExpression);
 	}
 }
 

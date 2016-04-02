@@ -1,19 +1,19 @@
 ﻿using System;
 using Amazon.DynamoDBv2.DataModel;
+using Quartz.DynamoDB.DataModel.Storage;
+using System.Collections.Generic;
+using Amazon.DynamoDBv2.Model;
 
 namespace Quartz.DynamoDB.DataModel
 {
     /// <summary>
     /// An instance of a quartz job scheduler.
     /// </summary>
-    [DynamoDBTable("Scheduler")]
-    public class DynamoScheduler
+	public class DynamoScheduler : IDynamoTableType, IInitialisableFromDynamoRecord, IConvertableToDynamoRecord
     {
         private readonly DateTimeOffsetConverter converter = new DateTimeOffsetConverter();
 
-        [DynamoDBHashKey]
         public string InstanceId { get; set; }
-
 
         /// <summary>
         /// Gets or sets the expires time as a unix epoch value in UTC timezone.
@@ -25,14 +25,14 @@ namespace Quartz.DynamoDB.DataModel
         /// </summary>
         public int? ExpiresUtcEpoch
         {
-            get;set;
+            get;
+			set;
         }
 
         /// <summary>
         /// Gets the expires time as a DateTimeOffset value in UTC timezone.
-        /// Ignored so it isn't stored, this is just here for conversion convenience.
+        /// This is just here for conversion convenience.
         /// </summary>
-        [DynamoDBIgnore]
         public DateTimeOffset? ExpiresUtc
         {
             get
@@ -49,7 +49,33 @@ namespace Quartz.DynamoDB.DataModel
                 ExpiresUtcEpoch = (int?)converter.ToEntry(value);
             }
         }
+			
+		public string State { get; set; }
 
-        public string State { get; set; }
+		public string DynamoTableName 
+		{
+			get 
+			{
+				return DynamoConfiguration.SchedulerTableName;
+			}
+		}
+
+		public void InitialiseFromDynamoRecord (System.Collections.Generic.Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue> record)
+		{
+			InstanceId = record ["InstanceId"].S;
+			ExpiresUtcEpoch = record["ExpiresUtcEpoch"].NULL ? (int?)null : int.Parse(record["ExpiresUtcEpoch"].N);
+			State = record["State"].NULL ? string.Empty : record["State"].S;
+		}
+
+		public System.Collections.Generic.Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue> ToDynamo ()
+		{
+			Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
+
+			record.Add("InstanceId", new AttributeValue { S = InstanceId });
+			record.Add("ExpiresUtcEpoch", ExpiresUtcEpoch.HasValue ? new AttributeValue { N = ExpiresUtcEpoch.Value.ToString() } : new AttributeValue { NULL = true });
+			record.Add("State", string.IsNullOrWhiteSpace(State) ? new AttributeValue { NULL = true } : new AttributeValue { S = State });
+
+
+			return record;		}
     }
 }

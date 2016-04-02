@@ -332,8 +332,7 @@ namespace Quartz.DynamoDB
 
         public void ResumeTrigger(TriggerKey triggerKey)
         {
-            //IOperableTrigger trigger = this.Triggers.FindOneByIdAs<IOperableTrigger>(triggerKey.ToBsonDocument());
-            var record = _context.Load<DynamoTrigger>(triggerKey.Group, triggerKey.Name);
+			var record = _triggerRepository.Load (triggerKey);
 
             // does the trigger exist?
             if (record == null)
@@ -359,7 +358,7 @@ namespace Quartz.DynamoDB
 
             //this.ApplyMisfireIfNecessary(trigger);
 
-            _context.Save(record, new DynamoDBOperationConfig());
+			_triggerRepository.Store (record);
         }
 
         public IList<string> ResumeTriggers(GroupMatcher<TriggerKey> matcher)
@@ -432,6 +431,8 @@ namespace Quartz.DynamoDB
             ScanCondition expiredCondition = new ScanCondition("ExpiresUtcEpoch", ScanOperator.LessThan,
                epochNow);
             var expiredSchedulers = _context.Scan<DynamoScheduler>(expiredCondition);
+
+
 
             foreach (var dynamoScheduler in expiredSchedulers)
             {

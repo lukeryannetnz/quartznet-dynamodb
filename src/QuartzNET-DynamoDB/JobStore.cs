@@ -27,6 +27,7 @@ namespace Quartz.DynamoDB
 
         private DynamoDBContext _context;
         private AmazonDynamoDBClient _client;
+		private JobRepository _jobRepository;
         private string _instanceId;
         //private string _instanceName;
 
@@ -52,6 +53,7 @@ namespace Quartz.DynamoDB
 
             _client = DynamoDbClientFactory.Create();
             _context = new DynamoDBContext(_client);
+			_jobRepository = new JobRepository (_client);
             new DynamoBootstrapper().BootStrap(_client);
 
             //_loadHelper = loadHelper;
@@ -100,21 +102,14 @@ namespace Quartz.DynamoDB
 
         public void StoreJob(IJobDetail newJob, bool replaceExisting)
         {
-			//TODO: replace all Load() object API calls with low level API. do a better job than below:
-			//if (!replaceExisting && _context.Load<DynamoJob>(newJob.Key.Group, newJob.Key.Name) != null)
-			if (!replaceExisting && _client.GetItem (new GetItemRequest (){ TableName = DynamoConfiguration.JobDetailTableName, Key = new Dictionary<string, AttributeValue> { {"Group", new AttributeValue(){ S = newJob.Key.Group}}, {"Name", new AttributeValue(){ S = newJob.Key.Name}} }}).Item.Any())
+			if (!replaceExisting && _jobRepository.LoadJob(newJob.Key) != null)
             {
                 throw new ObjectAlreadyExistsException(newJob);
             }
 
             DynamoJob job = new DynamoJob(newJob);
-			var dictionary = job.ToDynamo();
-            var response = _client.PutItem(new PutItemRequest(DynamoConfiguration.JobDetailTableName, dictionary));
 
-            if(response.HttpStatusCode != HttpStatusCode.OK)
-            {
-                throw new JobPersistenceException(string.Format("Non 200 status code returned from Dynamo: {0}", response));
-            }
+			_jobRepository.StoreJob(job);
         }
 
         public void StoreJobsAndTriggers(IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs,
@@ -135,22 +130,9 @@ namespace Quartz.DynamoDB
 
         public IJobDetail RetrieveJob(JobKey jobKey)
         {
-            var request = new GetItemRequest(
-                DynamoConfiguration.JobDetailTableName, 
-                new Dictionary<string, AttributeValue>
-                {
-                    { "Name", new AttributeValue() { S = jobKey.Name } },
-                    { "Group", new AttributeValue() { S = jobKey.Group } }
-                });
+			var job = _jobRepository.LoadJob (jobKey);
 
-            var response = _client.GetItem(request);
-
-            if(response.HttpStatusCode != HttpStatusCode.OK)
-            {
-                throw new JobPersistenceException($"Non 200 response code received when querying dynamo {response.ToString()}");
-            }
-
-            return response.IsItemSet ? new DynamoJob(response.Item).Job : null;
+			return job == null ? null : job.Job;
         }
 
         public void StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting)

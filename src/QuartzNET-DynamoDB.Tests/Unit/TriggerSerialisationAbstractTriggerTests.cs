@@ -186,8 +186,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.EndTimeUtc, result.EndTimeUtc);
         }
 
-        [Fact] [Trait("Category", "Unit")]
-
+        [Fact] 
+		[Trait("Category", "Unit")]
         public void StartTimeUtcSerializesCorrectly()
         {
             
@@ -200,9 +200,26 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.StartTimeUtc, result.StartTimeUtc);
         }
 
+		[Fact] 
+		[Trait("Category", "Unit")]
+		public void NextFireTimeUtcSerializesCorrectly()
+		{
+
+			var trigger = new TestTrigger();
+			var nextFireTime = new DateTimeOffset (1980, 12, 25, 07, 30, 53, TimeSpan.Zero);
+			trigger.SetNextFireTimeUtc (nextFireTime);
+
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			AbstractTrigger result = new DynamoTrigger(serialized).Trigger;
+
+			Assert.Equal(nextFireTime, result.GetNextFireTimeUtc());
+		}
+
         [Serializable]
         private sealed class TestTrigger : AbstractTrigger
         {
+			private DateTimeOffset? nextFireTimeUtc;
+
             public TestTrigger()
             {
                 Key = new TriggerKey("tname", "tgroup");
@@ -236,8 +253,8 @@ namespace Quartz.DynamoDB.Tests.Unit
 
             public override DateTimeOffset? GetNextFireTimeUtc()
             {
-                throw new NotImplementedException();
-            }
+				return nextFireTimeUtc;
+			}
 
             public override DateTimeOffset? GetFireTimeAfter(DateTimeOffset? afterTime)
             {
@@ -261,8 +278,8 @@ namespace Quartz.DynamoDB.Tests.Unit
 
             public override void SetNextFireTimeUtc(DateTimeOffset? nextFireTime)
             {
-                throw new NotImplementedException();
-            }
+				nextFireTimeUtc = nextFireTime;
+			}
 
             public override void SetPreviousFireTimeUtc(DateTimeOffset? previousFireTime)
             {

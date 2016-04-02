@@ -17,7 +17,6 @@ namespace Quartz.DynamoDB.DataModel
     /// </summary>
 	public class DynamoTrigger : IInitialisableFromDynamoRecord,IConvertableToDynamoRecord, IDynamoTableType
     {
-		private readonly DateTimeOffsetConverter dateTimeOffsetConverter = new DateTimeOffsetConverter();
 		private readonly JobDataMapConverter jobDataMapConverter = new JobDataMapConverter();
 
         public DynamoTrigger()
@@ -123,7 +122,14 @@ namespace Quartz.DynamoDB.DataModel
 			{
 				Trigger.EndTimeUtc = DateTimeOffset.Parse(record["EndTimeUtc"].S);
 			}
+
+			if(record.ContainsKey("NextFireTimeUtc"))
+			{
+				Trigger.SetNextFireTimeUtc(DateTimeOffset.Parse(record["NextFireTimeUtc"].S));
+			}
+
 			Trigger.Priority = int.Parse(record["Priority"].N);
+
 		}
 
 		public string DynamoTableName  
@@ -144,48 +150,48 @@ namespace Quartz.DynamoDB.DataModel
         /// This may be the straw that breaks the camels back and causes me to move away from the
         /// DataModel to only using the DocumentModel.
         /// </summary>
-        public string NextFireTimeUtcEpoch
-        {
-            get
-            {
-                var value = dateTimeOffsetConverter.ToEntry(Trigger.GetNextFireTimeUtc());
-
-                if (value == null)
-                {
-                    return string.Empty;
-                }
-                else
-                {
-                    return value.AsString();
-                }
-            }
-            set
-            {
-                if (value != null)
-                {
-                    var offset = (DateTimeOffset)dateTimeOffsetConverter.FromEntry(value);
-
-					Trigger.SetNextFireTimeUtc(offset);
-                }
-            }
-        }
+//        public string NextFireTimeUtcEpoch
+//        {
+//            get
+//            {
+//                var value = dateTimeOffsetConverter.ToEntry(Trigger.GetNextFireTimeUtc());
+//
+//                if (value == null)
+//                {
+//                    return string.Empty;
+//                }
+//                else
+//                {
+//                    return value.AsString();
+//                }
+//            }
+//            set
+//            {
+//                if (value != null)
+//                {
+//                    var offset = (DateTimeOffset)dateTimeOffsetConverter.FromEntry(value);
+//
+//					Trigger.SetNextFireTimeUtc(offset);
+//                }
+//            }
+//        }
 
         /// <summary>
         /// Gets the next fire time as a DateTimeOffset value in UTC timezone.
         /// Ignored so it isn't stored, this is just here for conversion convenience.
         /// </summary>
-        public DateTimeOffset? NextFireTimeUtc
-        {
-            get
-            {
-                if (!string.IsNullOrWhiteSpace(NextFireTimeUtcEpoch))
-                {
-                    return null;
-                }
-
-                return (DateTimeOffset)dateTimeOffsetConverter.FromEntry(NextFireTimeUtcEpoch);
-            }
-        }
+//        public DateTimeOffset? NextFireTimeUtc
+//        {
+//            get
+//            {
+//                if (!string.IsNullOrWhiteSpace(NextFireTimeUtcEpoch))
+//                {
+//                    return null;
+//                }
+//
+//                return (DateTimeOffset)dateTimeOffsetConverter.FromEntry(NextFireTimeUtcEpoch);
+//            }
+//        }
 
         /// <summary>
         /// The scheduler instance currently working on this trigger.
@@ -255,10 +261,16 @@ namespace Quartz.DynamoDB.DataModel
             record.Add("MisfireInstruction", new AttributeValue() { N = Trigger.MisfireInstruction.ToString() });
             record.Add("FireInstanceId", AttributeValueHelper.StringOrNull(Trigger.FireInstanceId));
             record.Add("StartTimeUtc", AttributeValueHelper.StringOrNull(Trigger.StartTimeUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
+		
             if (Trigger.EndTimeUtc.HasValue)
             {
                 record.Add("EndTimeUtc", AttributeValueHelper.StringOrNull(Trigger.EndTimeUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
             }
+
+			if (Trigger.GetNextFireTimeUtc().HasValue)
+			{
+				record.Add("NextFireTimeUtc", AttributeValueHelper.StringOrNull(Trigger.GetNextFireTimeUtc().Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
+			}
 
             record.Add("Priority", new AttributeValue() { N = Trigger.Priority.ToString() });
 

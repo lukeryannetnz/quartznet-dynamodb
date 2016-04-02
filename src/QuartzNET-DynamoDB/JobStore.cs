@@ -154,19 +154,19 @@ namespace Quartz.DynamoDB
 
             DynamoTrigger trigger = new DynamoTrigger(newTrigger);
 
-            //if (this.PausedTriggerGroups.FindOneByIdAs<BsonDocument>(newTrigger.Key.Group) != null
-            //    || this.PausedJobGroups.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.Group) != null)
-            //{
-            //    state = "Paused";
-            //    if (this.BlockedJobs.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.ToBsonDocument()) != null)
-            //    {
-            //        state = "PausedAndBlocked";
-            //    }
-            //}
-            //else if (this.BlockedJobs.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.ToBsonDocument()) != null)
-            //{
-            //    state = "Blocked";
-            //}
+//            if (this.PausedTriggerGroups.FindOneByIdAs<BsonDocument>(newTrigger.Key.Group) != null
+//                || this.PausedJobGroups.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.Group) != null)
+//            {
+//                state = "Paused";
+//                if (this.BlockedJobs.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.ToBsonDocument()) != null)
+//                {
+//                    state = "PausedAndBlocked";
+//                }
+//            }
+//            else if (this.BlockedJobs.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.ToBsonDocument()) != null)
+//            {
+//                state = "Blocked";
+//            }
 
             var response = _client.PutItem(DynamoConfiguration.TriggerTableName, trigger.ToDynamo());
 
@@ -301,7 +301,7 @@ namespace Quartz.DynamoDB
 
         public void PauseTrigger(TriggerKey triggerKey)
         {
-            var record = _context.Load<DynamoTrigger>(triggerKey.Group, triggerKey.Name);
+			var record = _triggerRepository.Load (triggerKey);
 
             if (record.TriggerState == TriggerState.Blocked)
             {
@@ -312,7 +312,7 @@ namespace Quartz.DynamoDB
                 record.State = "Paused";
             }
 
-            _context.Save(record, new DynamoDBOperationConfig());
+			_triggerRepository.Store (record);
         }
 
         public Collection.ISet<string> PauseTriggers(GroupMatcher<TriggerKey> matcher)
@@ -421,7 +421,7 @@ namespace Quartz.DynamoDB
             var scheduler = new DynamoScheduler
             {
                 InstanceId = _instanceId,
-                ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
+                //ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
                 State = "Running"
             };
 

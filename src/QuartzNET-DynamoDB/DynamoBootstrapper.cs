@@ -8,9 +8,9 @@ namespace Quartz.DynamoDB
     /// <summary>
     /// Bootstraps dynamo db to the required state. Ensures tables exist etc.
     /// </summary>
-    internal class DynamoBootstrapper
+    public class DynamoBootstrapper
     {
-        internal void BootStrap(IAmazonDynamoDB client)
+        public void BootStrap(IAmazonDynamoDB client)
         {
             if (!TableExists(client, DynamoConfiguration.JobDetailTableName))
             {

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
-    internal static class AttributeValueHelper
+    public static class AttributeValueHelper
     {
-        internal static AttributeValue StringOrNull(string value)
+        public static AttributeValue StringOrNull(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
             {

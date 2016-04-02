@@ -10,7 +10,7 @@ namespace Quartz.DynamoDB.DataModel
     /// <summary>
     /// An wrapper class for a Quartz JobDetail instance that can be serialized and stored in Amazon DynamoDB.
     /// </summary>
-    public class DynamoJob
+	public class DynamoJob : IInitialisableFromDynamoRecord, IConvertableToDynamoRecord, IDynamoTableType
     {
         private readonly SimpleTypeLoadHelper _typeHelper = new SimpleTypeLoadHelper();
 		private readonly JobDataMapConverter jobDataMapConverter = new JobDataMapConverter();
@@ -19,27 +19,40 @@ namespace Quartz.DynamoDB.DataModel
 		{
 		}
 
-        internal DynamoJob(IJobDetail job)
+        public DynamoJob(IJobDetail job)
         {
             this.Job = job;
         }
 
-        internal DynamoJob(Dictionary<string, AttributeValue> record)
-        {
-            JobDetailImpl job = new JobDetailImpl();
-            job.Key = new JobKey(record["Name"].S, record["Group"].S);
-            job.Description = record["Description"].NULL ? string.Empty : record["Description"].S;
-            job.JobType = _typeHelper.LoadType(record["JobType"].S);
-			job.JobDataMap = (JobDataMap)jobDataMapConverter.FromEntry(record["JobDataMap"]);
-            job.Durable = record["Durable"].BOOL;
-            job.RequestsRecovery = record["RequestsRecovery"].BOOL;
+		public DynamoJob(Dictionary<string, AttributeValue> record)
+		{
+			InitialiseFromDynamoRecord (record);
+		}
 
-            Job = job;
-        }
+		public void InitialiseFromDynamoRecord(Dictionary<string, AttributeValue> record)
+		{
+			JobDetailImpl job = new JobDetailImpl();
+			job.Key = new JobKey(record["Name"].S, record["Group"].S);
+			job.Description = record["Description"].NULL ? string.Empty : record["Description"].S;
+			job.JobType = _typeHelper.LoadType(record["JobType"].S);
+			job.JobDataMap = (JobDataMap)jobDataMapConverter.FromEntry(record["JobDataMap"]);
+			job.Durable = record["Durable"].BOOL;
+			job.RequestsRecovery = record["RequestsRecovery"].BOOL;
+
+			Job = job;
+		}
+
+		public string DynamoTableName  
+		{
+			get 
+			{
+				return DynamoConfiguration.JobDetailTableName;
+			}
+		}
 
         public IJobDetail Job { get; private set; }
 
-        internal Dictionary<string, AttributeValue> ToDynamo()
+        public Dictionary<string, AttributeValue> ToDynamo()
         {
             Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
             

@@ -1,26 +1,27 @@
 ﻿using System;
-using Quartz.DynamoDB.DataModel;
 using Amazon.DynamoDBv2;
+using Quartz.DynamoDB;
+using Quartz.DynamoDB.DataModel;
 using Amazon.DynamoDBv2.Model;
 using System.Collections.Generic;
+using Quartz.Util;
 using System.Net;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
-	/// <summary>
-	/// Deals with storing and retrieving DynamoJobs from the Dynamo API.
-	/// </summary>
-	public class JobRepository
+	public class Repository<T, TKey> : IRepository<T, TKey> where T : IInitialisableFromDynamoRecord, IConvertableToDynamoRecord, IDynamoTableType, new()
 	{
 		private AmazonDynamoDBClient _client;
 
-		public JobRepository (AmazonDynamoDBClient client)
+		public Repository (AmazonDynamoDBClient client)
 		{
 			_client = client;
 		}
 
-		public DynamoJob LoadJob(JobKey key)
+		public T Load(Key<TKey> key)
 		{
+			T entity = new T();
+
 			if (key == null || string.IsNullOrWhiteSpace (key.Group) || string.IsNullOrWhiteSpace (key.Name)) 
 			{
 				throw new ArgumentException ("Invalid key provided");
@@ -28,31 +29,34 @@ namespace Quartz.DynamoDB.DataModel.Storage
 
 			var request = new GetItemRequest ()
 			{ 
-				TableName = DynamoConfiguration.JobDetailTableName, 
+				TableName = entity.DynamoTableName, 
 				Key = new Dictionary<string, AttributeValue> 
 				{ 
 					{"Group", new AttributeValue(){ S = key.Group}}, 
 					{"Name", new AttributeValue(){ S = key.Name}}
 				}
 			};
-					
+
 			var response = _client.GetItem (request);
 
-			return response.IsItemSet ? new DynamoJob (response.Item) : null;
+			if (response.IsItemSet) 
+			{
+				entity.InitialiseFromDynamoRecord (response.Item);
+				return entity;
+			} 
+
+			return default(T);
 		}
 
-		public void StoreJob(DynamoJob job)
+		public void Store(T entity)
 		{
-			if (job == null 
-				|| job.Job == null 
-				|| string.IsNullOrWhiteSpace (job.Job.Key.Group) 
-				|| string.IsNullOrWhiteSpace (job.Job.Key.Name)) 
+			if (entity == null) 
 			{
 				throw new ArgumentException ("Invalid job provided. Must have Job property set which must have Key property set.");
 			}
 
-			var dictionary = job.ToDynamo();
-			var response = _client.PutItem(new PutItemRequest(DynamoConfiguration.JobDetailTableName, dictionary));
+			var dictionary = entity.ToDynamo();
+			var response = _client.PutItem(new PutItemRequest(entity.DynamoTableName, dictionary));
 
 			if(response.HttpStatusCode != HttpStatusCode.OK)
 			{

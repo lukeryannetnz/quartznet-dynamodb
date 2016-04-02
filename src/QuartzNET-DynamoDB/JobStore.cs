@@ -28,7 +28,9 @@ namespace Quartz.DynamoDB
 
         private DynamoDBContext _context;
         private AmazonDynamoDBClient _client;
-		private JobRepository _jobRepository;
+		private IRepository<DynamoJob, JobKey> _jobRepository;
+		private IRepository<DynamoTrigger, TriggerKey> _triggerRepository;
+
         private string _instanceId;
         //private string _instanceName;
 
@@ -54,7 +56,8 @@ namespace Quartz.DynamoDB
 
             _client = DynamoDbClientFactory.Create();
             _context = new DynamoDBContext(_client);
-			_jobRepository = new JobRepository (_client);
+			_jobRepository = new Repository<DynamoJob, JobKey> (_client);
+			_triggerRepository = new Repository<DynamoTrigger, TriggerKey> (_client);
             new DynamoBootstrapper().BootStrap(_client);
 
             //_loadHelper = loadHelper;
@@ -103,14 +106,14 @@ namespace Quartz.DynamoDB
 
         public void StoreJob(IJobDetail newJob, bool replaceExisting)
         {
-			if (!replaceExisting && _jobRepository.LoadJob(newJob.Key) != null)
+			if (!replaceExisting && _jobRepository.Load(newJob.Key) != null)
             {
                 throw new ObjectAlreadyExistsException(newJob);
             }
 
             DynamoJob job = new DynamoJob(newJob);
 
-			_jobRepository.StoreJob(job);
+			_jobRepository.Store(job);
         }
 
         public void StoreJobsAndTriggers(IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs,
@@ -131,14 +134,14 @@ namespace Quartz.DynamoDB
 
         public IJobDetail RetrieveJob(JobKey jobKey)
         {
-			var job = _jobRepository.LoadJob (jobKey);
+			var job = _jobRepository.Load (jobKey);
 
 			return job == null ? null : job.Job;
         }
 
         public void StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting)
         {
-			if (!replaceExisting && _context.Load<DynamoTrigger>(newTrigger.Key.Group, newTrigger.Key.Name) != null)
+			if (!replaceExisting && _triggerRepository.Load(newTrigger.Key) != null)
             {
                 throw new ObjectAlreadyExistsException(newTrigger);
             }

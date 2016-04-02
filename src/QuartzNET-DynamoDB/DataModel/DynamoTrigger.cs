@@ -195,7 +195,7 @@ namespace Quartz.DynamoDB.DataModel
 
         /// <summary>
         /// The current state of this trigger. Generally a value from the Quartz.TriggerState
-        /// enum but occasionally an public value including: Waiting, PausedAndBlocked.
+        /// enum but occasionally an internal value including: Waiting, PausedAndBlocked.
         /// </summary>
         public string State { get; set; }
 

@@ -58,7 +58,7 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         /// <summary>
         /// Tests that when state is PausedAndBlocked, TriggerState is Paused.
-        /// This is because PausedAndBlocked is an public state that we do not want to expose
+        /// This is because PausedAndBlocked is an internal state that we do not want to expose
         /// to externally.
         /// </summary>
         [Fact] [Trait("Category", "Unit")]

@@ -435,7 +435,7 @@ namespace Quartz.DynamoDB.Tests.Integration
 
         public class SampleSignaler : ISchedulerSignaler
         {
-            public int fMisfireCount = 0;
+            private int fMisfireCount = 0;
 
             public void NotifyTriggerListenersMisfired(ITrigger trigger)
             {

@@ -215,6 +215,21 @@ namespace Quartz.DynamoDB.Tests.Unit
 			Assert.Equal(nextFireTime, result.GetNextFireTimeUtc());
 		}
 
+		[Fact]
+		[Trait("Category", "Unit")]
+		public void TriggerStateSerialised()
+		{
+			var sut = new DynamoTrigger (new TestTrigger());
+			sut.State = "CustomState";
+
+			var serialised = sut.ToDynamo ();
+
+			var deserialised = new DynamoTrigger ();
+			deserialised.InitialiseFromDynamoRecord (serialised);
+
+			Assert.Equal (sut.State, deserialised.State);
+		}
+
         [Serializable]
         private sealed class TestTrigger : AbstractTrigger
         {

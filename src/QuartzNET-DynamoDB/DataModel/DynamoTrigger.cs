@@ -106,6 +106,8 @@ namespace Quartz.DynamoDB.DataModel
 					break;
 				}
 			}
+
+			State = record ["State"].S;
 			Trigger.Name = record["Name"].S;
 			Trigger.Group = record["Group"].S;
 			Trigger.JobName = record["JobName"].S;
@@ -198,6 +200,8 @@ namespace Quartz.DynamoDB.DataModel
         public Dictionary<string, AttributeValue> ToDynamo()
         {
             Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
+
+			record.Add("State", AttributeValueHelper.StringOrNull (State));
 
             record.Add("Name", AttributeValueHelper.StringOrNull(Trigger.Name));
             record.Add("Group", AttributeValueHelper.StringOrNull(Trigger.Group));

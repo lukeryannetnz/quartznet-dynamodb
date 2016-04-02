@@ -176,7 +176,7 @@ namespace Quartz.DynamoDB.Tests.Integration
         [Fact] [Trait("Category", "Integration")]
         public void TestTriggerStates()
         {
-            IOperableTrigger trigger = new SimpleTriggerImpl("trigger1", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, DateTimeOffset.UtcNow.AddSeconds(100), DateTimeOffset.UtcNow.AddSeconds(200), 2, TimeSpan.FromSeconds(2));
+			IOperableTrigger trigger = new SimpleTriggerImpl("TestTriggerStates_trigger1", "TestTriggerStates_triggerGroup1", fJobDetail.Name, fJobDetail.Group, DateTimeOffset.UtcNow.AddSeconds(100), DateTimeOffset.UtcNow.AddSeconds(200), 2, TimeSpan.FromSeconds(2));
             trigger.ComputeFirstFireTimeUtc(null);
             Assert.Equal(TriggerState.None, fJobStore.GetTriggerState(trigger.Key));
             fJobStore.StoreTrigger(trigger, false);

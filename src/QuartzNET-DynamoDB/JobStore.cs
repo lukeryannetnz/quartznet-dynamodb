@@ -12,6 +12,7 @@ using Quartz.Spi;
 using Amazon.DynamoDBv2.Model;
 using System.Net;
 using Quartz.DynamoDB.DataModel.Storage;
+using Quartz.Util;
 
 namespace Quartz.DynamoDB
 {
@@ -30,6 +31,7 @@ namespace Quartz.DynamoDB
         private AmazonDynamoDBClient _client;
 		private IRepository<DynamoJob, JobKey> _jobRepository;
 		private IRepository<DynamoTrigger, TriggerKey> _triggerRepository;
+		private IRepository<DynamoScheduler, Key<object>> _schedulerRepository;
 
         private string _instanceId;
         //private string _instanceName;
@@ -58,6 +60,7 @@ namespace Quartz.DynamoDB
             _context = new DynamoDBContext(_client);
 			_jobRepository = new Repository<DynamoJob, JobKey> (_client);
 			_triggerRepository = new Repository<DynamoTrigger, TriggerKey> (_client);
+			_schedulerRepository = new Repository<DynamoScheduler, Key<object>> (_client);
             new DynamoBootstrapper().BootStrap(_client);
 
             //_loadHelper = loadHelper;
@@ -293,7 +296,7 @@ namespace Quartz.DynamoDB
 
         public TriggerState GetTriggerState(TriggerKey triggerKey)
         {
-            var record = _context.Load<DynamoTrigger>(triggerKey.Group, triggerKey.Name);
+			var record = _triggerRepository.Load (triggerKey);
 
             //todo: consider if we need paused and blocked
             return record?.TriggerState ?? TriggerState.None;
@@ -424,7 +427,7 @@ namespace Quartz.DynamoDB
                 State = "Running"
             };
 
-            _context.Save(scheduler);
+			_schedulerRepository.Store(scheduler);
 
             int epochNow = SystemTime.Now().UtcDateTime.ToUnixEpochTime();
 

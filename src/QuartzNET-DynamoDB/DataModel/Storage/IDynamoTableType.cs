@@ -13,7 +13,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
 	public interface IDynamoTableType
 	{
 		/// <summary>
-		/// Gets the name of the dynamo table.
+		/// Gets the name of the dynamo table to store this type in.
 		/// </summary>
 		/// <value>The name of the dynamo table.</value>
 		string DynamoTableName { get; }

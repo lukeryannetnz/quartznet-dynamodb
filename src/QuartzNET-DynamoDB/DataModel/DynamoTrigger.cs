@@ -23,7 +23,6 @@ namespace Quartz.DynamoDB.DataModel
         public DynamoTrigger()
         {
             State = "Waiting";
-
         }
 
         public DynamoTrigger(IOperableTrigger trigger) : this()
@@ -32,13 +31,13 @@ namespace Quartz.DynamoDB.DataModel
             {
                 throw new ArgumentException("Trigger must be of type Quartz.Impl.Triggers.AbstractTrigger", nameof(trigger));
             }
+
             Trigger = (AbstractTrigger)trigger;
         }
 
         public DynamoTrigger(Dictionary<string, AttributeValue> item)
         {
-			InitialiseFromDynamoRecord (item);
-
+			InitialiseFromDynamoRecord(item);
         }
 			
 		public void InitialiseFromDynamoRecord (Dictionary<string, AttributeValue> record)

@@ -79,7 +79,6 @@
     <Compile Include="DataModel\Storage\AttributeValueHelper.cs" />
     <Compile Include="DataModel\Storage\JobDataMapConverter.cs" />
     <Compile Include="DataModel\Storage\IRepository.cs" />
-    <Compile Include="DataModel\IDynamoType.cs" />
     <Compile Include="DataModel\Storage\IInitialiseFromDynamoRecord.cs" />
     <Compile Include="DataModel\Storage\IDynamoTableType.cs" />
     <Compile Include="DataModel\Storage\IConvertToDynamoRecord.cs" />

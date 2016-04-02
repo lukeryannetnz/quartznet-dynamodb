@@ -10,7 +10,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
 	/// <summary>
 	/// Indicates that this type can be initialised from dynamo db record.
 	/// </summary>
-	public interface IInitialiseFromDynamoRecord
+	public interface IInitialisableFromDynamoRecord
 	{
 		/// <summary>
 		/// Initialises the instance from dynamo record retrieved from the dynamo API.

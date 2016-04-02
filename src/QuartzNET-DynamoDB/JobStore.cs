@@ -421,7 +421,7 @@ namespace Quartz.DynamoDB
             var scheduler = new DynamoScheduler
             {
                 InstanceId = _instanceId,
-                //ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
+                ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
                 State = "Running"
             };
 

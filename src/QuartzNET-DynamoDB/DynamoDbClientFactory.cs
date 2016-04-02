@@ -5,9 +5,9 @@ namespace Quartz.DynamoDB
     /// <summary>
     /// Creates instances of the dynamo db client.
     /// </summary>
-    internal static class DynamoDbClientFactory
+    public static class DynamoDbClientFactory
     {
-        internal static AmazonDynamoDBClient Create()
+        public static AmazonDynamoDBClient Create()
         {
             // First, set up a DynamoDB client for DynamoDB Local
             AmazonDynamoDBConfig ddbConfig = new AmazonDynamoDBConfig();

@@ -1,10 +1,10 @@
 ﻿namespace Quartz.DynamoDB
 {
-    internal class DynamoConfiguration
+    public class DynamoConfiguration
     {
-        internal static string JobDetailTableName => "JobDetail";
+        public static string JobDetailTableName => "JobDetail";
 
-        internal static string TriggerTableName => "Trigger";
+        public static string TriggerTableName => "Trigger";
 
         public static string SchedulerTableName => "Scheduler";
     }

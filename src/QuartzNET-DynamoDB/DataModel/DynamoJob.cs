@@ -54,18 +54,7 @@ namespace Quartz.DynamoDB.DataModel
 		{ 
 			get 
 			{
-				return new Dictionary<string, AttributeValue> () {
-					{ "Name", new AttributeValue ()
-						{
-							S = Job.Key.Name 
-						}
-					},
-					{ "Group", new AttributeValue ()
-						{
-							S = Job.Key.Group 
-						}
-					}
-				};
+				return Job.Key.ToDictionary ();
 			}
 		}
 

@@ -146,18 +146,7 @@ namespace Quartz.DynamoDB.DataModel
 		{ 
 			get 
 			{
-				return new Dictionary<string, AttributeValue> () {
-					{ "Name", new AttributeValue ()
-						{
-							S = Trigger.Key.Name 
-						}
-					},
-					{ "Group", new AttributeValue ()
-						{
-							S = Trigger.Key.Group 
-						}
-					}
-				};
+				return Trigger.Key.ToDictionary ();
 			}
 		}
 			

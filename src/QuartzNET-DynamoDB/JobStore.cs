@@ -29,9 +29,9 @@ namespace Quartz.DynamoDB
 
         private DynamoDBContext _context;
         private AmazonDynamoDBClient _client;
-		private IRepository<DynamoJob, JobKey> _jobRepository;
-		private IRepository<DynamoTrigger, TriggerKey> _triggerRepository;
-		private IRepository<DynamoScheduler, Key<object>> _schedulerRepository;
+		private IRepository<DynamoJob> _jobRepository;
+		private IRepository<DynamoTrigger> _triggerRepository;
+		private IRepository<DynamoScheduler> _schedulerRepository;
 
         private string _instanceId;
         //private string _instanceName;
@@ -58,9 +58,9 @@ namespace Quartz.DynamoDB
 
             _client = DynamoDbClientFactory.Create();
             _context = new DynamoDBContext(_client);
-			_jobRepository = new Repository<DynamoJob, JobKey> (_client);
-			_triggerRepository = new Repository<DynamoTrigger, TriggerKey> (_client);
-			_schedulerRepository = new Repository<DynamoScheduler, Key<object>> (_client);
+			_jobRepository = new Repository<DynamoJob> (_client);
+			_triggerRepository = new Repository<DynamoTrigger> (_client);
+			_schedulerRepository = new Repository<DynamoScheduler> (_client);
             new DynamoBootstrapper().BootStrap(_client);
 
             //_loadHelper = loadHelper;
@@ -109,12 +109,12 @@ namespace Quartz.DynamoDB
 
         public void StoreJob(IJobDetail newJob, bool replaceExisting)
         {
-			if (!replaceExisting && _jobRepository.Load(newJob.Key) != null)
+			DynamoJob job = new DynamoJob(newJob);
+
+			if (!replaceExisting && _jobRepository.Load(job.Key) != null)
             {
                 throw new ObjectAlreadyExistsException(newJob);
             }
-
-            DynamoJob job = new DynamoJob(newJob);
 
 			_jobRepository.Store(job);
         }
@@ -137,14 +137,16 @@ namespace Quartz.DynamoDB
 
         public IJobDetail RetrieveJob(JobKey jobKey)
         {
-			var job = _jobRepository.Load (jobKey);
+			var job = _jobRepository.Load (jobKey.ToDictionary());
 
 			return job == null ? null : job.Job;
         }
 
         public void StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting)
         {
-			if (!replaceExisting && _triggerRepository.Load(newTrigger.Key) != null)
+			DynamoTrigger trigger = new DynamoTrigger(newTrigger);
+
+			if (!replaceExisting && _triggerRepository.Load(trigger.Key) != null)
             {
                 throw new ObjectAlreadyExistsException(newTrigger);
             }
@@ -154,8 +156,6 @@ namespace Quartz.DynamoDB
                 throw new JobPersistenceException("The job (" + newTrigger.JobKey +
                                                   ") referenced by the trigger does not exist.");
             }
-
-            DynamoTrigger trigger = new DynamoTrigger(newTrigger);
 
 //            if (this.PausedTriggerGroups.FindOneByIdAs<BsonDocument>(newTrigger.Key.Group) != null
 //                || this.PausedJobGroups.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.Group) != null)
@@ -296,7 +296,7 @@ namespace Quartz.DynamoDB
 
         public TriggerState GetTriggerState(TriggerKey triggerKey)
         {
-			var record = _triggerRepository.Load (triggerKey);
+			var record = _triggerRepository.Load (triggerKey.ToDictionary());
 
             //todo: consider if we need paused and blocked
             return record?.TriggerState ?? TriggerState.None;
@@ -304,7 +304,7 @@ namespace Quartz.DynamoDB
 
         public void PauseTrigger(TriggerKey triggerKey)
         {
-			var record = _triggerRepository.Load (triggerKey);
+			var record = _triggerRepository.Load (triggerKey.ToDictionary());
 
             if (record.TriggerState == TriggerState.Blocked)
             {
@@ -335,7 +335,7 @@ namespace Quartz.DynamoDB
 
         public void ResumeTrigger(TriggerKey triggerKey)
         {
-			var record = _triggerRepository.Load (triggerKey);
+			var record = _triggerRepository.Load (triggerKey.ToDictionary());
 
             // does the trigger exist?
             if (record == null)

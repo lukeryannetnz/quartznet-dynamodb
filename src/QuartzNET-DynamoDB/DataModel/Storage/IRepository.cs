@@ -11,13 +11,13 @@ namespace Quartz.DynamoDB.DataModel.Storage
 	/// <summary>
 	/// Deals with storing and retrieving Dynamo records from the Dynamo api.
 	/// </summary>
-	interface IRepository<T, TKey>
+	interface IRepository<T>
 	{
 		/// <summary>
 		/// Load a single record of type T from the table T is associated with, matching the provided Key.
 		/// </summary>
 		/// <param name="key">Key.</param>
-		T Load (Key<TKey> key);
+		T Load (Dictionary<string, AttributeValue> key);
 
 		/// <summary>
 		/// Store the specified entity in the table T is associated with.

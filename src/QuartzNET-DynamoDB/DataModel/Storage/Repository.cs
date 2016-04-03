@@ -9,7 +9,7 @@ using System.Net;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
-	public class Repository<T, TKey> : IRepository<T, TKey> where T : IInitialisableFromDynamoRecord, IConvertableToDynamoRecord, IDynamoTableType, new()
+	public class Repository<T> : IRepository<T> where T : IInitialisableFromDynamoRecord, IConvertableToDynamoRecord, IDynamoTableType, new()
 	{
 		private AmazonDynamoDBClient _client;
 
@@ -18,11 +18,11 @@ namespace Quartz.DynamoDB.DataModel.Storage
 			_client = client;
 		}
 
-		public T Load(Key<TKey> key)
+		public T Load(Dictionary<string, AttributeValue> key)
 		{
 			T entity = new T();
 
-			if (key == null || string.IsNullOrWhiteSpace (key.Group) || string.IsNullOrWhiteSpace (key.Name)) 
+			if (key == null || key.Count < 1) 
 			{
 				throw new ArgumentException ("Invalid key provided");
 			}
@@ -30,11 +30,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
 			var request = new GetItemRequest ()
 			{ 
 				TableName = entity.DynamoTableName, 
-				Key = new Dictionary<string, AttributeValue> 
-				{ 
-					{"Group", new AttributeValue(){ S = key.Group}}, 
-					{"Name", new AttributeValue(){ S = key.Name}}
-				}
+				Key = key
 			};
 
 			var response = _client.GetItem (request);
@@ -52,7 +48,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
 		{
 			if (entity == null) 
 			{
-				throw new ArgumentException ("Invalid job provided. Must have Job property set which must have Key property set.");
+				throw new ArgumentNullException (nameof(entity));
 			}
 
 			var dictionary = entity.ToDynamo();

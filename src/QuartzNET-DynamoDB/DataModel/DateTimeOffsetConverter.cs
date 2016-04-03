@@ -10,22 +10,16 @@ namespace Quartz.DynamoDB.DataModel
     /// DateTimeOffset is preferable to DateTime as it is explicit about timezone and stores everything relative to UTC, rather than assuming local.
     /// Note that this converter doesn't serialize the offset. If a local offset is provided, the same time is returned in UTC.
     /// </summary>
-    public class DateTimeOffsetConverter : IPropertyConverter
+    public class DateTimeOffsetConverter
     {
         /// <summary>
         /// Returns a dynamodb entry (int) with the datetime relative to unix epoch time.
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public DynamoDBEntry ToEntry(object value)
+		public int ToEntry(DateTimeOffset offset)
         {
-            DateTimeOffset? offset = value as DateTimeOffset?;
-            if (offset == null || !offset.HasValue)
-            {
-                return null;
-            }
-
-            return offset.Value.UtcDateTime.ToUnixEpochTime();
+            return offset.UtcDateTime.ToUnixEpochTime();
         }
 
         /// <summary>
@@ -33,9 +27,8 @@ namespace Quartz.DynamoDB.DataModel
         /// </summary>
         /// <param name="entry"></param>
         /// <returns></returns>
-        public object FromEntry(DynamoDBEntry entry)
+		public DateTimeOffset FromEntry(int secondsSinceUtcEpoch)
         {
-            int secondsSinceUtcEpoch = entry.AsInt();
             var utcDateTime = UnixEpochDateTimeExtensions.UtcEpochTime.AddSeconds(secondsSinceUtcEpoch);
 
             return new DateTimeOffset(utcDateTime);

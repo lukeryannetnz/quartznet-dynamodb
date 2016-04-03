@@ -414,7 +414,8 @@ namespace Quartz.DynamoDB
 
         public IList<IOperableTrigger> AcquireNextTriggers(DateTimeOffset noLaterThan, int maxCount, TimeSpan timeWindow)
         {
-            // multiple instance management
+            // multiple instance management. Create a running scheduler for this instance.
+			// TODO: investigate: does this create duplicate active schedulers for the same instanceid?
             var scheduler = new DynamoScheduler
             {
                 InstanceId = _instanceId,
@@ -424,50 +425,31 @@ namespace Quartz.DynamoDB
 
 			_schedulerRepository.Store(scheduler);
 
-            int epochNow = SystemTime.Now().UtcDateTime.ToUnixEpochTime();
-			var expressionAttributeValues = new Dictionary<string,AttributeValue> 
-			{
-				{":EpochNow", new AttributeValue { N = epochNow.ToString() }}
-			};
-
-			var filterExpression = "ExpiresUtcEpoch < :EpochNow";
-			var expiredSchedulers = _schedulerRepository.Scan(expressionAttributeValues, filterExpression);
-
-            foreach (var dynamoScheduler in expiredSchedulers)
-            {
-				_schedulerRepository.Delete (dynamoScheduler.Key);
-            }
-
-			var activeSchedulers = _schedulerRepository.Scan(null, string.Empty);
-            //IEnumerable<BsonValue> activeInstances = this.Schedulers.Distinct("_id");
-
-            // Reset the state of any triggers that are associated with non-active schedulers.
-            //todo: this will be slow. do the query based on an index.
-			foreach (var trigger in _triggerRepository.Scan(null, string.Empty))
-            {
-                if (!string.IsNullOrEmpty(trigger.SchedulerInstanceId) && !activeSchedulers.Select(s => s.InstanceId).Contains(trigger.SchedulerInstanceId))
-                {
-                    trigger.SchedulerInstanceId = string.Empty;
-                    trigger.State = "Waiting";
-
-					_triggerRepository.Store(trigger);
-                }
-            }
+			DeleteExpiredSchedulers();
+			ResetTriggersAssociatedWithNonActiveSchedulers ();
 
             List<IOperableTrigger> result = new List<IOperableTrigger>();
             Collection.ISet<JobKey> acquiredJobKeysForNoConcurrentExec = new Collection.HashSet<JobKey>();
             DateTimeOffset? firstAcquiredTriggerFireTime = null;
 
-            var waitingStateCondition = new ScanCondition("State", ScanOperator.Equal, "Waiting");
             string maxNextFireTime = (noLaterThan + timeWindow).UtcDateTime.ToUnixEpochTime().ToString();
-            var dueToFireCondition = new ScanCondition("NextFireTimeUtcEpoch", ScanOperator.LessThanOrEqual, maxNextFireTime);
-            var candidates = _context.Scan<DynamoTrigger>(waitingStateCondition, dueToFireCondition);
-            //var candidates = this.Triggers.FindAs<Spi.IOperableTrigger>(
-            //    Query.And(
-            //        Query.EQ("State", "Waiting"),
-            //        Query.LTE("nextFireTimeUtc", (noLaterThan + timeWindow).UtcDateTime)))
-            //    .OrderBy(t => t.GetNextFireTimeUtc()).ThenByDescending(t => t.Priority);
+            
+			var candidateExpressionAttributeNames = new Dictionary<string,string> 
+			{
+				{"#S", "State" }
+			};
 
+			var candidateExpressionAttributeValues = new Dictionary<string,AttributeValue> 
+			{
+				{":WaitingState", new AttributeValue { S = "Waiting" }},
+				{":MaxNextFireTime", new AttributeValue { N = maxNextFireTime }}
+			};
+
+			var candidateFilterExpression = "#S = :WaitingState and NextFireTimeUtcEpoch <= :MaxNextFireTime";
+
+			var candidates = _triggerRepository.Scan (candidateExpressionAttributeValues,candidateExpressionAttributeNames, candidateFilterExpression)
+				.OrderBy(t => t.Trigger.GetNextFireTimeUtc()).ThenByDescending(t => t.Trigger.Priority);
+			
             foreach (var trigger in candidates)
             {
                 if (trigger.Trigger.GetNextFireTimeUtc() == null)
@@ -518,38 +500,20 @@ namespace Quartz.DynamoDB
                 // an update is successful (or not).s
 
                 // Only grab a trigger if the state is still waiting (another scheduler hasn't grabbed it meanwhile)
-                // See dynamo docs for more details on conditions http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html
-                UpdateItemOperationConfig conditionalUpdate = new UpdateItemOperationConfig();
-                conditionalUpdate.ConditionalExpression = new Expression
-                {
-                    ExpressionStatement = "Name = :name and Group = :group and State = :state",
-                    ExpressionAttributeValues =
-                    {
-                        [":name"] = trigger.Trigger.Name,
-                        [":group"] = trigger.Trigger.Group,
-                        [":state"] = "Waiting"
-                    }
-                };
+				var acquireTriggerConditionalExpression = "Name = :name and Group = :group and State = :state";
+				Dictionary<string, AttributeValue> acquireTriggerExpressionAttributeValues = new Dictionary<string, AttributeValue>() {
+					{":name", new AttributeValue() { S = trigger.Trigger.Name}},
+					{":group", new AttributeValue() { S = trigger.Trigger.Group}},
+					{":state", new AttributeValue() { S = "Waiting"}}
+				};
 
                 trigger.Trigger.FireInstanceId = this.GetFiredTriggerRecordId();
                 trigger.SchedulerInstanceId = InstanceId;
                 trigger.State = "Acquired";
 
-                //Table triggerTable = Table.LoadTable(_client, DynamoConfiguration.TriggerTableName);
-                //TODO: FIX ME
-                //bool acquiredTrigger = triggerTable.TryUpdateItem((Document)(new TriggerConverter().ToEntry(trigger)), conditionalUpdate);
+				var acquiredTrigger = _triggerRepository.Store(trigger, acquireTriggerExpressionAttributeValues, acquireTriggerConditionalExpression);
 
-                //var acquired = this.Triggers.FindAndModify(
-                //    Query.And(
-                //        Query.EQ("_id", trigger.Key.ToBsonDocument()),
-                //        Query.EQ("State", "Waiting")),
-                //    SortBy.Null,
-                //    Update.Set("State", "Acquired")
-                //        .Set("SchedulerInstanceId", this.instanceId)
-                //        .Set("FireInstanceId", trigger.FireInstanceId));
-
-                if(true)
-                //if (acquiredTrigger)
+				if (acquiredTrigger.Any())
                 {
                     result.Add(trigger.Trigger);
 
@@ -565,25 +529,50 @@ namespace Quartz.DynamoDB
                 }
             }
 
-
-            //    if (acquired.ModifiedDocument != null)
-            //    {
-            //        result.Add(trigger);
-
-            //        if (firstAcquiredTriggerFireTime == null)
-            //        {
-            //            firstAcquiredTriggerFireTime = trigger.GetNextFireTimeUtc();
-            //        }
-            //    }
-
-            //    if (result.Count == maxCount)
-            //    {
-            //        break;
-            //    }
-            //}
-
             return result;
         }
+
+		/// <summary>
+		/// Deletes any expired scheduler records.
+		/// </summary>
+		private void DeleteExpiredSchedulers()
+		{
+			int epochNow = SystemTime.Now ().UtcDateTime.ToUnixEpochTime ();
+			var expressionAttributeValues = new Dictionary<string, AttributeValue> {
+				{
+					":EpochNow",
+					new AttributeValue {
+						N = epochNow.ToString ()
+					}
+				}
+			};
+			var filterExpression = "ExpiresUtcEpoch < :EpochNow";
+			var expiredSchedulers = _schedulerRepository.Scan (expressionAttributeValues, null, filterExpression);
+
+			foreach (var dynamoScheduler in expiredSchedulers) 
+			{
+				_schedulerRepository.Delete (dynamoScheduler.Key);
+			}
+		}
+
+		/// <summary>
+		/// Reset the state of any triggers that are associated with non-active schedulers.
+		/// </summary>
+		void ResetTriggersAssociatedWithNonActiveSchedulers()
+		{
+			var activeSchedulers = _schedulerRepository.Scan(null, null, string.Empty);
+
+			//todo: this will be slow. do the query based on an index.
+			foreach (var trigger in _triggerRepository.Scan (null, null,string.Empty))
+			{
+				if (!string.IsNullOrEmpty (trigger.SchedulerInstanceId) && !activeSchedulers.Select (s => s.InstanceId).Contains (trigger.SchedulerInstanceId))
+				{
+					trigger.SchedulerInstanceId = string.Empty;
+					trigger.State = "Waiting";
+					_triggerRepository.Store (trigger);
+				}
+			}
+		}
 
         /// <summary>
         /// Checks if the given triggers NextFireTime is older than now + the misfire threshold.

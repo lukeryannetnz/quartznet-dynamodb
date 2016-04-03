@@ -46,18 +46,34 @@ namespace Quartz.DynamoDB.DataModel.Storage
 
 		public void Store(T entity)
 		{
+			Store (entity, null, string.Empty);
+		}
+
+		public Dictionary<string,AttributeValue> Store(T entity, Dictionary<string,AttributeValue> expressionAttributeValues, string conditionExpression)
+		{
 			if (entity == null) 
 			{
 				throw new ArgumentNullException (nameof(entity));
 			}
 
 			var dictionary = entity.ToDynamo();
-			var response = _client.PutItem(new PutItemRequest(entity.DynamoTableName, dictionary));
+			var request = new PutItemRequest (entity.DynamoTableName, dictionary);
+
+			if(!string.IsNullOrWhiteSpace(conditionExpression))
+			{
+				request.ConditionExpression = conditionExpression;	
+				request.ExpressionAttributeValues = expressionAttributeValues;
+				request.ReturnValues = ReturnValue.ALL_OLD;
+			}
+
+			var response = _client.PutItem(request);
 
 			if(response.HttpStatusCode != HttpStatusCode.OK)
 			{
 				throw new JobPersistenceException($"Non 200 response code received from dynamo {response.ToString()}");
 			}
+
+			return response.Attributes;
 		}
 
 		public void Delete(Dictionary<string, AttributeValue> key)
@@ -77,7 +93,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
 			}
 		}
 
-		public IEnumerable<T> Scan(Dictionary<string,AttributeValue> expressionAttributeValues, string filterExpression)
+		public IEnumerable<T> Scan(Dictionary<string,AttributeValue> expressionAttributeValues, Dictionary<string, string> expressionAttributeNames, string filterExpression)
 		{
 			T entity = new T();
 
@@ -89,6 +105,11 @@ namespace Quartz.DynamoDB.DataModel.Storage
 			if (expressionAttributeValues != null) 
 			{
 				request.ExpressionAttributeValues = expressionAttributeValues;
+			}
+
+			if (expressionAttributeNames != null)
+			{
+				request.ExpressionAttributeNames = expressionAttributeNames;
 			}
 
 			if (!string.IsNullOrWhiteSpace (filterExpression)) 

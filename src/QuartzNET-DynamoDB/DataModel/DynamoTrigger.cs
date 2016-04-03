@@ -18,6 +18,7 @@ namespace Quartz.DynamoDB.DataModel
 	public class DynamoTrigger : IInitialisableFromDynamoRecord,IConvertableToDynamoRecord, IDynamoTableType
     {
 		private readonly JobDataMapConverter jobDataMapConverter = new JobDataMapConverter();
+		private readonly DateTimeOffsetConverter dateTimeOffsetConverter = new DateTimeOffsetConverter();
 
         public DynamoTrigger()
         {
@@ -127,7 +128,7 @@ namespace Quartz.DynamoDB.DataModel
 
 			if(record.ContainsKey("NextFireTimeUtc"))
 			{
-				Trigger.SetNextFireTimeUtc(DateTimeOffset.Parse(record["NextFireTimeUtc"].S));
+				Trigger.SetNextFireTimeUtc(dateTimeOffsetConverter.FromEntry(int.Parse(record["NextFireTimeUtc"].N)));
 			}
 
 			Trigger.Priority = int.Parse(record["Priority"].N);
@@ -230,7 +231,7 @@ namespace Quartz.DynamoDB.DataModel
 
 			if (Trigger.GetNextFireTimeUtc().HasValue)
 			{
-				record.Add("NextFireTimeUtc", AttributeValueHelper.StringOrNull(Trigger.GetNextFireTimeUtc().Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
+				record.Add("NextFireTimeUtc", new AttributeValue() { N = dateTimeOffsetConverter.ToEntry(Trigger.GetNextFireTimeUtc().Value).ToString()});
 			}
 
             record.Add("Priority", new AttributeValue() { N = Trigger.Priority.ToString() });

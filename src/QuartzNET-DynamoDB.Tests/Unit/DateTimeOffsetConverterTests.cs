@@ -17,7 +17,7 @@ namespace Quartz.DynamoDB.Tests.Unit
             var sut = new DateTimeOffsetConverter();
 
             var epochTime = sut.ToEntry(xmas2015);
-            Assert.Equal(1451001600, epochTime.AsInt());
+            Assert.Equal(1451001600, epochTime);
 
             var result = sut.FromEntry(epochTime);
             Assert.Equal(xmas2015, (DateTimeOffset)result);
@@ -32,7 +32,7 @@ namespace Quartz.DynamoDB.Tests.Unit
             var sut = new DateTimeOffsetConverter();
 
             var epochTime = sut.ToEntry(ninthOctoberNineteenSixtyNine);
-            Assert.Equal(-7228801, epochTime.AsInt());
+            Assert.Equal(-7228801, epochTime);
 
             var result = sut.FromEntry(epochTime);
             Assert.Equal(ninthOctoberNineteenSixtyNine, (DateTimeOffset)result);

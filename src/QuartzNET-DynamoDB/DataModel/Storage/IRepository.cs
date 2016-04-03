@@ -26,12 +26,30 @@ namespace Quartz.DynamoDB.DataModel.Storage
 		void Store (T entity);
 
 		/// <summary>
+		/// Store the specified entity, in the table T is associated with. 
+		/// Only store the specific entity is the condition specified in conditionExpression is met..
+		/// See dynamo docs for more details on conditions http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html
+		/// </summary>
+		/// <param name="entity">Entity.</param>
+		/// <param name="expressionAttributeValues">Expression attribute values. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ExpressionPlaceholders.html"/></param>
+		/// <param name="conditionExpression">Condition expression. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ConditionExpression"/></param>
+		/// <returns>>ALL_OLD the values that were replaced. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ReturnValues"/> </returns>
+		Dictionary<string,AttributeValue> Store(T entity, Dictionary<string,AttributeValue> expressionAttributeValues, string conditionExpression);
+
+		/// <summary>
 		/// Delete the entity with the specified key.
 		/// </summary>
 		/// <param name="key">Key.</param>
 		void Delete (Dictionary<string, AttributeValue> key);
 
-		IEnumerable<T> Scan (Dictionary<string,AttributeValue> expressionAttributeValues, string filterExpression);
+		/// <summary>
+		/// Scan the table with the provided expressionAttributeValues and filterExpression.
+		/// <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html"/> 
+		/// </summary>
+		/// <param name="expressionAttributeValues">Expression attribute values. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ExpressionPlaceholders.html"/></param>
+		/// <param name="filterExpression">Filter expression. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/QueryAndScan.html#FilteringResults"/></param>
+		/// <param name="expressionAttributeNames">Expression attribute names. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ExpressionAttributeNames"/></param>
+		IEnumerable<T> Scan (Dictionary<string,AttributeValue> expressionAttributeValues, Dictionary<string, string> expressionAttributeNames, string filterExpression);
 	}
 }
 

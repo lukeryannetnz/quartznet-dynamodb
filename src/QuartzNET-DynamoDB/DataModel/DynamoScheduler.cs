@@ -43,11 +43,14 @@ namespace Quartz.DynamoDB.DataModel
                     return null;
                 }
 
-                return (DateTimeOffset)converter.FromEntry(ExpiresUtcEpoch);
+				return converter.FromEntry(ExpiresUtcEpoch.Value);
             }
             set
             {
-                ExpiresUtcEpoch = (int?)converter.ToEntry(value);
+				if (value.HasValue)
+				{
+					ExpiresUtcEpoch = converter.ToEntry (value.Value);
+				}
             }
         }
 			

@@ -46,10 +46,10 @@ namespace Quartz.DynamoDB.DataModel.Storage
 
 		public void Store(T entity)
 		{
-			Store (entity, null, string.Empty);
+			Store (entity, null, null, string.Empty);
 		}
 
-		public Dictionary<string,AttributeValue> Store(T entity, Dictionary<string,AttributeValue> expressionAttributeValues, string conditionExpression)
+		public Dictionary<string,AttributeValue> Store(T entity, Dictionary<string,AttributeValue> expressionAttributeValues, Dictionary<string, string> expressionAttributeNames, string conditionExpression)
 		{
 			if (entity == null) 
 			{
@@ -63,6 +63,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
 			{
 				request.ConditionExpression = conditionExpression;	
 				request.ExpressionAttributeValues = expressionAttributeValues;
+				request.ExpressionAttributeNames = expressionAttributeNames;
 				request.ReturnValues = ReturnValue.ALL_OLD;
 			}
 

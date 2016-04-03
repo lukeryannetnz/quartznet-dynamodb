@@ -494,13 +494,13 @@ namespace Quartz.DynamoDB
                     }
                 }
 
-
-                // Do this using the lower level Document Model (rather than object model) as Object Model
-                // support for conditional updates (optimistic locking) doesn't provide adequate feedback when
-                // an update is successful (or not).s
+				var acquireTriggerConditionalExpressionAttributeNames = new Dictionary<string,string> 
+				{
+					{ "#S", "State" }
+				};
 
                 // Only grab a trigger if the state is still waiting (another scheduler hasn't grabbed it meanwhile)
-				var acquireTriggerConditionalExpression = "Name = :name and Group = :group and State = :state";
+				var acquireTriggerConditionalExpression = "Name = :name and Group = :group and #S = :state";
 				Dictionary<string, AttributeValue> acquireTriggerExpressionAttributeValues = new Dictionary<string, AttributeValue>() {
 					{":name", new AttributeValue() { S = trigger.Trigger.Name}},
 					{":group", new AttributeValue() { S = trigger.Trigger.Group}},
@@ -511,7 +511,7 @@ namespace Quartz.DynamoDB
                 trigger.SchedulerInstanceId = InstanceId;
                 trigger.State = "Acquired";
 
-				var acquiredTrigger = _triggerRepository.Store(trigger, acquireTriggerExpressionAttributeValues, acquireTriggerConditionalExpression);
+				var acquiredTrigger = _triggerRepository.Store(trigger, acquireTriggerExpressionAttributeValues, acquireTriggerConditionalExpressionAttributeNames, acquireTriggerConditionalExpression);
 
 				if (acquiredTrigger.Any())
                 {

@@ -33,8 +33,9 @@ namespace Quartz.DynamoDB.DataModel.Storage
 		/// <param name="entity">Entity.</param>
 		/// <param name="expressionAttributeValues">Expression attribute values. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ExpressionPlaceholders.html"/></param>
 		/// <param name="conditionExpression">Condition expression. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ConditionExpression"/></param>
+		/// <param name="expressionAttributeNames">Expression attribute names. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ExpressionAttributeNames"/></param>
 		/// <returns>>ALL_OLD the values that were replaced. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ReturnValues"/> </returns>
-		Dictionary<string,AttributeValue> Store(T entity, Dictionary<string,AttributeValue> expressionAttributeValues, string conditionExpression);
+		Dictionary<string,AttributeValue> Store(T entity, Dictionary<string,AttributeValue> expressionAttributeValues, Dictionary<string, string> expressionAttributeNames, string conditionExpression);
 
 		/// <summary>
 		/// Delete the entity with the specified key.

@@ -126,9 +126,9 @@ namespace Quartz.DynamoDB.DataModel
 				Trigger.EndTimeUtc = DateTimeOffset.Parse(record["EndTimeUtc"].S);
 			}
 
-			if(record.ContainsKey("NextFireTimeUtc"))
+			if(record.ContainsKey("NextFireTimeUtcEpoch"))
 			{
-				Trigger.SetNextFireTimeUtc(dateTimeOffsetConverter.FromEntry(int.Parse(record["NextFireTimeUtc"].N)));
+				Trigger.SetNextFireTimeUtc(dateTimeOffsetConverter.FromEntry(int.Parse(record["NextFireTimeUtcEpoch"].N)));
 			}
 
 			Trigger.Priority = int.Parse(record["Priority"].N);
@@ -231,7 +231,7 @@ namespace Quartz.DynamoDB.DataModel
 
 			if (Trigger.GetNextFireTimeUtc().HasValue)
 			{
-				record.Add("NextFireTimeUtc", new AttributeValue() { N = dateTimeOffsetConverter.ToEntry(Trigger.GetNextFireTimeUtc().Value).ToString()});
+				record.Add("NextFireTimeUtcEpoch", new AttributeValue() { N = dateTimeOffsetConverter.ToEntry(Trigger.GetNextFireTimeUtc().Value).ToString()});
 			}
 
             record.Add("Priority", new AttributeValue() { N = Trigger.Priority.ToString() });

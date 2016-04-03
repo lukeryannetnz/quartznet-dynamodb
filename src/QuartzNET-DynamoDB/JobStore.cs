@@ -627,7 +627,12 @@ namespace Quartz.DynamoDB
 
         public void ReleaseAcquiredTrigger(IOperableTrigger trigger)
         {
-            throw new NotImplementedException();
+			var t = _triggerRepository.Load (trigger.Key.ToDictionary());
+
+			t.SchedulerInstanceId = string.Empty;
+			t.State = "Waiting";
+
+			_triggerRepository.Store (t);
         }
 
         public IList<TriggerFiredResult> TriggersFired(IList<IOperableTrigger> triggers)

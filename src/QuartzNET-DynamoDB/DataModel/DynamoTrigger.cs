@@ -109,6 +109,7 @@ namespace Quartz.DynamoDB.DataModel
 			}
 
 			State = record ["State"].S;
+			SchedulerInstanceId = record ["SchedulerInstanceId"].S;
 			Trigger.Name = record["Name"].S;
 			Trigger.Group = record["Group"].S;
 			Trigger.JobName = record["JobName"].S;
@@ -211,6 +212,7 @@ namespace Quartz.DynamoDB.DataModel
             Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
 
 			record.Add("State", AttributeValueHelper.StringOrNull (State));
+			record.Add("SchedulerInstanceId", AttributeValueHelper.StringOrNull (SchedulerInstanceId));
 
             record.Add("Name", AttributeValueHelper.StringOrNull(Trigger.Name));
             record.Add("Group", AttributeValueHelper.StringOrNull(Trigger.Group));

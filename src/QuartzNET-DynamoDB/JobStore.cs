@@ -496,11 +496,13 @@ namespace Quartz.DynamoDB
 
 				var acquireTriggerConditionalExpressionAttributeNames = new Dictionary<string,string> 
 				{
-					{ "#S", "State" }
+					{ "#S", "State" },
+					{ "#N", "Name" },
+					{ "#G", "Group" }
 				};
 
                 // Only grab a trigger if the state is still waiting (another scheduler hasn't grabbed it meanwhile)
-				var acquireTriggerConditionalExpression = "Name = :name and Group = :group and #S = :state";
+				var acquireTriggerConditionalExpression = "#N = :name and #G = :group and #S = :state";
 				Dictionary<string, AttributeValue> acquireTriggerExpressionAttributeValues = new Dictionary<string, AttributeValue>() {
 					{":name", new AttributeValue() { S = trigger.Trigger.Name}},
 					{":group", new AttributeValue() { S = trigger.Trigger.Group}},
@@ -611,7 +613,7 @@ namespace Quartz.DynamoDB
             if (!trigger.Trigger.GetNextFireTimeUtc().HasValue)
             {
                 trigger.State = "Complete";
-                _context.Save(trigger);
+				this.StoreTrigger(trigger.Trigger, true);
 
                 _signaler.NotifySchedulerListenersFinalized(trigger.Trigger);
             }

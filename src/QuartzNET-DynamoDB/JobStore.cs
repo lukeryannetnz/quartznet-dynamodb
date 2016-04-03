@@ -414,12 +414,7 @@ namespace Quartz.DynamoDB
 
         public IList<IOperableTrigger> AcquireNextTriggers(DateTimeOffset noLaterThan, int maxCount, TimeSpan timeWindow)
         {
-            // multiple instances management
-            //this.Schedulers.Save(new BsonDocument()
-            //    .SetElement(new BsonElement("_id", this.instanceId))
-            //    .SetElement(new BsonElement("Expires", (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime))
-            //    .SetElement(new BsonElement("State", "Running")));
-
+            // multiple instance management
             var scheduler = new DynamoScheduler
             {
                 InstanceId = _instanceId,
@@ -430,31 +425,32 @@ namespace Quartz.DynamoDB
 			_schedulerRepository.Store(scheduler);
 
             int epochNow = SystemTime.Now().UtcDateTime.ToUnixEpochTime();
+			var expressionAttributeValues = new Dictionary<string,AttributeValue> 
+			{
+				{":EpochNow", new AttributeValue { N = epochNow.ToString() }}
+			};
 
-            ScanCondition expiredCondition = new ScanCondition("ExpiresUtcEpoch", ScanOperator.LessThan,
-               epochNow);
-            var expiredSchedulers = _context.Scan<DynamoScheduler>(expiredCondition);
-
-
+			var filterExpression = "ExpiresUtcEpoch < :EpochNow";
+			var expiredSchedulers = _schedulerRepository.Scan(expressionAttributeValues, filterExpression);
 
             foreach (var dynamoScheduler in expiredSchedulers)
             {
-                _context.Delete(dynamoScheduler);
+				_schedulerRepository.Delete (dynamoScheduler.Key);
             }
 
-            var activeSchedulers = _context.Scan<DynamoScheduler>();
+			var activeSchedulers = _schedulerRepository.Scan(null, string.Empty);
             //IEnumerable<BsonValue> activeInstances = this.Schedulers.Distinct("_id");
 
             // Reset the state of any triggers that are associated with non-active schedulers.
             //todo: this will be slow. do the query based on an index.
-            foreach (var trigger in _context.Scan<DynamoTrigger>())
+			foreach (var trigger in _triggerRepository.Scan(null, string.Empty))
             {
                 if (!string.IsNullOrEmpty(trigger.SchedulerInstanceId) && !activeSchedulers.Select(s => s.InstanceId).Contains(trigger.SchedulerInstanceId))
                 {
                     trigger.SchedulerInstanceId = string.Empty;
                     trigger.State = "Waiting";
 
-                    _context.Save(trigger);
+					_triggerRepository.Store(trigger);
                 }
             }
 

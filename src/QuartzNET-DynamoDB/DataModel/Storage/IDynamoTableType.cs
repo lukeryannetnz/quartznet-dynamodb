@@ -17,6 +17,12 @@ namespace Quartz.DynamoDB.DataModel.Storage
 		/// </summary>
 		/// <value>The name of the dynamo table.</value>
 		string DynamoTableName { get; }
+
+		/// <summary>
+		/// Gets the dynamo db key for this instance.
+		/// </summary>
+		/// <value>The key.</value>
+		Dictionary<string, AttributeValue> Key { get; }
 	}
 
 }

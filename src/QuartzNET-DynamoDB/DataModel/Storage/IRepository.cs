@@ -25,6 +25,12 @@ namespace Quartz.DynamoDB.DataModel.Storage
 		/// <param name="entity">Entity.</param>
 		void Store (T entity);
 
+		/// <summary>
+		/// Delete the entity with the specified key.
+		/// </summary>
+		/// <param name="key">Key.</param>
+		void Delete (Dictionary<string, AttributeValue> key);
+
 		IEnumerable<T> Scan (Dictionary<string,AttributeValue> expressionAttributeValues, string filterExpression);
 	}
 }

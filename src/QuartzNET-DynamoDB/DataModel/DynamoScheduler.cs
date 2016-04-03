@@ -61,6 +61,25 @@ namespace Quartz.DynamoDB.DataModel
 			}
 		}
 
+		public Dictionary<string, AttributeValue> Key 
+		{ 
+			get 
+			{
+				return new Dictionary<string, AttributeValue> () {
+					{ "InstanceId", new AttributeValue ()
+						{
+							S = InstanceId 
+						}
+					},
+					{ "ExpiresUtcEpoch", new AttributeValue ()
+						{
+							N = ExpiresUtcEpoch.ToString() 
+						}
+					}
+				};
+			}
+		}
+
 		public void InitialiseFromDynamoRecord (System.Collections.Generic.Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue> record)
 		{
 			InstanceId = record ["InstanceId"].S;

@@ -50,6 +50,25 @@ namespace Quartz.DynamoDB.DataModel
 			}
 		}
 
+		public Dictionary<string, AttributeValue> Key 
+		{ 
+			get 
+			{
+				return new Dictionary<string, AttributeValue> () {
+					{ "Name", new AttributeValue ()
+						{
+							S = Job.Key.Name 
+						}
+					},
+					{ "Group", new AttributeValue ()
+						{
+							S = Job.Key.Group 
+						}
+					}
+				};
+			}
+		}
+
         public IJobDetail Job { get; private set; }
 
         public Dictionary<string, AttributeValue> ToDynamo()

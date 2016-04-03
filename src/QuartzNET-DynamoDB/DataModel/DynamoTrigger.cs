@@ -141,6 +141,25 @@ namespace Quartz.DynamoDB.DataModel
 				return DynamoConfiguration.TriggerTableName;
 			}
 		}
+
+		public Dictionary<string, AttributeValue> Key 
+		{ 
+			get 
+			{
+				return new Dictionary<string, AttributeValue> () {
+					{ "Name", new AttributeValue ()
+						{
+							S = Trigger.Key.Name 
+						}
+					},
+					{ "Group", new AttributeValue ()
+						{
+							S = Trigger.Key.Group 
+						}
+					}
+				};
+			}
+		}
 			
         public AbstractTrigger Trigger { get; set; }
 

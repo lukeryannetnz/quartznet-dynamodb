@@ -64,6 +64,23 @@ namespace Quartz.DynamoDB.DataModel.Storage
 			}
 		}
 
+		public void Delete(Dictionary<string, AttributeValue> key)
+		{
+			if (key == null) 
+			{
+				throw new ArgumentException ("Invalid key provided.");
+			}
+
+			T entity = new T();
+
+			var response = _client.DeleteItem (new DeleteItemRequest (entity.DynamoTableName, key));
+
+			if(response.HttpStatusCode != HttpStatusCode.OK)
+			{
+				throw new JobPersistenceException($"Non 200 response code received from dynamo {response.ToString()}");
+			}
+		}
+
 		public IEnumerable<T> Scan(Dictionary<string,AttributeValue> expressionAttributeValues, string filterExpression)
 		{
 			T entity = new T();

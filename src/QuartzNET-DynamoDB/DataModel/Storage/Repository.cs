@@ -9,7 +9,7 @@ using System.Net;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
-	public class Repository<T> : IRepository<T> where T : IInitialisableFromDynamoRecord, IConvertableToDynamoRecord, IDynamoTableType, new()
+	public class Repository<T> : IRepository<T> where T : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType, new()
 	{
 		private AmazonDynamoDBClient _client;
 

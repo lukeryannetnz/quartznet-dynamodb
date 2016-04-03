@@ -15,7 +15,7 @@ namespace Quartz.DynamoDB.DataModel
     /// <summary>
     /// A wrapper class for a Quartz Trigger instance that can be serialized and stored in Amazon DynamoDB.
     /// </summary>
-	public class DynamoTrigger : IInitialisableFromDynamoRecord,IConvertableToDynamoRecord, IDynamoTableType
+	public class DynamoTrigger : IInitialisableFromDynamoRecord,IConvertibleToDynamoRecord, IDynamoTableType
     {
 		private readonly JobDataMapConverter jobDataMapConverter = new JobDataMapConverter();
 		private readonly DateTimeOffsetConverter dateTimeOffsetConverter = new DateTimeOffsetConverter();

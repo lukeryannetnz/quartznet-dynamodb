@@ -10,7 +10,7 @@ namespace Quartz.DynamoDB.DataModel
     /// <summary>
     /// An instance of a quartz job scheduler.
     /// </summary>
-	public class DynamoScheduler : IDynamoTableType, IInitialisableFromDynamoRecord, IConvertableToDynamoRecord
+	public class DynamoScheduler : IDynamoTableType, IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord
     {
         private readonly DateTimeOffsetConverter converter = new DateTimeOffsetConverter();
 

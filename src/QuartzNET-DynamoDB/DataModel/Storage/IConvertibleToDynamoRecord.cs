@@ -10,7 +10,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
 	/// <summary>
 	/// Indicates that this type can be converted to a dynamo db record.
 	/// </summary>
-	public interface IConvertableToDynamoRecord
+	public interface IConvertibleToDynamoRecord
 	{
 		/// <summary>
 		/// Converts the given instance to a dynamo db record.

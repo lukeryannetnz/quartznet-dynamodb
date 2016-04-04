@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 using Xunit;
 
-
 [assembly: AssemblyTitle("QuartzNET-DynamoDB.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]

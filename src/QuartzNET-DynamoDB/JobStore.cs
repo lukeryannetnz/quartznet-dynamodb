@@ -80,10 +80,7 @@ namespace Quartz.DynamoDB
 
         public void SchedulerPaused()
 		{
-			var scheduler = _schedulerRepository.Load (new Dictionary<string, AttributeValue> (){ {
-					"InstanceId",
-					new AttributeValue (){ S = InstanceId }
-				} });
+			var scheduler = _schedulerRepository.Load (DynamoScheduler.CreateKeyDictionary (InstanceId));
 
 			scheduler.State = "Paused";
 
@@ -92,8 +89,11 @@ namespace Quartz.DynamoDB
 
         public void SchedulerResumed()
         {
-            throw new NotImplementedException();
-        }
+			var scheduler = _schedulerRepository.Load (DynamoScheduler.CreateKeyDictionary (InstanceId));
+
+			scheduler.State = "Resumed";
+
+			_schedulerRepository.Store (scheduler);        }
 
         public void Shutdown()
         {
@@ -206,11 +206,7 @@ namespace Quartz.DynamoDB
         {
             var request = new GetItemRequest(
               DynamoConfiguration.TriggerTableName,
-              new Dictionary<string, AttributeValue>
-              {
-                    { "Name", new AttributeValue() { S = triggerKey.Name } },
-                    { "Group", new AttributeValue() { S = triggerKey.Group } }
-              });
+				triggerKey.ToDictionary());
 
             var response = _client.GetItem(request);
 
@@ -582,6 +578,7 @@ namespace Quartz.DynamoDB
 				ExpiresUtc = (SystemTime.Now () + new TimeSpan (0, 10, 0)).UtcDateTime,
 				State = "Running"
 			};
+
 			_schedulerRepository.Store (scheduler);
 		}
 
@@ -668,7 +665,7 @@ namespace Quartz.DynamoDB
             {
                 if (value.TotalMilliseconds < 1)
                 {
-                    throw new ArgumentException("Misfirethreashold must be larger than 0");
+                    throw new ArgumentException("Misfirethreshold must be larger than 0");
                 }
                 _misfireThreshold = value;
             }

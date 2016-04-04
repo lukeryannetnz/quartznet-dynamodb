@@ -68,14 +68,24 @@ namespace Quartz.DynamoDB.DataModel
 		{ 
 			get 
 			{
-				return new Dictionary<string, AttributeValue> () {
-					{ "InstanceId", new AttributeValue ()
-						{
-							S = InstanceId 
-						}
-					}
-				};
+				return CreateKeyDictionary (InstanceId);
 			}
+		}
+
+		/// <summary>
+		/// Creates a dynamo key dictionary for the Scheduler table with the provided instance id.
+		/// </summary>
+		/// <returns>The dynamo key.</returns>
+		/// <param name="instanceId">Instance identifier.</param>
+		public static Dictionary<string, AttributeValue> CreateKeyDictionary(string instanceId)
+		{
+			return new Dictionary<string, AttributeValue> () {
+				{ "InstanceId", new AttributeValue ()
+					{
+						S = instanceId 
+					}
+				}
+			};
 		}
 
 		public void InitialiseFromDynamoRecord (System.Collections.Generic.Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue> record)

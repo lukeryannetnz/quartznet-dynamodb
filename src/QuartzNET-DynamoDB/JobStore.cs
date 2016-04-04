@@ -529,59 +529,6 @@ namespace Quartz.DynamoDB
             return result;
         }
 
-		/// <summary>
-		/// Deletes any expired scheduler records.
-		/// </summary>
-		private void DeleteExpiredSchedulers()
-		{
-			int epochNow = SystemTime.Now ().UtcDateTime.ToUnixEpochTime ();
-			var expressionAttributeValues = new Dictionary<string, AttributeValue> {
-				{
-					":EpochNow",
-					new AttributeValue {
-						N = epochNow.ToString ()
-					}
-				}
-			};
-			var filterExpression = "ExpiresUtcEpoch < :EpochNow";
-			var expiredSchedulers = _schedulerRepository.Scan (expressionAttributeValues, null, filterExpression);
-
-			foreach (var dynamoScheduler in expiredSchedulers) 
-			{
-				_schedulerRepository.Delete (dynamoScheduler.Key);
-			}
-		}
-
-		/// <summary>
-		/// Reset the state of any triggers that are associated with non-active schedulers.
-		/// </summary>
-		void ResetTriggersAssociatedWithNonActiveSchedulers()
-		{
-			var activeSchedulers = _schedulerRepository.Scan(null, null, string.Empty);
-
-			//todo: this will be slow. do the query based on an index.
-			foreach (var trigger in _triggerRepository.Scan (null, null,string.Empty))
-			{
-				if (!string.IsNullOrEmpty (trigger.SchedulerInstanceId) && !activeSchedulers.Select (s => s.InstanceId).Contains (trigger.SchedulerInstanceId))
-				{
-					trigger.SchedulerInstanceId = string.Empty;
-					trigger.State = "Waiting";
-					_triggerRepository.Store (trigger);
-				}
-			}
-		}
-
-		void CreateOrUpdateCurrentSchedulerInstance()
-		{
-			var scheduler = new DynamoScheduler {
-				InstanceId = _instanceId,
-				ExpiresUtc = (SystemTime.Now () + new TimeSpan (0, 10, 0)).UtcDateTime,
-				State = "Running"
-			};
-
-			_schedulerRepository.Store (scheduler);
-		}
-
         /// <summary>
         /// Checks if the given triggers NextFireTime is older than now + the misfire threshold.
         /// If it is, applies the misfire and updates the record in the DB.
@@ -699,6 +646,65 @@ namespace Quartz.DynamoDB
         }
 
         public int ThreadPoolSize { get; set; }
+
+		/// <summary>
+		/// Creates a Scheduler record for the current instance id that expires in 10 minutes. 
+		/// Or if a record already exists for the id, updates the Expires time to 10 minutes from now. 
+		/// 
+		/// Always sets the scheduler state to Running.
+		/// </summary>
+		private void CreateOrUpdateCurrentSchedulerInstance()
+		{
+			var scheduler = new DynamoScheduler {
+				InstanceId = _instanceId,
+				ExpiresUtc = (SystemTime.Now () + new TimeSpan (0, 10, 0)).UtcDateTime,
+				State = "Running"
+			};
+
+			_schedulerRepository.Store (scheduler);
+		}
+
+		/// <summary>
+		/// Deletes any expired scheduler records.
+		/// </summary>
+		private void DeleteExpiredSchedulers()
+		{
+			int epochNow = SystemTime.Now ().UtcDateTime.ToUnixEpochTime ();
+			var expressionAttributeValues = new Dictionary<string, AttributeValue> {
+				{
+					":EpochNow",
+					new AttributeValue {
+						N = epochNow.ToString ()
+					}
+				}
+			};
+			var filterExpression = "ExpiresUtcEpoch < :EpochNow";
+			var expiredSchedulers = _schedulerRepository.Scan (expressionAttributeValues, null, filterExpression);
+
+			foreach (var dynamoScheduler in expiredSchedulers) 
+			{
+				_schedulerRepository.Delete (dynamoScheduler.Key);
+			}
+		}
+
+		/// <summary>
+		/// Reset the state of any triggers that are associated with non-active schedulers.
+		/// </summary>
+		private void ResetTriggersAssociatedWithNonActiveSchedulers()
+		{
+			var activeSchedulers = _schedulerRepository.Scan(null, null, string.Empty);
+
+			//todo: this will be slow. do the query based on an index.
+			foreach (var trigger in _triggerRepository.Scan (null, null,string.Empty))
+			{
+				if (!string.IsNullOrEmpty (trigger.SchedulerInstanceId) && !activeSchedulers.Select (s => s.InstanceId).Contains (trigger.SchedulerInstanceId))
+				{
+					trigger.SchedulerInstanceId = string.Empty;
+					trigger.State = "Waiting";
+					_triggerRepository.Store (trigger);
+				}
+			}
+		}
 
         #region IDisposable Support
 

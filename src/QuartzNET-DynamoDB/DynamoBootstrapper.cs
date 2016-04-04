@@ -163,11 +163,6 @@ namespace Quartz.DynamoDB
                     {
                         AttributeName = "InstanceId",
                         AttributeType = "S"
-                    },
-                       new AttributeDefinition
-                    {
-                        AttributeName = "ExpiresUtcEpoch",
-                        AttributeType = "N"
                     }
                 },
                 KeySchema = new List<KeySchemaElement>()
@@ -176,11 +171,6 @@ namespace Quartz.DynamoDB
                     {
                         AttributeName = "InstanceId",
                         KeyType = "HASH"
-                    },
-                      new KeySchemaElement
-                    {
-                        AttributeName = "ExpiresUtcEpoch",
-                        KeyType = "RANGE"
                     }
                 }
             };

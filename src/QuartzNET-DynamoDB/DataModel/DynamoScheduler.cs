@@ -73,11 +73,6 @@ namespace Quartz.DynamoDB.DataModel
 						{
 							S = InstanceId 
 						}
-					},
-					{ "ExpiresUtcEpoch", new AttributeValue ()
-						{
-							N = ExpiresUtcEpoch.ToString() 
-						}
 					}
 				};
 			}

@@ -27,7 +27,7 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <CustomCommands>
       <CustomCommands>
-        <Command type="Execute" command="../packages/xunit.runner.console.2.1.0/tools/xunit.console.x86.exe ${TargetFile}" />
+        <Command type="Execute" command="../packages/xunit.runner.console.2.1.0/tools/xunit.console.x86.exe ${TargetFile} -trait &quot;Category=Integration&quot;" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
@@ -85,13 +85,15 @@
     <Compile Include="Unit\DateTimeOffsetConverterTests.cs" />
     <Compile Include="Unit\DynamoTriggerTests.cs" />
     <Compile Include="Unit\JobDataMapConverterTests.cs" />
-    <Compile Include="Integration\JobStoreTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Unit\TriggerSerialisationAbstractTriggerTests.cs" />
     <Compile Include="Unit\TriggerSerialisationSimpleTriggerTests.cs" />
     <Compile Include="Unit\TriggerSerialisationDailyTimeIntervalTriggerTests.cs" />
     <Compile Include="Unit\TriggerSerialisationCalendarIntervalTriggerTests.cs" />
     <Compile Include="Unit\SchedulerTests.cs" />
+    <Compile Include="Integration\RepositoryTests.cs" />
+    <Compile Include="Integration\RamJobStoreTests.cs" />
+    <Compile Include="Integration\JobStoreSchedulerIntegrationTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="job_scheduling_data_2_0.xsd">

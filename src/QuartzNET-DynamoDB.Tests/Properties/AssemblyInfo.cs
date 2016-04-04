@@ -5,6 +5,9 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
+using Xunit;
+
+
 [assembly: AssemblyTitle("QuartzNET-DynamoDB.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
@@ -21,3 +24,6 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("3f207083-d3a7-4784-add4-6eb05671ce68")]
+
+// Disable parallel test execution as we have tests that check counts in the database. Concurrency screws these up.
+[assembly: CollectionBehavior(DisableTestParallelization = true)]

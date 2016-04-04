@@ -16,6 +16,7 @@
  * under the License.
  * 
  */
+using System.Linq;
 
 #endregion
 
@@ -39,14 +40,14 @@ namespace Quartz.DynamoDB.Tests.Integration
 	/// Note: These are integration tests and require connectivity to a dynamo instance. See <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Tools.DynamoDBLocal.html"/> for information on running dynamo locally.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "This is a test class. No need to implement dispose.")]
-    public class JobStoreTest
+    public class RamJobStoreTests
     {
         private readonly IJobStore fJobStore;
         private readonly JobDetailImpl fJobDetail;
         private readonly SampleSignaler fSignaler;
 		private readonly string testIdentifier = DateTime.UtcNow.Ticks.ToString();
 
-        public JobStoreTest()
+        public RamJobStoreTests()
         {
             fJobStore = new JobStore();
             fSignaler = new SampleSignaler();
@@ -173,7 +174,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.ReleaseAcquiredTrigger(trigger3);
         }
 
-        [Fact] [Trait("Category", "Integration")]
+        [Fact] [Trait("Category", "IntegrationTriggerState")]
         public void TestTriggerStates()
         {
 			long ticks = DateTime.UtcNow.Ticks;
@@ -190,10 +191,10 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.ResumeTrigger(trigger.Key);
             Assert.Equal(TriggerState.Normal, fJobStore.GetTriggerState(trigger.Key));
 
-            trigger = fJobStore.AcquireNextTriggers(trigger.GetNextFireTimeUtc().Value.AddSeconds(10), 1, TimeSpan.FromMilliseconds(1))[0];
+			trigger = fJobStore.AcquireNextTriggers(trigger.GetNextFireTimeUtc().Value.AddSeconds(10), 1, TimeSpan.FromMilliseconds(1)).FirstOrDefault();
             Assert.NotNull(trigger);
             fJobStore.ReleaseAcquiredTrigger(trigger);
-            trigger = fJobStore.AcquireNextTriggers(trigger.GetNextFireTimeUtc().Value.AddSeconds(10), 1, TimeSpan.FromMilliseconds(1))[0];
+			trigger = fJobStore.AcquireNextTriggers(trigger.GetNextFireTimeUtc().Value.AddSeconds(10), 1, TimeSpan.FromMilliseconds(1)).FirstOrDefault();
             Assert.NotNull(trigger);
             Assert.Equal(0, fJobStore.AcquireNextTriggers(trigger.GetNextFireTimeUtc().Value.AddSeconds(10), 1, TimeSpan.FromMilliseconds(1)).Count);
         }

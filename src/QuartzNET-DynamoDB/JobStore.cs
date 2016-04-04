@@ -75,12 +75,20 @@ namespace Quartz.DynamoDB
 
         public void SchedulerStarted()
         {
+			CreateOrUpdateCurrentSchedulerInstance ();
         }
 
         public void SchedulerPaused()
-        {
-            throw new NotImplementedException();
-        }
+		{
+			var scheduler = _schedulerRepository.Load (new Dictionary<string, AttributeValue> (){ {
+					"InstanceId",
+					new AttributeValue (){ S = InstanceId }
+				} });
+
+			scheduler.State = "Paused";
+
+			_schedulerRepository.Store (scheduler);
+		}
 
         public void SchedulerResumed()
         {
@@ -359,7 +367,7 @@ namespace Quartz.DynamoDB
             record.State = "Waiting";
             //}
 
-            //this.ApplyMisfireIfNecessary(trigger);
+            this.ApplyMisfireIfNecessary(record);
 
 			_triggerRepository.Store (record);
         }
@@ -400,8 +408,6 @@ namespace Quartz.DynamoDB
         /// </summary>
         private static long _ftrCtr = SystemTime.UtcNow().Ticks;
 
-        
-
         /// <summary>
         /// Gets the fired trigger record id.
         /// </summary>
@@ -416,14 +422,7 @@ namespace Quartz.DynamoDB
         {
             // multiple instance management. Create a running scheduler for this instance.
 			// TODO: investigate: does this create duplicate active schedulers for the same instanceid?
-            var scheduler = new DynamoScheduler
-            {
-                InstanceId = _instanceId,
-                ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
-                State = "Running"
-            };
-
-			_schedulerRepository.Store(scheduler);
+			CreateOrUpdateCurrentSchedulerInstance ();
 
 			DeleteExpiredSchedulers();
 			ResetTriggersAssociatedWithNonActiveSchedulers ();
@@ -574,6 +573,16 @@ namespace Quartz.DynamoDB
 					_triggerRepository.Store (trigger);
 				}
 			}
+		}
+
+		void CreateOrUpdateCurrentSchedulerInstance()
+		{
+			var scheduler = new DynamoScheduler {
+				InstanceId = _instanceId,
+				ExpiresUtc = (SystemTime.Now () + new TimeSpan (0, 10, 0)).UtcDateTime,
+				State = "Running"
+			};
+			_schedulerRepository.Store (scheduler);
 		}
 
         /// <summary>

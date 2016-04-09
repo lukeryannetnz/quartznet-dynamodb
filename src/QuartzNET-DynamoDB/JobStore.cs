@@ -245,18 +245,9 @@ namespace Quartz.DynamoDB
 
         public IOperableTrigger RetrieveTrigger(TriggerKey triggerKey)
         {
-            var request = new GetItemRequest(
-              DynamoConfiguration.TriggerTableName,
-				triggerKey.ToDictionary());
+			var trigger = _triggerRepository.Load(triggerKey.ToDictionary());
 
-            var response = _client.GetItem(request);
-
-            if (response.HttpStatusCode != HttpStatusCode.OK)
-            {
-                throw new JobPersistenceException($"Non 200 response code received when querying dynamo {response.ToString()}");
-            }
-
-            return response.IsItemSet ? new DynamoTrigger(response.Item).Trigger : null;
+			return trigger?.Trigger;
         }
 
         public bool CalendarExists(string calName)

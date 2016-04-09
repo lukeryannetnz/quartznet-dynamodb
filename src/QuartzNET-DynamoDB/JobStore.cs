@@ -138,8 +138,21 @@ namespace Quartz.DynamoDB
 
         public bool RemoveJob(JobKey jobKey)
         {
-            throw new NotImplementedException();
-        }
+			// keep separated to clean up any staled trigger
+			IList<IOperableTrigger> triggersForJob = this.GetTriggersForJob(jobKey);
+			foreach (IOperableTrigger trigger in triggersForJob)
+			{
+				this.RemoveTrigger(trigger.Key);
+			}
+
+			var found = this.CheckExists(jobKey);
+			if (found)
+			{
+				_jobRepository.Delete(jobKey.ToDictionary());
+			}
+
+			return found;
+		}
 
         public bool RemoveJobs(IList<JobKey> jobKeys)
         {
@@ -192,7 +205,32 @@ namespace Quartz.DynamoDB
 
         public bool RemoveTrigger(TriggerKey triggerKey)
         {
-            throw new NotImplementedException();
+			bool found;
+
+				var trigger = this.RetrieveTrigger(triggerKey);
+				found = trigger != null;
+
+				if (found)
+				{
+					_triggerRepository.Delete(triggerKey.ToDictionary());
+
+//					if (removeOrphanedJob)
+//					{
+//						IJobDetail jobDetail = this.RetrieveJob(trigger.JobKey);
+//						IList<IOperableTrigger> trigs = this.GetTriggersForJob(jobDetail.Key);
+//						if ((trigs == null
+//							|| trigs.Count == 0)
+//							&& !jobDetail.Durable)
+//						{
+//							if (this.RemoveJob(jobDetail.Key))
+//							{
+//								signaler.NotifySchedulerListenersJobDeleted(jobDetail.Key);
+//							}
+//						}
+//					}
+			}
+
+			return found;
         }
 
         public bool RemoveTriggers(IList<TriggerKey> triggerKeys)
@@ -228,12 +266,12 @@ namespace Quartz.DynamoDB
 
         public bool CheckExists(JobKey jobKey)
         {
-            throw new NotImplementedException();
+			return _jobRepository.Load(jobKey.ToDictionary()) == null;
         }
 
         public bool CheckExists(TriggerKey triggerKey)
         {
-            throw new NotImplementedException();
+			return _triggerRepository.Load(triggerKey.ToDictionary()) == null;
         }
 
 		/// <summary>
@@ -308,7 +346,23 @@ namespace Quartz.DynamoDB
 
         public IList<IOperableTrigger> GetTriggersForJob(JobKey jobKey)
         {
-            throw new NotImplementedException();
+			var attributeNames = new Dictionary<string,string> 
+			{
+				{"#jn", "JobName" },
+				{"#jg", "JobGroup" }
+			};
+
+			var attributeValues = new Dictionary<string,AttributeValue> 
+			{
+				{":JobName", new AttributeValue { S = jobKey.Name }},
+				{":JobGroup", new AttributeValue { S = jobKey.Group }}
+			};
+
+			var filterExpression = "#jn = :JobName and #jg = :JobGroup";
+
+			var candidates = _triggerRepository.Scan(attributeValues, attributeNames, filterExpression);
+
+			return candidates.Select(t => (IOperableTrigger)t.Trigger).ToList();
         }
 
         public TriggerState GetTriggerState(TriggerKey triggerKey)

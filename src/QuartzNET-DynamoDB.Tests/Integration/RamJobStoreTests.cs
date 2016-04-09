@@ -311,7 +311,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             // Store jobs.
             IJobDetail job = JobBuilder.Create<NoOpJob>().WithIdentity("job" + 0).Build();
             fJobStore.StoreJob(job, true);
-            Assert.Throws<ArgumentException>(() => fJobStore.StoreJob(job, false));
+			Assert.Throws<ObjectAlreadyExistsException>(() => fJobStore.StoreJob(job, false));
         }
 
         /// <summary>

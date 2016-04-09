@@ -93,7 +93,8 @@ namespace Quartz.DynamoDB
 
 			scheduler.State = "Resumed";
 
-			_schedulerRepository.Store (scheduler);        }
+			_schedulerRepository.Store (scheduler);        
+		}
 
         public void Shutdown()
         {
@@ -103,7 +104,8 @@ namespace Quartz.DynamoDB
 
         public void StoreJobAndTrigger(IJobDetail newJob, IOperableTrigger newTrigger)
         {
-            throw new NotImplementedException();
+			StoreJob(newJob, false);
+			StoreTrigger(newTrigger, false);
         }
 
         public bool IsJobGroupPaused(string groupName)

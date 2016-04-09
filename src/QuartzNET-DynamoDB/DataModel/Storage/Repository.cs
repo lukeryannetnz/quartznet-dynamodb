@@ -133,6 +133,18 @@ namespace Quartz.DynamoDB.DataModel.Storage
 
 			return matchedRecords;
 		}
+
+		public void DeleteTable()
+		{
+			T entity = new T();
+
+			var response = _client.DeleteTable (entity.DynamoTableName);
+
+			if(response.HttpStatusCode != HttpStatusCode.OK)
+			{
+				throw new JobPersistenceException($"Non 200 response code received from dynamo {response.ToString()}");
+			}
+		}
 	}
 }
 

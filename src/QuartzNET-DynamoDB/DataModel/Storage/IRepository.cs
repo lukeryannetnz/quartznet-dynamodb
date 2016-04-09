@@ -51,6 +51,11 @@ namespace Quartz.DynamoDB.DataModel.Storage
 		/// <param name="filterExpression">Filter expression. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/QueryAndScan.html#FilteringResults"/></param>
 		/// <param name="expressionAttributeNames">Expression attribute names. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ExpressionAttributeNames"/></param>
 		IEnumerable<T> Scan (Dictionary<string,AttributeValue> expressionAttributeValues, Dictionary<string, string> expressionAttributeNames, string filterExpression);
+
+		/// <summary>
+		/// Deletes the table. This permanently deletes ALL DATA in the table!
+		/// </summary>
+		void DeleteTable();
 	}
 }
 

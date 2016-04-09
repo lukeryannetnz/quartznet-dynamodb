@@ -97,6 +97,7 @@ namespace Quartz.DynamoDB
 
         public void Shutdown()
         {
+			// todo: remove scheduler instance from db?
             Dispose();
         }
 
@@ -233,10 +234,20 @@ namespace Quartz.DynamoDB
             throw new NotImplementedException();
         }
 
+		/// <summary>
+		/// Clears (deletes!) all scheduling data - all <see cref="IJob"/>s, <see cref="ITrigger" />s
+		/// <see cref="ICalendar"/>s.
+		/// </summary>
         public void ClearAllSchedulingData()
         {
-            throw new NotImplementedException();
-        }
+			// unschedule jobs (delete triggers)
+			_triggerRepository.DeleteTable();
+
+			// delete jobs
+			_jobRepository.DeleteTable();
+
+			// delete calendars
+		}
 
         public void StoreCalendar(string name, ICalendar calendar, bool replaceExisting, bool updateTriggers)
         {

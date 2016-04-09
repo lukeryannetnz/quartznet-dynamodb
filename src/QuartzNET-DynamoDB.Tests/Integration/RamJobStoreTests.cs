@@ -40,7 +40,7 @@ namespace Quartz.DynamoDB.Tests.Integration
 	/// Note: These are integration tests and require connectivity to a dynamo instance. See <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Tools.DynamoDBLocal.html"/> for information on running dynamo locally.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "This is a test class. No need to implement dispose.")]
-    public class RamJobStoreTests
+	public class RamJobStoreTests : IDisposable
     {
         private readonly IJobStore fJobStore;
         private readonly JobDetailImpl fJobDetail;
@@ -461,5 +461,14 @@ namespace Quartz.DynamoDB.Tests.Integration
             {
             }
         }
+
+		#region IDisposable implementation
+
+		public void Dispose()
+		{
+			fJobStore.ClearAllSchedulingData ();
+		}
+
+		#endregion
     }
 }

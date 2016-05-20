@@ -1,15 +1,12 @@
 ﻿using System;
-using Amazon.DynamoDBv2;
-using Quartz.DynamoDB;
-using Quartz.DynamoDB.DataModel;
-using Amazon.DynamoDBv2.Model;
 using System.Collections.Generic;
-using Quartz.Util;
 using System.Net;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
-	public class Repository<T> : IRepository<T> where T : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType, new()
+    public class Repository<T> : IRepository<T> where T : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType, new()
 	{
 		private AmazonDynamoDBClient _client;
 

@@ -1,9 +1,7 @@
 ﻿using System;
-using Amazon.DynamoDBv2.DataModel;
 using Quartz.DynamoDB.DataModel.Storage;
 using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
-using Quartz.Util;
 
 namespace Quartz.DynamoDB.DataModel
 {

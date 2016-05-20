@@ -102,7 +102,6 @@ namespace Quartz.DynamoDB
                 createResponse.TableDescription.TableStatus);
         }
 
-
         private void CreateTriggerTable(IAmazonDynamoDB client)
         {
             // Build a 'CreateTableRequest' for the new table
@@ -149,7 +148,6 @@ namespace Quartz.DynamoDB
             Debug.WriteLine("\n\n Created the \"Trigger\" table successfully!\n    Status of the new table: '{0}'",
                 createResponse.TableDescription.TableStatus);
         }
-
 
         private void CreateSchedulerTable(IAmazonDynamoDB client)
         {

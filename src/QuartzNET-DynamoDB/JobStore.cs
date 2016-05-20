@@ -5,14 +5,12 @@ using System.Linq;
 using System.Threading;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using Quartz.DynamoDB.DataModel;
 using Quartz.Impl.Matchers;
 using Quartz.Spi;
 using Amazon.DynamoDBv2.Model;
 using System.Net;
 using Quartz.DynamoDB.DataModel.Storage;
-using Quartz.Util;
 
 namespace Quartz.DynamoDB
 {

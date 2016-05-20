@@ -1,17 +1,12 @@
-using System;
-using Amazon.DynamoDBv2;
-using Quartz.DynamoDB;
-using Quartz.DynamoDB.DataModel;
-using Amazon.DynamoDBv2.Model;
-using Quartz.Util;
 using System.Collections.Generic;
+using Amazon.DynamoDBv2.Model;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
-	/// <summary>
-	/// Deals with storing and retrieving Dynamo records from the Dynamo api.
-	/// </summary>
-	interface IRepository<T>
+    /// <summary>
+    /// Deals with storing and retrieving Dynamo records from the Dynamo api.
+    /// </summary>
+    interface IRepository<T>
 	{
 		/// <summary>
 		/// Load a single record of type T from the table T is associated with, matching the provided Key.

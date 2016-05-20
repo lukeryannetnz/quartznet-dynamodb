@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
 
 namespace Quartz.DynamoDB
 {
-	public static class QuartzKeyExtensionMethods
+    public static class QuartzKeyExtensionMethods
 	{
 		public static Dictionary<string, AttributeValue> ToDictionary(this JobKey key)
 		{

@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.Model;
-using Amazon.DynamoDBv2.DocumentModel;
 using Newtonsoft.Json;
 using Quartz.Simpl;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
     /// <summary>
-    /// Coverts a JobDataMap object to a dynamo db type.
+    /// Coverts a Quartz JobDataMap object to a dynamo db type.
     /// Uses the NewtonSoft JSON serializer and type reflection to serialize objects to strings. Could no doubt be improved.
     /// </summary>
     public class JobDataMapConverter

@@ -212,7 +212,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             trigger.ComputeFirstFireTimeUtc(null);
             ICalendar cal = new MonthlyCalendar();
             fJobStore.StoreTrigger(trigger, false);
-            fJobStore.StoreCalendar("cal", cal, false, true);
+			fJobStore.StoreCalendar("cal", cal, true, true);
 
             fJobStore.RemoveCalendar("cal");
         }

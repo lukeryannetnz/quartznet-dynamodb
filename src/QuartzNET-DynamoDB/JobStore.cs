@@ -361,8 +361,7 @@ namespace Quartz.DynamoDB
 
 			if (updateTriggers)
 			{
-				//todo: this will be slow. do the query based on an index.
-				var triggers = _triggerRepository.Scan (null, null,string.Empty).Where(t => t.Trigger.CalendarName == name);
+				var triggers = GetTriggersForCalendar(name);
 
 				foreach (var trigger in triggers)
 				{
@@ -372,9 +371,25 @@ namespace Quartz.DynamoDB
 			}
 		}
 
+		private IEnumerable<DynamoTrigger> GetTriggersForCalendar(string calendarName)
+		{
+			//todo: this will be slow. do the query based on an index.
+			var triggers = _triggerRepository.Scan(null, null, string.Empty).Where(t => t.Trigger.CalendarName == calendarName);
+			return triggers;
+		}
+
 		public bool RemoveCalendar(string calName)
 		{
-			throw new NotImplementedException ();
+			var triggers = this.GetTriggersForCalendar(calName);
+			if (triggers != null && triggers.Count() > 0)
+			{
+				throw new JobPersistenceException("Calender cannot be removed if it is referenced by a Trigger!");
+			}
+
+			var calendar = new DynamoCalendar (){ Name = calName };
+			_calendarRepository.Delete(calendar.Key);
+
+			return true;		
 		}
 
 		public ICalendar RetrieveCalendar(string calName)

@@ -30,6 +30,7 @@ namespace Quartz.DynamoDB
 		private IRepository<DynamoJob> _jobRepository;
 		private IRepository<DynamoTrigger> _triggerRepository;
 		private IRepository<DynamoScheduler> _schedulerRepository;
+		private IRepository<DynamoTriggerGroup> _triggerGroupRepository;
 
         private string _instanceId;
         //private string _instanceName;
@@ -59,6 +60,8 @@ namespace Quartz.DynamoDB
 			_jobRepository = new Repository<DynamoJob> (_client);
 			_triggerRepository = new Repository<DynamoTrigger> (_client);
 			_schedulerRepository = new Repository<DynamoScheduler> (_client);
+			_triggerGroupRepository = new Repository<DynamoTriggerGroup> (_client);
+
             new DynamoBootstrapper().BootStrap(_client);
 
             //_loadHelper = loadHelper;
@@ -179,7 +182,13 @@ namespace Quartz.DynamoDB
                                                   ") referenced by the trigger does not exist.");
             }
 
-//            if (this.PausedTriggerGroups.FindOneByIdAs<BsonDocument>(newTrigger.Key.Group) != null
+			var triggerGroup = this._triggerGroupRepository.Load(newTrigger.Key.ToGroupDictionary());
+
+			if (triggerGroup != null && triggerGroup.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused)
+			{
+				trigger.State = "Paused";
+			}
+			//            if (this.PausedTriggerGroups.FindOneByIdAs<BsonDocument>(newTrigger.Key.Group) != null
 //                || this.PausedJobGroups.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.Group) != null)
 //            {
 //                state = "Paused";

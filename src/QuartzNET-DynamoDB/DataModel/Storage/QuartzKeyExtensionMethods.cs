@@ -20,6 +20,13 @@ namespace Quartz.DynamoDB
 				{ "Name", new AttributeValue (){ S = key.Name } }
 			};
 		}
+
+		public static Dictionary<string, AttributeValue> ToGroupDictionary(this TriggerKey key)
+		{
+			return new Dictionary<string, AttributeValue> { 
+				{ "Name", new AttributeValue (){ S = key.Group } }
+			};
+		}
 	}
 }
 

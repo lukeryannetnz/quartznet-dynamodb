@@ -4,6 +4,7 @@ using Amazon.DynamoDBv2.Model;
 using Quartz.Spi;
 using Quartz.Impl.Triggers;
 using System.Linq;
+using Quartz.DynamoDB;
 using Quartz.DynamoDB.DataModel.Storage;
 
 namespace Quartz.DynamoDB.DataModel
@@ -44,7 +45,7 @@ namespace Quartz.DynamoDB.DataModel
 		{
 			get
 			{
-				return "DynamoTriggerGroup";
+				return DynamoConfiguration.TriggerGroupTableName;
 			}
 		}
 

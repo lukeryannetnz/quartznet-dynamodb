@@ -352,7 +352,7 @@ namespace Quartz.DynamoDB
 
 			var existingRecord = _calendarRepository.Load(dynamoCal.Key);
 
-			if(existingRecord == null && replaceExisting == false)
+			if(existingRecord != null && replaceExisting == false)
 			{
 				throw new ObjectAlreadyExistsException (string.Format(CultureInfo.InvariantCulture, "Calendar with name '{0}' already exists.", name));
 			}

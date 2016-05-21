@@ -47,15 +47,38 @@ namespace Quartz.DynamoDB.Tests
 		}
 
 		/// <summary>
-		/// Tests that when Pause triggers is called with a group matcher starts with....
+		/// Tests that when Pause triggers is called with a group matcher starts with and no groups match, then 0 should be returned.
 		/// </summary>
 		[Fact]
 		[Trait("Category", "Integration")]
-		public void PauseTriggersStartsWith()
+		public void PauseTriggersStartsWithNoMatches()
 		{
-			Assert.Throws<Exception>(() => {
-				_sut.PauseTriggers(Quartz.Impl.Matchers.GroupMatcher<TriggerKey>.GroupStartsWith("startswith"));
-			});
+			string triggerGroup = Guid.NewGuid().ToString();
+
+			var result = _sut.PauseTriggers(Quartz.Impl.Matchers.GroupMatcher<TriggerKey>.GroupStartsWith(triggerGroup.Substring(0, 8)));
+			Assert.Equal(0, result.Count);
+		}
+
+		/// <summary>
+		/// Tests that when Pause triggers is called with a group matcher starts with and one groups matches, 
+		/// then that group should be paused,
+		/// </summary>
+		[Fact]
+		[Trait("Category", "Integration")]
+		public void PauseTriggersStartsWithOneMatch()
+		{
+			string triggerGroup = Guid.NewGuid().ToString();
+			// Create a random job, store it.
+			string jobName = Guid.NewGuid().ToString();
+			JobDetailImpl detail = new JobDetailImpl (jobName, "JobGroup", typeof(NoOpJob));
+			_sut.StoreJob(detail, false);
+
+			// Create a trigger for the job, in the trigger group.
+			IOperableTrigger tr = new SimpleTriggerImpl ("test", triggerGroup, jobName, "JobGroup", DateTimeOffset.UtcNow, null, 1, TimeSpan.FromHours(1));
+			_sut.StoreTrigger(tr, false);
+
+			var result = _sut.PauseTriggers(Quartz.Impl.Matchers.GroupMatcher<TriggerKey>.GroupStartsWith(triggerGroup.Substring(0, 8)));
+			Assert.Equal(1, result.Count);
 		}
 
 		/// <summary>

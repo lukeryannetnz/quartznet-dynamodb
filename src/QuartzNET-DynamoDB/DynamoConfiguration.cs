@@ -12,5 +12,6 @@
 
         public static string SchedulerTableName => "Scheduler";
 
+		public static string CalendarTableName => "Calendar";
     }
 }

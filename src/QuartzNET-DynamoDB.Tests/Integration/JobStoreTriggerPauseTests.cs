@@ -17,7 +17,6 @@ namespace Quartz.DynamoDB.Tests
 	public class JobStoreTriggerPauseTests
 	{
 		IJobStore _sut;
-		Repository<DynamoTrigger> _triggerRepository;
 
 		public JobStoreTriggerPauseTests ()
 		{
@@ -26,10 +25,6 @@ namespace Quartz.DynamoDB.Tests
 			var loadHelper = new SimpleTypeLoadHelper ();
 
 			_sut.Initialize(loadHelper, signaler);
-
-			var client = DynamoDbClientFactory.Create();
-			_triggerRepository = new Repository<DynamoTrigger> (client);
-
 		}
 
 		/// <summary>
@@ -103,9 +98,8 @@ namespace Quartz.DynamoDB.Tests
 			IOperableTrigger tr = new SimpleTriggerImpl ("test", triggerGroup, jobName, "JobGroup", DateTimeOffset.UtcNow, null, 1, TimeSpan.FromHours(1));
 			_sut.StoreTrigger(tr, false);
 
-			var trigger = _triggerRepository.Load(tr.Key.ToDictionary());
-
-			Assert.Equal("Paused", trigger.State);
+			var triggerState = _sut.GetTriggerState(tr.Key);
+			Assert.Equal("Paused", triggerState.ToString());
 		}
 
 		/// <summary>
@@ -128,13 +122,13 @@ namespace Quartz.DynamoDB.Tests
 			_sut.StoreTrigger(tr, false);
 
 			// Trigger should be waiting to be picked up.
-			var trigger = _triggerRepository.Load(tr.Key.ToDictionary());
-			Assert.Equal("Waiting", trigger.State);
+			var triggerState = _sut.GetTriggerState(tr.Key);
+			Assert.Equal("Normal", triggerState.ToString());
 
 			_sut.PauseTriggers(Quartz.Impl.Matchers.GroupMatcher<TriggerKey>.GroupEquals(triggerGroup));
 
-			trigger = _triggerRepository.Load(tr.Key.ToDictionary());
-			Assert.Equal("Paused", trigger.State);
+			triggerState = _sut.GetTriggerState(tr.Key);
+			Assert.Equal("Paused", triggerState.ToString());
 		}
 	}
 }

@@ -392,8 +392,32 @@ namespace Quartz.DynamoDB
 		{
 			var record = _triggerRepository.Load(triggerKey.ToDictionary());
 
-			//todo: consider if we need paused and blocked
-			return record?.TriggerState ?? TriggerState.None;
+			if (record == null)
+			{
+				return TriggerState.None;
+			}
+			if (record.State == "Complete")
+			{
+				return TriggerState.Complete;
+			}
+			if (record.State == "Paused")
+			{
+				return TriggerState.Paused;
+			}
+			if (record.State == "PausedAndBlocked")
+			{
+				return TriggerState.Paused;
+			}
+			if (record.State == "Blocked")
+			{
+				return TriggerState.Blocked;
+			}
+			if (record.State == "Error")
+			{
+				return TriggerState.Error;
+			}
+
+			return TriggerState.Normal;
 		}
 
 		public void PauseTrigger(TriggerKey triggerKey)

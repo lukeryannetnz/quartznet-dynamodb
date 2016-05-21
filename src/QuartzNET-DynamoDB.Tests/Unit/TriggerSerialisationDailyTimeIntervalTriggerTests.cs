@@ -3,6 +3,7 @@ using Quartz.Collection;
 using Quartz.DynamoDB.DataModel;
 using Quartz.Impl.Triggers;
 using Xunit;
+using Quartz.Spi;
 
 namespace Quartz.DynamoDB.Tests.Unit
 {
@@ -64,6 +65,18 @@ namespace Quartz.DynamoDB.Tests.Unit
 
             Assert.Equal(trigger.RepeatInterval, result.RepeatInterval);
         }
+
+		[Fact] [Trait("Category", "Unit")]
+
+		public void LongRepeatIntervalSerializesCorrectly()
+		{
+			SimpleTriggerImpl trigger = new SimpleTriggerImpl ("test", "testtriggerGroup", "jobName", "JobGroup", DateTimeOffset.UtcNow, null, 1, TimeSpan.FromHours(1));
+
+			var serialized = new DynamoTrigger(trigger).ToDynamo();
+			SimpleTriggerImpl result = (SimpleTriggerImpl)new DynamoTrigger(serialized).Trigger;
+
+			Assert.Equal(trigger.RepeatInterval, result.RepeatInterval);
+		}
 
         [Fact] [Trait("Category", "Unit")]
 

@@ -130,6 +130,18 @@ namespace Quartz.DynamoDB
 				throw new ObjectAlreadyExistsException (newJob);
 			}
 
+			var jobGroup = this._jobGroupRepository.Load(newJob.Key.ToGroupDictionary());
+
+			if (jobGroup == null)
+			{
+				jobGroup = new DynamoJobGroup () {
+					Name = newJob.Key.Group,
+					State = DynamoJobGroup.DynamoJobGroupState.Active
+				};
+
+				_jobGroupRepository.Store(jobGroup);
+			}
+
 			_jobRepository.Store(job);
 		}
 

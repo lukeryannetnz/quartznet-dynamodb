@@ -188,6 +188,17 @@ namespace Quartz.DynamoDB
 			{
 				trigger.State = "Paused";
 			}
+
+			if (triggerGroup == null)
+			{
+				triggerGroup = new DynamoTriggerGroup () {
+					Name = newTrigger.Key.Group,
+					State = DynamoTriggerGroup.DynamoTriggerGroupState.Active
+				};
+
+				_triggerGroupRepository.Store(triggerGroup);
+			}
+
 			//            if (this.PausedTriggerGroups.FindOneByIdAs<BsonDocument>(newTrigger.Key.Group) != null
 //                || this.PausedJobGroups.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.Group) != null)
 //            {

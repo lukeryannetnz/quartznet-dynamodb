@@ -363,7 +363,21 @@ namespace Quartz.DynamoDB
 
 		public Collection.ISet<JobKey> GetJobKeys(GroupMatcher<JobKey> matcher)
 		{
-			throw new NotImplementedException ();
+			var jobGroupName = matcher.CompareToValue;
+
+			var attributeNames = new Dictionary<string,string> {
+				{ "#jg", "Group" }
+			};
+
+			var attributeValues = new Dictionary<string,AttributeValue> {
+				{ ":Group", new AttributeValue { S = jobGroupName } }
+			};
+
+			var filterExpression = "#jg = :Group";
+
+			var candidates = _jobRepository.Scan(attributeValues, attributeNames, filterExpression);
+
+			return new Collection.HashSet<JobKey> (candidates.Select(t => t.Job.Key));		
 		}
 
 		public Collection.ISet<TriggerKey> GetTriggerKeys(GroupMatcher<TriggerKey> matcher)
@@ -477,8 +491,7 @@ namespace Quartz.DynamoDB
 			{
 				PauseTriggerGroup(matcher.CompareToValue);
 				pausedGroups.Add(matcher.CompareToValue);
-			} 
-			else
+			} else
 			{
 				IList<string> groups = this.GetTriggerGroupNames();
 
@@ -529,8 +542,54 @@ namespace Quartz.DynamoDB
 
 		public IList<string> PauseJobs(GroupMatcher<JobKey> matcher)
 		{
-			throw new NotImplementedException ();
+			List<string> pausedGroups = new List<String> ();
+			StringOperator op = matcher.CompareWithOperator;
+			if (op == StringOperator.Equality)
+			{
+				this.PauseJobGroup(matcher.CompareToValue);
+				pausedGroups.Add(matcher.CompareToValue);
+			} else
+			{
+				IList<string> groups = this.GetJobGroupNames();
+
+				foreach (string group in groups)
+				{
+					if (op.Evaluate(group, matcher.CompareToValue))
+					{
+						this.PauseJobGroup(matcher.CompareToValue);
+						pausedGroups.Add(matcher.CompareToValue);
+					}
+				}
+			}
+
+			foreach (string groupName in pausedGroups)
+			{
+				foreach (JobKey jobKey in GetJobKeys(GroupMatcher<JobKey>.GroupEquals(groupName)))
+				{
+					IList<IOperableTrigger> triggers = this.GetTriggersForJob(jobKey);
+					foreach (IOperableTrigger trigger in triggers)
+					{
+						this.PauseTrigger(trigger.Key);
+					}
+				}
+			}
+
+			return pausedGroups;		
 		}
+
+		private void PauseJobGroup(string groupName)
+		{
+			var jobGroup = this._jobGroupRepository.Load(new JobKey (string.Empty, groupName).ToGroupDictionary());
+			if (jobGroup == null)
+			{
+				jobGroup = new DynamoJobGroup () {
+					Name = groupName
+				};
+			}
+			jobGroup.State = DynamoJobGroup.DynamoJobGroupState.Paused;
+			this._jobGroupRepository.Store(jobGroup);
+		}
+
 
 		public void ResumeTrigger(TriggerKey triggerKey)
 		{

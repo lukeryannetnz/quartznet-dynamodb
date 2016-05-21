@@ -385,8 +385,12 @@ namespace Quartz.DynamoDB
 
         public void PauseJob(JobKey jobKey)
         {
-            throw new NotImplementedException();
-        }
+            IList<IOperableTrigger> triggersForJob = this.GetTriggersForJob(jobKey);
+            foreach (IOperableTrigger trigger in triggersForJob)
+            {
+                this.PauseTrigger(trigger.Key);
+            }        
+        }        
 
         public IList<string> PauseJobs(GroupMatcher<JobKey> matcher)
         {

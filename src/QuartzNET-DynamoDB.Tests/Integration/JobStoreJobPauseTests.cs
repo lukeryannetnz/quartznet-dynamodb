@@ -35,6 +35,19 @@ namespace Quartz.DynamoDB.Tests
 			Assert.Equal(1, result.Count);
 			Assert.Equal(jobGroup, result.Single());
 		}
+
+		/// <summary>
+		/// Tests that when Pause jobs is called with a group matcher starts with and no groups match, then 0 should be returned.
+		/// </summary>
+		[Fact]
+		[Trait("Category", "Integration")]
+		public void PauseJobsStartsWithNoMatches()
+		{
+			string jobGroup = Guid.NewGuid().ToString();
+
+			var result = _sut.PauseJobs(Quartz.Impl.Matchers.GroupMatcher<JobKey>.GroupStartsWith(jobGroup.Substring(0, 8)));
+			Assert.Equal(0, result.Count);
+		}
 	}
 }
 

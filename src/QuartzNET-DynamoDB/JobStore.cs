@@ -32,6 +32,7 @@ namespace Quartz.DynamoDB
 		private IRepository<DynamoTrigger> _triggerRepository;
 		private IRepository<DynamoScheduler> _schedulerRepository;
 		private IRepository<DynamoTriggerGroup> _triggerGroupRepository;
+		private IRepository<DynamoCalendar> _calendarRepository;
 
 		private string _instanceId;
 		//private string _instanceName;
@@ -63,6 +64,8 @@ namespace Quartz.DynamoDB
 			_triggerRepository = new Repository<DynamoTrigger> (_client);
 			_schedulerRepository = new Repository<DynamoScheduler> (_client);
 			_triggerGroupRepository = new Repository<DynamoTriggerGroup> (_client);
+			_calendarRepository = new Repository<DynamoCalendar> (_client);
+
 
 			new DynamoBootstrapper ().BootStrap(_client);
 
@@ -331,9 +334,42 @@ namespace Quartz.DynamoDB
 			// delete calendars
 		}
 
+		/// <summary>
+		/// Store the given <see cref="ICalendar" />.
+		/// </summary>
+		/// <param name="name">The name.</param>
+		/// <param name="calendar">The <see cref="ICalendar" /> to be stored.</param>
+		/// <param name="replaceExisting">If <see langword="true" />, any <see cref="ICalendar" /> existing
+		/// in the <see cref="IJobStore" /> with the same name and group
+		/// should be over-written.</param>
+		/// <param name="updateTriggers">If <see langword="true" />, any <see cref="ITrigger" />s existing
+		/// in the <see cref="IJobStore" /> that reference an existing
+		/// Calendar with the same name with have their next fire time
+		/// re-computed with the new <see cref="ICalendar" />.</param>
 		public void StoreCalendar(string name, ICalendar calendar, bool replaceExisting, bool updateTriggers)
 		{
-			throw new NotImplementedException ();
+			var dynamoCal = new DynamoCalendar(){Name = name, Description = calendar.Description};
+
+			var existingRecord = _calendarRepository.Load(dynamoCal.Key);
+
+			if(existingRecord == null && replaceExisting == false)
+			{
+				throw new ObjectAlreadyExistsException (string.Format(CultureInfo.InvariantCulture, "Calendar with name '{0}' already exists.", name));
+			}
+
+			_calendarRepository.Store(dynamoCal);
+
+			if (updateTriggers)
+			{
+				//todo: this will be slow. do the query based on an index.
+				var triggers = _triggerRepository.Scan (null, null,string.Empty).Where(t => t.Trigger.CalendarName == name);
+
+				foreach (var trigger in triggers)
+				{
+					trigger.Trigger.UpdateWithNewCalendar(calendar, MisfireThreshold);
+					_triggerRepository.Store(trigger);
+				}
+			}
 		}
 
 		public bool RemoveCalendar(string calName)

@@ -20,11 +20,18 @@ namespace Quartz.DynamoDB
 			set;
 		}
 
+		public string Description
+		{
+			get;
+			set;
+		}
+
 		public System.Collections.Generic.Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue> ToDynamo()
 		{
 			Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
 
 			record.Add("Name", AttributeValueHelper.StringOrNull (Name));
+			record.Add("Description", AttributeValueHelper.StringOrNull (Description));
 
 			return record;		
 		}
@@ -32,6 +39,7 @@ namespace Quartz.DynamoDB
 		public void InitialiseFromDynamoRecord(System.Collections.Generic.Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue> record)
 		{
 			Name = record["Name"].S;
+			Description = record["Description"].S;
 		}
 
 		public string DynamoTableName

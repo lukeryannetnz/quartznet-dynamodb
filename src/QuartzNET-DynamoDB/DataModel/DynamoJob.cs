@@ -7,7 +7,7 @@ using Quartz.DynamoDB.DataModel.Storage;
 namespace Quartz.DynamoDB.DataModel
 {
     /// <summary>
-    /// An wrapper class for a Quartz JobDetail instance that can be serialized and stored in Amazon DynamoDB.
+    /// A wrapper class for a Quartz JobDetail instance that can be serialized and stored in Amazon DynamoDB.
     /// </summary>
 	public class DynamoJob : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType
     {

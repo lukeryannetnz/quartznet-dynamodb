@@ -93,7 +93,7 @@ namespace Quartz.DynamoDB.DataModel
 					Trigger = simpleTrigger;
 
 					simpleTrigger.RepeatCount = int.Parse(record["RepeatCount"].N);
-					simpleTrigger.RepeatInterval = new TimeSpan(int.Parse(record["RepeatInterval"].N));
+					simpleTrigger.RepeatInterval = new TimeSpan(long.Parse(record["RepeatInterval"].N));
 					simpleTrigger.TimesTriggered = int.Parse(record["TimesTriggered"].N);
 					break;
 				}

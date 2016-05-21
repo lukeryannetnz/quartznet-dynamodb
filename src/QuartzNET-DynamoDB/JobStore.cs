@@ -335,8 +335,24 @@ namespace Quartz.DynamoDB
 
         public Collection.ISet<TriggerKey> GetTriggerKeys(GroupMatcher<TriggerKey> matcher)
         {
-            throw new NotImplementedException();
-        }
+			var triggerGroupName = matcher.CompareToValue;
+
+			var attributeNames = new Dictionary<string,string> 
+			{
+				{"#tg", "Group" }
+			};
+
+			var attributeValues = new Dictionary<string,AttributeValue> 
+			{
+				{":Group", new AttributeValue { S = triggerGroupName }}
+			};
+
+			var filterExpression = "#tg = :Group";
+
+			var candidates = _triggerRepository.Scan(attributeValues, attributeNames, filterExpression);
+
+			return new Collection.HashSet<TriggerKey>(candidates.Select(t => t.Trigger.Key));
+		}
 
         public IList<string> GetJobGroupNames()
         {
@@ -400,7 +416,38 @@ namespace Quartz.DynamoDB
 
         public Collection.ISet<string> PauseTriggers(GroupMatcher<TriggerKey> matcher)
         {
-            throw new NotImplementedException();
+			IList<string> pausedGroups = new List<string>();
+
+			StringOperator op = matcher.CompareWithOperator;
+			if (op == StringOperator.Equality)
+			{
+				var triggerGroup = this._triggerGroupRepository.Load(new TriggerKey (string.Empty, matcher.CompareToValue).ToGroupDictionary());
+
+				if (triggerGroup == null)
+				{
+					triggerGroup = new DynamoTriggerGroup (){ Name = matcher.CompareToValue };
+				}
+
+				triggerGroup.State = DynamoTriggerGroup.DynamoTriggerGroupState.Paused;
+				this._triggerGroupRepository.Store(triggerGroup);
+
+				pausedGroups.Add(matcher.CompareToValue);
+			} else
+			{
+				throw new Exception ("panic");
+			}
+
+			foreach (string pausedGroup in pausedGroups)
+			{
+				Collection.ISet<TriggerKey> keys = this.GetTriggerKeys(GroupMatcher<TriggerKey>.GroupEquals(pausedGroup));
+
+				foreach (TriggerKey key in keys)
+				{
+					this.PauseTrigger(key);
+				}
+			}
+
+			return new Collection.HashSet<string>(pausedGroups);
         }
 
         public void PauseJob(JobKey jobKey)

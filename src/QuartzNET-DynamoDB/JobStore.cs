@@ -28,6 +28,7 @@ namespace Quartz.DynamoDB
 		private DynamoDBContext _context;
 		private AmazonDynamoDBClient _client;
 		private IRepository<DynamoJob> _jobRepository;
+		private IRepository<DynamoJobGroup> _jobGroupRepository;
 		private IRepository<DynamoTrigger> _triggerRepository;
 		private IRepository<DynamoScheduler> _schedulerRepository;
 		private IRepository<DynamoTriggerGroup> _triggerGroupRepository;
@@ -58,6 +59,7 @@ namespace Quartz.DynamoDB
 			_client = DynamoDbClientFactory.Create();
 			_context = new DynamoDBContext (_client);
 			_jobRepository = new Repository<DynamoJob> (_client);
+			_jobGroupRepository = new Repository<DynamoJobGroup> (_client);
 			_triggerRepository = new Repository<DynamoTrigger> (_client);
 			_schedulerRepository = new Repository<DynamoScheduler> (_client);
 			_triggerGroupRepository = new Repository<DynamoTriggerGroup> (_client);
@@ -198,6 +200,25 @@ namespace Quartz.DynamoDB
 
 				_triggerGroupRepository.Store(triggerGroup);
 			}
+
+			var jobGroup = this._jobGroupRepository.Load(newTrigger.JobKey.ToGroupDictionary());
+
+			if (jobGroup != null && jobGroup.State == DynamoJobGroup.DynamoJobGroupState.Paused)
+			{
+				trigger.State = "Paused";
+			}
+
+			if (jobGroup == null)
+			{
+				jobGroup = new DynamoJobGroup () {
+					Name = newTrigger.JobKey.Group,
+					State = DynamoJobGroup.DynamoJobGroupState.Active
+				};
+
+				_jobGroupRepository.Store(jobGroup);
+			}
+
+			//todo: support blocked,PausedAndBlocked
 
 			//            if (this.PausedTriggerGroups.FindOneByIdAs<BsonDocument>(newTrigger.Key.Group) != null
 //                || this.PausedJobGroups.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.Group) != null)

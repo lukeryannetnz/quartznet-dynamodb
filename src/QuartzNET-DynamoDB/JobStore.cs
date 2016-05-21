@@ -26,7 +26,6 @@ namespace Quartz.DynamoDB
 		//todo: think about thread safety.
 
 		private DynamoDBContext _context;
-		private AmazonDynamoDBClient _client;
 		private IRepository<DynamoJob> _jobRepository;
 		private IRepository<DynamoJobGroup> _jobGroupRepository;
 		private IRepository<DynamoTrigger> _triggerRepository;
@@ -57,17 +56,17 @@ namespace Quartz.DynamoDB
 				throw new ArgumentNullException (nameof(signaler));
 			}
 
-			_client = DynamoDbClientFactory.Create();
-			_context = new DynamoDBContext (_client);
-			_jobRepository = new Repository<DynamoJob> (_client);
-			_jobGroupRepository = new Repository<DynamoJobGroup> (_client);
-			_triggerRepository = new Repository<DynamoTrigger> (_client);
-			_schedulerRepository = new Repository<DynamoScheduler> (_client);
-			_triggerGroupRepository = new Repository<DynamoTriggerGroup> (_client);
-			_calendarRepository = new Repository<DynamoCalendar> (_client);
+			var client = DynamoDbClientFactory.Create();
+			_context = new DynamoDBContext (client);
+			_jobRepository = new Repository<DynamoJob> (client);
+			_jobGroupRepository = new Repository<DynamoJobGroup> (client);
+			_triggerRepository = new Repository<DynamoTrigger> (client);
+			_schedulerRepository = new Repository<DynamoScheduler> (client);
+			_triggerGroupRepository = new Repository<DynamoTriggerGroup> (client);
+			_calendarRepository = new Repository<DynamoCalendar> (client);
 
 
-			new DynamoBootstrapper ().BootStrap(_client);
+			new DynamoBootstrapper ().BootStrap(client);
 
 			//_loadHelper = loadHelper;
 			_signaler = signaler;
@@ -249,12 +248,7 @@ namespace Quartz.DynamoDB
 //                state = "Blocked";
 //            }
 
-			var response = _client.PutItem(DynamoConfiguration.TriggerTableName, trigger.ToDynamo());
-
-			if (response.HttpStatusCode != HttpStatusCode.OK)
-			{
-				throw new JobPersistenceException (string.Format("Non 200 status code returned from Dynamo: {0}", response));
-			}
+			_triggerRepository.Store(trigger);
 		}
 
 		public bool RemoveTrigger(TriggerKey triggerKey)

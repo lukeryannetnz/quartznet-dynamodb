@@ -84,6 +84,7 @@
     <Compile Include="DataModel\Storage\QuartzKeyExtensionMethods.cs" />
     <Compile Include="DataModel\Storage\IConvertibleToDynamoRecord.cs" />
     <Compile Include="DataModel\DynamoTriggerGroup.cs" />
+    <Compile Include="DataModel\DynamoJobGroup.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="job_scheduling_data_2_0.xsd">

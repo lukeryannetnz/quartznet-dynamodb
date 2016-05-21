@@ -2,7 +2,9 @@
 {
     public class DynamoConfiguration
     {
-        public static string JobDetailTableName => "JobDetail";
+        public static string JobDetailTableName => "Job";
+
+		public static string JobGroupTableName => "JobGroup";
 
         public static string TriggerTableName => "Trigger";
 

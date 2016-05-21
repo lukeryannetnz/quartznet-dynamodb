@@ -3,6 +3,8 @@ using Quartz.Simpl;
 using Quartz.Spi;
 using Xunit;
 using System.Linq;
+using Quartz.Impl;
+using Quartz.Job;
 
 namespace Quartz.DynamoDB.Tests
 {
@@ -47,6 +49,24 @@ namespace Quartz.DynamoDB.Tests
 
 			var result = _sut.PauseJobs(Quartz.Impl.Matchers.GroupMatcher<JobKey>.GroupStartsWith(jobGroup.Substring(0, 8)));
 			Assert.Equal(0, result.Count);
+		}
+
+		/// <summary>
+		/// Tests that when Pause jobs is called with a group matcher starts with and one groups matches, 
+		/// then that group should be paused,
+		/// </summary>
+		[Fact]
+		[Trait("Category", "Integration")]
+		public void PauseJobsStartsWithOneMatch()
+		{
+			string jobGroup = Guid.NewGuid().ToString();
+			// Create a random job, store it.
+			string jobName = Guid.NewGuid().ToString();
+			JobDetailImpl detail = new JobDetailImpl (jobName, jobGroup, typeof(NoOpJob));
+			_sut.StoreJob(detail, false);
+
+			var result = _sut.PauseJobs(Quartz.Impl.Matchers.GroupMatcher<JobKey>.GroupStartsWith(jobGroup.Substring(0, 8)));
+			Assert.Equal(1, result.Count);
 		}
 	}
 }

@@ -401,7 +401,9 @@ namespace Quartz.DynamoDB
 
 		public IList<string> GetJobGroupNames()
 		{
-			throw new NotImplementedException ();
+			var allJobGroups = this._jobGroupRepository.Scan(null, null, string.Empty);
+
+			return allJobGroups.Select(jg => jg.Name).ToList();		
 		}
 
 		public IList<string> GetTriggerGroupNames()

@@ -94,14 +94,14 @@ namespace Quartz.DynamoDB.Tests.Integration
         [Trait("Category", "Integration")]
         public void TestAcquireNextTriggerBatch()
         {
-            DateTimeOffset d = DateBuilder.EvenMinuteDateAfterNow();
+			DateTimeOffset d = DateBuilder.EvenMinuteDateAfterNow().ToUniversalTime();
 
             IOperableTrigger early = new SimpleTriggerImpl("early", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, d, d.AddMilliseconds(5), 2, TimeSpan.FromSeconds(2));
             IOperableTrigger trigger1 = new SimpleTriggerImpl("trigger1", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, d.AddMilliseconds(200000), d.AddMilliseconds(200005), 2, TimeSpan.FromSeconds(2));
-            IOperableTrigger trigger2 = new SimpleTriggerImpl("trigger2", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, d.AddMilliseconds(200100), d.AddMilliseconds(200105), 2, TimeSpan.FromSeconds(2));
-            IOperableTrigger trigger3 = new SimpleTriggerImpl("trigger3", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, d.AddMilliseconds(200200), d.AddMilliseconds(200205), 2, TimeSpan.FromSeconds(2));
-            IOperableTrigger trigger4 = new SimpleTriggerImpl("trigger4", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, d.AddMilliseconds(200300), d.AddMilliseconds(200305), 2, TimeSpan.FromSeconds(2));
-            IOperableTrigger trigger10 = new SimpleTriggerImpl("trigger10", "triggerGroup2", fJobDetail.Name, fJobDetail.Group, d.AddMilliseconds(500000), d.AddMilliseconds(700000), 2, TimeSpan.FromSeconds(2));
+            IOperableTrigger trigger2 = new SimpleTriggerImpl("trigger2", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, d.AddMilliseconds(300100), d.AddMilliseconds(300105), 2, TimeSpan.FromSeconds(2));
+            IOperableTrigger trigger3 = new SimpleTriggerImpl("trigger3", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, d.AddMilliseconds(400200), d.AddMilliseconds(400205), 2, TimeSpan.FromSeconds(2));
+            IOperableTrigger trigger4 = new SimpleTriggerImpl("trigger4", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, d.AddMilliseconds(500300), d.AddMilliseconds(500305), 2, TimeSpan.FromSeconds(2));
+            IOperableTrigger trigger10 = new SimpleTriggerImpl("trigger10", "triggerGroup2", fJobDetail.Name, fJobDetail.Group, d.AddMilliseconds(700000), d.AddMilliseconds(700000), 2, TimeSpan.FromSeconds(2));
 
             early.ComputeFirstFireTimeUtc(null);
             trigger1.ComputeFirstFireTimeUtc(null);
@@ -109,16 +109,16 @@ namespace Quartz.DynamoDB.Tests.Integration
             trigger3.ComputeFirstFireTimeUtc(null);
             trigger4.ComputeFirstFireTimeUtc(null);
             trigger10.ComputeFirstFireTimeUtc(null);
-            fJobStore.StoreTrigger(early, false);
-            fJobStore.StoreTrigger(trigger1, false);
-            fJobStore.StoreTrigger(trigger2, false);
-            fJobStore.StoreTrigger(trigger3, false);
-            fJobStore.StoreTrigger(trigger4, false);
-            fJobStore.StoreTrigger(trigger10, false);
+            fJobStore.StoreTrigger(early, true);
+			fJobStore.StoreTrigger(trigger1, true);
+			fJobStore.StoreTrigger(trigger2, true);
+			fJobStore.StoreTrigger(trigger3, true);
+			fJobStore.StoreTrigger(trigger4, true);
+			fJobStore.StoreTrigger(trigger10, true);
 
             DateTimeOffset firstFireTime = trigger1.GetNextFireTimeUtc().Value;
 
-            IList<IOperableTrigger> acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddSeconds(10), 4, TimeSpan.FromSeconds(1));
+            IList<IOperableTrigger> acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddSeconds(10), 4, TimeSpan.FromSeconds(501));
             Assert.Equal(4, acquiredTriggers.Count);
             Assert.Equal(early.Key, acquiredTriggers[0].Key);
             Assert.Equal(trigger1.Key, acquiredTriggers[1].Key);
@@ -129,7 +129,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.ReleaseAcquiredTrigger(trigger2);
             fJobStore.ReleaseAcquiredTrigger(trigger3);
 
-            acquiredTriggers = this.fJobStore.AcquireNextTriggers(firstFireTime.AddSeconds(10), 5, TimeSpan.FromMilliseconds(1000));
+			acquiredTriggers = this.fJobStore.AcquireNextTriggers(firstFireTime.AddSeconds(10), 5, TimeSpan.FromSeconds(510));
             Assert.Equal(5, acquiredTriggers.Count);
             Assert.Equal(early.Key, acquiredTriggers[0].Key);
             Assert.Equal(trigger1.Key, acquiredTriggers[1].Key);
@@ -142,7 +142,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.ReleaseAcquiredTrigger(trigger3);
             fJobStore.ReleaseAcquiredTrigger(trigger4);
 
-            acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddSeconds(10), 6, TimeSpan.FromSeconds(1));
+            acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddSeconds(10), 6, TimeSpan.FromSeconds(510));
             Assert.Equal(5, acquiredTriggers.Count);
             Assert.Equal(early.Key, acquiredTriggers[0].Key);
             Assert.Equal(trigger1.Key, acquiredTriggers[1].Key);
@@ -155,12 +155,12 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.ReleaseAcquiredTrigger(trigger3);
             fJobStore.ReleaseAcquiredTrigger(trigger4);
 
-            acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(1), 5, TimeSpan.Zero);
+			acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(1), 5, TimeSpan.FromSeconds(210));
             Assert.Equal(2, acquiredTriggers.Count);
             fJobStore.ReleaseAcquiredTrigger(early);
             fJobStore.ReleaseAcquiredTrigger(trigger1);
 
-            acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(250), 5, TimeSpan.FromMilliseconds(199));
+			acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(250), 5, TimeSpan.FromSeconds(510));
             Assert.Equal(5, acquiredTriggers.Count);
             fJobStore.ReleaseAcquiredTrigger(early);
             fJobStore.ReleaseAcquiredTrigger(trigger1);
@@ -168,7 +168,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.ReleaseAcquiredTrigger(trigger3);
             fJobStore.ReleaseAcquiredTrigger(trigger4);
 
-            acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(150), 5, TimeSpan.FromMilliseconds(50L));
+			acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(150), 5, TimeSpan.FromSeconds(410));
             Assert.Equal(4, acquiredTriggers.Count);
             fJobStore.ReleaseAcquiredTrigger(early);
             fJobStore.ReleaseAcquiredTrigger(trigger1);

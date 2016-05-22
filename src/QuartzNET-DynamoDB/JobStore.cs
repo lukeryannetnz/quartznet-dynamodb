@@ -11,6 +11,7 @@ using Quartz.Spi;
 using Amazon.DynamoDBv2.Model;
 using System.Net;
 using Quartz.DynamoDB.DataModel.Storage;
+using System.Diagnostics;
 
 namespace Quartz.DynamoDB
 {
@@ -715,6 +716,8 @@ namespace Quartz.DynamoDB
 
 		public IList<IOperableTrigger> AcquireNextTriggers(DateTimeOffset noLaterThan, int maxCount, TimeSpan timeWindow)
 		{
+			Debug.WriteLine("Acquiring triggers. No later than: {0}, timewindow: {1}", noLaterThan, timeWindow);
+
 			// multiple instance management. Create a running scheduler for this instance.
 			// TODO: investigate: does this create duplicate active schedulers for the same instanceid?
 			CreateOrUpdateCurrentSchedulerInstance();
@@ -744,8 +747,11 @@ namespace Quartz.DynamoDB
 			
 			foreach (var trigger in candidates)
 			{
+				Debug.WriteLine("Processing candidate. Name: {0} Next fire time: {1}",  trigger.Trigger.Name, trigger.Trigger.GetNextFireTimeUtc());
+
 				if (trigger.Trigger.GetNextFireTimeUtc() == null)
 				{
+					Debug.WriteLine("Candidate has no next fire time. Excluding.");
 					continue;
 				}
 
@@ -757,14 +763,18 @@ namespace Quartz.DynamoDB
 				if (firstAcquiredTriggerFireTime != null
 				    && trigger.Trigger.GetNextFireTimeUtc() > (firstAcquiredTriggerFireTime.Value + timeWindow))
 				{
+					Debug.WriteLine("Breaking, have hit trigger beyond the time window.");
 					break;
 				}
 
 				if (this.ApplyMisfireIfNecessary(trigger))
 				{
+					Debug.WriteLine("Applied misfire. Next fire time: {0}", trigger.Trigger.GetNextFireTimeUtc());
+
 					if (trigger.Trigger.GetNextFireTimeUtc() == null
 					    || trigger.Trigger.GetNextFireTimeUtc() > noLaterThan + timeWindow)
 					{
+						Debug.WriteLine("Continuing. No next fire time, or fire time outside of window.");
 						continue;
 					}
 				}
@@ -778,8 +788,11 @@ namespace Quartz.DynamoDB
 				{
 					if (acquiredJobKeysForNoConcurrentExec.Contains(jobKey))
 					{
+						Debug.WriteLine("Continuing. Added non-concurrent trigger twice.");
+
 						continue; // go to next trigger in store.
-					} else
+					} 
+					else
 					{
 						acquiredJobKeysForNoConcurrentExec.Add(jobKey);
 					}
@@ -803,10 +816,14 @@ namespace Quartz.DynamoDB
 				trigger.SchedulerInstanceId = InstanceId;
 				trigger.State = "Acquired";
 
+				Debug.WriteLine("Acquiring the trigger.");
+
 				var acquiredTrigger = _triggerRepository.Store(trigger, acquireTriggerExpressionAttributeValues, acquireTriggerConditionalExpressionAttributeNames, acquireTriggerConditionalExpression);
 
 				if (acquiredTrigger.Any())
 				{
+					Debug.WriteLine("Acquired the trigger.");
+
 					result.Add(trigger.Trigger);
 
 					if (firstAcquiredTriggerFireTime == null)
@@ -817,6 +834,8 @@ namespace Quartz.DynamoDB
 
 				if (result.Count == maxCount)
 				{
+					Debug.WriteLine("Hit the max count.");
+
 					break;
 				}
 			}

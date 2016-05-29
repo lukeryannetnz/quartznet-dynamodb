@@ -1,4 +1,6 @@
-﻿namespace Quartz.DynamoDB
+﻿using System.Configuration;
+
+namespace Quartz.DynamoDB
 {
     public class DynamoConfiguration
     {
@@ -13,5 +15,7 @@
         public static string SchedulerTableName => "Scheduler";
 
 		public static string CalendarTableName => "Calendar";
+
+		public static string ServiceUrl => ConfigurationManager.AppSettings["DynamoServiceURL"].ToString();
     }
 }

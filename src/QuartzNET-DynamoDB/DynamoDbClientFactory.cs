@@ -9,11 +9,17 @@ namespace Quartz.DynamoDB
     {
         public static AmazonDynamoDBClient Create()
         {
-            // First, set up a DynamoDB client for DynamoDB Local
-            AmazonDynamoDBConfig ddbConfig = new AmazonDynamoDBConfig();
-            ddbConfig.ServiceURL = "http://localhost:8000";
+			if (!string.IsNullOrWhiteSpace(Quartz.DynamoDB.DynamoConfiguration.ServiceUrl))
+			{
+				// First, set up a DynamoDB client for DynamoDB Local
+				AmazonDynamoDBConfig ddbConfig = new AmazonDynamoDBConfig();
+				ddbConfig.ServiceURL = Quartz.DynamoDB.DynamoConfiguration.ServiceUrl;
+
+				return  new AmazonDynamoDBClient(ddbConfig); 
+			}
             
-            return  new AmazonDynamoDBClient(ddbConfig); 
+			// If no url in the config, use the profile and region from the config.
+			return new AmazonDynamoDBClient ();
         }
     }
 }

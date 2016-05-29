@@ -68,6 +68,24 @@ namespace Quartz.DynamoDB.Tests
 			var result = _sut.PauseJobs(Quartz.Impl.Matchers.GroupMatcher<JobKey>.GroupStartsWith(jobGroup.Substring(0, 8)));
 			Assert.Equal(1, result.Count);
 		}
+
+		/// <summary>
+		/// Tests that when Pause Jobs is called IsJobGroupPaused returns true.
+		/// </summary>
+		[Fact]
+		[Trait("Category", "Integration")]
+		public void PauseJobsGroups()
+		{
+			string jobGroup = Guid.NewGuid().ToString();
+
+			var paused = _sut.IsJobGroupPaused(jobGroup);
+			Assert.Equal(false, paused);
+
+			_sut.PauseJobs(Quartz.Impl.Matchers.GroupMatcher<JobKey>.GroupEquals(jobGroup));
+
+			paused = _sut.IsJobGroupPaused(jobGroup);
+			Assert.Equal(true, paused);
+		}
 	}
 }
 

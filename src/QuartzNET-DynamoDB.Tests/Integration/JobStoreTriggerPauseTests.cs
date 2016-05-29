@@ -130,6 +130,24 @@ namespace Quartz.DynamoDB.Tests
 			triggerState = _sut.GetTriggerState(tr.Key);
 			Assert.Equal("Paused", triggerState.ToString());
 		}
+
+		/// <summary>
+		/// Tests that when Pause triggers is called IsTriggerGroup paused returns true.
+		/// </summary>
+		[Fact]
+		[Trait("Category", "Integration")]
+		public void PauseTriggersIsTriggerPaused()
+		{
+			string triggerGroup = Guid.NewGuid().ToString();
+
+			var paused = _sut.IsTriggerGroupPaused(triggerGroup);
+			Assert.Equal(false, paused);
+
+			_sut.PauseTriggers(Quartz.Impl.Matchers.GroupMatcher<TriggerKey>.GroupEquals(triggerGroup));
+		
+			paused = _sut.IsTriggerGroupPaused(triggerGroup);
+			Assert.Equal(true, paused);
+		}
 	}
 }
 

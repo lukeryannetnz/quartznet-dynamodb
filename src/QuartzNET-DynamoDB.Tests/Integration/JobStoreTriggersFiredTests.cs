@@ -37,11 +37,16 @@ namespace Quartz.DynamoDB.Tests
 			string jobGroup = Guid.NewGuid().ToString();
 			string triggerName = Guid.NewGuid().ToString();
 			string triggerGroup = Guid.NewGuid().ToString();
-			DateTimeOffset d = DateBuilder.EvenMinuteDateAfterNow();
+			DateTimeOffset d = DateTime.UtcNow;
 
 			JobDetailImpl job = new JobDetailImpl(jobName, jobGroup, typeof(NoOpJob));
-			IOperableTrigger trigger = new SimpleTriggerImpl(triggerName, triggerGroup, job.Name, job.Group, d, d, 2, TimeSpan.FromSeconds(2));
+			IOperableTrigger trigger = new SimpleTriggerImpl(triggerName, triggerGroup, job.Name, job.Group, d, null, 2, TimeSpan.FromSeconds(5));
+			trigger.ComputeFirstFireTimeUtc(null);
+
 			_sut.StoreJobAndTrigger(job, trigger);
+
+			var acquired =_sut.AcquireNextTriggers(d.AddSeconds(9), 100, TimeSpan.FromSeconds(5));
+			Assert.True(acquired.Count > 0);
 
 			var result = _sut.TriggersFired(new List<IOperableTrigger> () { trigger });
 

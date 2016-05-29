@@ -12,6 +12,7 @@ using Amazon.DynamoDBv2.Model;
 using System.Net;
 using Quartz.DynamoDB.DataModel.Storage;
 using System.Diagnostics;
+using Quartz.Impl.Triggers;
 
 namespace Quartz.DynamoDB
 {
@@ -476,6 +477,13 @@ namespace Quartz.DynamoDB
 
 		public IList<IOperableTrigger> GetTriggersForJob(JobKey jobKey)
 		{
+			var candidates = GetDynamoTriggersForJob(jobKey);
+
+			return candidates.Select(t => (IOperableTrigger)t.Trigger).ToList();
+		}
+
+		private IEnumerable<DynamoTrigger> GetDynamoTriggersForJob(JobKey jobKey)
+		{
 			var attributeNames = new Dictionary<string,string> {
 				{ "#jn", "JobName" },
 				{ "#jg", "JobGroup" }
@@ -490,7 +498,7 @@ namespace Quartz.DynamoDB
 
 			var candidates = _triggerRepository.Scan(attributeValues, attributeNames, filterExpression);
 
-			return candidates.Select(t => (IOperableTrigger)t.Trigger).ToList();
+			return candidates;
 		}
 
 		public TriggerState GetTriggerState(TriggerKey triggerKey)
@@ -915,7 +923,78 @@ namespace Quartz.DynamoDB
 
 		public IList<TriggerFiredResult> TriggersFired(IList<IOperableTrigger> triggers)
 		{
-			throw new NotImplementedException ();
+			List<TriggerFiredResult> results = new List<TriggerFiredResult>();
+
+			foreach (IOperableTrigger trigger in triggers)
+			{
+				var storedTrigger = _triggerRepository.Load(trigger.Key.ToDictionary());
+				// was the trigger deleted since being acquired?
+				if (storedTrigger == null)
+				{
+					continue;
+				}
+				// was the trigger completed, paused, blocked, etc. since being acquired?
+				if (storedTrigger.State != "Acquired")
+				{
+					continue;
+				}
+
+				ICalendar cal = null;
+				if (trigger.CalendarName != null)
+				{
+					cal = this.RetrieveCalendar(trigger.CalendarName);
+					if (cal == null)
+					{
+						continue;
+					}
+				}
+
+				trigger.Triggered(cal);
+				storedTrigger.Trigger = (AbstractTrigger)trigger;
+				storedTrigger.State = "Executing";
+
+				_triggerRepository.Store(storedTrigger);
+
+				var storedJob = _jobRepository.Load(trigger.JobKey.ToDictionary());
+
+				TriggerFiredBundle bndle = new TriggerFiredBundle(storedJob.Job,
+					trigger,
+					cal,
+					false, 
+					SystemTime.UtcNow(),
+					trigger.GetPreviousFireTimeUtc(), 
+					trigger.GetPreviousFireTimeUtc(),
+					trigger.GetNextFireTimeUtc());
+
+				IJobDetail job = bndle.JobDetail;
+
+				if (job.ConcurrentExecutionDisallowed)
+				{
+					//concurrent execution not allowed so set triggers to Blocked (or PausedAndBlocked) and Jobs to Blocked.
+
+					var triggersForJob = this.GetDynamoTriggersForJob(job.Key);
+
+					foreach (var jobTrigger in triggersForJob)
+					{
+						if(jobTrigger.State == "Waiting")
+						{
+							jobTrigger.State = "Blocked";
+						}
+
+						if(jobTrigger.State == "Paused")
+						{
+							jobTrigger.State = "PausedAndBlocked";
+						}
+
+						_triggerRepository.Store(jobTrigger);
+					}  
+
+					//todo: block the job
+				}
+
+				results.Add(new TriggerFiredResult(bndle));
+			}
+			return results;
 		}
 
 		public void TriggeredJobComplete(IOperableTrigger trigger, IJobDetail jobDetail,

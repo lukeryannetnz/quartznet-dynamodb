@@ -7,7 +7,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>QuartzNETDynamoDB.TestApp</RootNamespace>
     <AssemblyName>QuartzNET-DynamoDB.TestApp</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -49,5 +49,11 @@
     <None Include="packages.config" />
     <None Include="job_scheduling_data_2_0.xsd" />
     <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\QuartzNET-DynamoDB\QuartzNET-DynamoDB.csproj">
+      <Project>{0834342B-7512-487B-829B-572F140655E8}</Project>
+      <Name>QuartzNET-DynamoDB</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

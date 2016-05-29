@@ -71,11 +71,11 @@
     <Reference Include="Common.Logging">
       <HintPath>..\packages\Common.Logging.3.3.1\lib\net40\Common.Logging.dll</HintPath>
     </Reference>
-    <Reference Include="AWSSDK.DynamoDBv2">
-      <HintPath>..\packages\AWSSDK.DynamoDBv2.3.1.3.0\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
-    </Reference>
     <Reference Include="AWSSDK.Core">
-      <HintPath>..\packages\AWSSDK.Core.3.1.5.1\lib\net45\AWSSDK.Core.dll</HintPath>
+      <HintPath>..\packages\AWSSDK.Core.3.1.6.0\lib\net45\AWSSDK.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="AWSSDK.DynamoDBv2">
+      <HintPath>..\packages\AWSSDK.DynamoDBv2.3.1.4.1\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

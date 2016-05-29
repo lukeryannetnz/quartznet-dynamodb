@@ -16,6 +16,6 @@ namespace Quartz.DynamoDB
 
 		public static string CalendarTableName => "Calendar";
 
-		public static string ServiceUrl => ConfigurationManager.AppSettings["DynamoServiceURL"].ToString();
+		public static string ServiceUrl => ConfigurationManager.AppSettings["DynamoServiceURL"] ?? string.Empty;
     }
 }

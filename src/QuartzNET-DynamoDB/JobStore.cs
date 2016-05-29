@@ -126,7 +126,14 @@ namespace Quartz.DynamoDB
 
 		public bool IsTriggerGroupPaused(string groupName)
 		{
-			throw new NotImplementedException ();
+			var group = _triggerGroupRepository.Load(new TriggerKey (string.Empty, groupName).ToGroupDictionary());
+
+			if (group == null)
+			{
+				return false;
+			}
+
+			return group.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused;
 		}
 
 		public void StoreJob(IJobDetail newJob, bool replaceExisting)

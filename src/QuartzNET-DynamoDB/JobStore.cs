@@ -33,7 +33,6 @@ namespace Quartz.DynamoDB
 		private IRepository<DynamoCalendar> _calendarRepository;
 
 		private string _instanceId;
-		//private string _instanceName;
 
 		/// <summary>
 		/// Tracks if dispose has been called to detect redundant (multiple) dispose calls.
@@ -63,7 +62,6 @@ namespace Quartz.DynamoDB
 			_schedulerRepository = new Repository<DynamoScheduler> (client);
 			_triggerGroupRepository = new Repository<DynamoTriggerGroup> (client);
 			_calendarRepository = new Repository<DynamoCalendar> (client);
-
 
 			new DynamoBootstrapper ().BootStrap(client);
 
@@ -969,8 +967,7 @@ namespace Quartz.DynamoDB
 		{
 			set
 			{
-				throw new NotImplementedException ();
-				//this._instanceName = value;
+				DynamoConfiguration.InstanceName = value;
 			}
 		}
 

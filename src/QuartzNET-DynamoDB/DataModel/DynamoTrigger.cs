@@ -129,7 +129,6 @@ namespace Quartz.DynamoDB.DataModel
 			}
 
 			Trigger.Priority = int.Parse(record["Priority"].N);
-
 		}
 
 		public string DynamoTableName  

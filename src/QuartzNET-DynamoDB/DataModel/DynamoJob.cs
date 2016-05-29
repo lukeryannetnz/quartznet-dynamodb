@@ -57,7 +57,7 @@ namespace Quartz.DynamoDB.DataModel
 			}
 		}
 
-        public IJobDetail Job { get; private set; }
+        public IJobDetail Job { get; set; }
 
         public Dictionary<string, AttributeValue> ToDynamo()
         {

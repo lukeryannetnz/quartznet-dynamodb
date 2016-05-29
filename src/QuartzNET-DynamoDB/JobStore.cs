@@ -23,8 +23,7 @@ namespace Quartz.DynamoDB
 	/// </summary>
 	public class JobStore : IJobStore, IDisposable
 	{
-		//todo: think about thread safety.
-
+		private readonly object lockObject = new object();
 		private DynamoDBContext _context;
 		private IRepository<DynamoJob> _jobRepository;
 		private IRepository<DynamoJobGroup> _jobGroupRepository;
@@ -64,21 +63,27 @@ namespace Quartz.DynamoDB
 			_triggerGroupRepository = new Repository<DynamoTriggerGroup> (client);
 			_calendarRepository = new Repository<DynamoCalendar> (client);
 
-			new DynamoBootstrapper ().BootStrap(client);
-
-			//_loadHelper = loadHelper;
-			_signaler = signaler;
-
-			// We should have had an instance id assigned by now, but if we haven't assign one.
-			if (string.IsNullOrEmpty(InstanceId))
+			lock (lockObject)
 			{
-				InstanceId = Guid.NewGuid().ToString();
+				new DynamoBootstrapper ().BootStrap(client);
+
+				//_loadHelper = loadHelper;
+				_signaler = signaler;
+
+				// We should have had an instance id assigned by now, but if we haven't assign one.
+				if (string.IsNullOrEmpty(InstanceId))
+				{
+					InstanceId = Guid.NewGuid().ToString();
+				}
 			}
 		}
 
 		public void SchedulerStarted()
 		{
-			CreateOrUpdateCurrentSchedulerInstance();
+			lock (lockObject)
+			{
+				CreateOrUpdateCurrentSchedulerInstance();
+			}
 		}
 
 		public void SchedulerPaused()
@@ -107,8 +112,11 @@ namespace Quartz.DynamoDB
 
 		public void StoreJobAndTrigger(IJobDetail newJob, IOperableTrigger newTrigger)
 		{
-			StoreJob(newJob, false);
-			StoreTrigger(newTrigger, false);
+			lock (lockObject)
+			{
+				StoreJob(newJob, false);
+				StoreTrigger(newTrigger, false);
+			}
 		}
 
 		public bool IsJobGroupPaused(string groupName)
@@ -137,26 +145,29 @@ namespace Quartz.DynamoDB
 
 		public void StoreJob(IJobDetail newJob, bool replaceExisting)
 		{
-			DynamoJob job = new DynamoJob (newJob);
-
-			if (!replaceExisting && _jobRepository.Load(job.Key) != null)
+			lock (lockObject)
 			{
-				throw new ObjectAlreadyExistsException (newJob);
+				DynamoJob job = new DynamoJob (newJob);
+
+				if (!replaceExisting && _jobRepository.Load(job.Key) != null)
+				{
+					throw new ObjectAlreadyExistsException (newJob);
+				}
+
+				var jobGroup = this._jobGroupRepository.Load(newJob.Key.ToGroupDictionary());
+
+				if (jobGroup == null)
+				{
+					jobGroup = new DynamoJobGroup () {
+						Name = newJob.Key.Group,
+						State = DynamoJobGroup.DynamoJobGroupState.Active
+					};
+
+					_jobGroupRepository.Store(jobGroup);
+				}
+
+				_jobRepository.Store(job);
 			}
-
-			var jobGroup = this._jobGroupRepository.Load(newJob.Key.ToGroupDictionary());
-
-			if (jobGroup == null)
-			{
-				jobGroup = new DynamoJobGroup () {
-					Name = newJob.Key.Group,
-					State = DynamoJobGroup.DynamoJobGroupState.Active
-				};
-
-				_jobGroupRepository.Store(jobGroup);
-			}
-
-			_jobRepository.Store(job);
 		}
 
 		public void StoreJobsAndTriggers(IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs,
@@ -167,20 +178,23 @@ namespace Quartz.DynamoDB
 
 		public bool RemoveJob(JobKey jobKey)
 		{
-			// keep separated to clean up any staled trigger
-			IList<IOperableTrigger> triggersForJob = this.GetTriggersForJob(jobKey);
-			foreach (IOperableTrigger trigger in triggersForJob)
+			lock (lockObject)
 			{
-				this.RemoveTrigger(trigger.Key);
-			}
+				// keep separated to clean up any staled trigger
+				IList<IOperableTrigger> triggersForJob = this.GetTriggersForJob(jobKey);
+				foreach (IOperableTrigger trigger in triggersForJob)
+				{
+					this.RemoveTrigger(trigger.Key);
+				}
 
-			var found = this.CheckExists(jobKey);
-			if (found)
-			{
-				_jobRepository.Delete(jobKey.ToDictionary());
-			}
+				var found = this.CheckExists(jobKey);
+				if (found)
+				{
+					_jobRepository.Delete(jobKey.ToDictionary());
+				}
 
-			return found;
+				return found;
+			}
 		}
 
 		public bool RemoveJobs(IList<JobKey> jobKeys)
@@ -190,63 +204,68 @@ namespace Quartz.DynamoDB
 
 		public IJobDetail RetrieveJob(JobKey jobKey)
 		{
-			var job = _jobRepository.Load(jobKey.ToDictionary());
+			lock (lockObject)
+			{
+				var job = _jobRepository.Load(jobKey.ToDictionary());
 
-			return job == null ? null : job.Job;
+				return job == null ? null : job.Job;
+			}
 		}
 
 		public void StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting)
 		{
-			DynamoTrigger trigger = new DynamoTrigger (newTrigger);
-
-			if (!replaceExisting && _triggerRepository.Load(trigger.Key) != null)
+			lock (lockObject)
 			{
-				throw new ObjectAlreadyExistsException (newTrigger);
-			}
+				DynamoTrigger trigger = new DynamoTrigger (newTrigger);
 
-			if (RetrieveJob(newTrigger.JobKey) == null)
-			{
-				throw new JobPersistenceException ("The job (" + newTrigger.JobKey +
-				") referenced by the trigger does not exist.");
-			}
+				if (!replaceExisting && _triggerRepository.Load(trigger.Key) != null)
+				{
+					throw new ObjectAlreadyExistsException (newTrigger);
+				}
 
-			var triggerGroup = this._triggerGroupRepository.Load(newTrigger.Key.ToGroupDictionary());
+				if (RetrieveJob(newTrigger.JobKey) == null)
+				{
+					throw new JobPersistenceException ("The job (" + newTrigger.JobKey +
+					") referenced by the trigger does not exist.");
+				}
 
-			if (triggerGroup != null && triggerGroup.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused)
-			{
-				trigger.State = "Paused";
-			}
+				var triggerGroup = this._triggerGroupRepository.Load(newTrigger.Key.ToGroupDictionary());
 
-			if (triggerGroup == null)
-			{
-				triggerGroup = new DynamoTriggerGroup () {
-					Name = newTrigger.Key.Group,
-					State = DynamoTriggerGroup.DynamoTriggerGroupState.Active
-				};
+				if (triggerGroup != null && triggerGroup.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused)
+				{
+					trigger.State = "Paused";
+				}
 
-				_triggerGroupRepository.Store(triggerGroup);
-			}
+				if (triggerGroup == null)
+				{
+					triggerGroup = new DynamoTriggerGroup () {
+						Name = newTrigger.Key.Group,
+						State = DynamoTriggerGroup.DynamoTriggerGroupState.Active
+					};
 
-			var jobGroup = this._jobGroupRepository.Load(newTrigger.JobKey.ToGroupDictionary());
+					_triggerGroupRepository.Store(triggerGroup);
+				}
 
-			if (jobGroup != null && jobGroup.State == DynamoJobGroup.DynamoJobGroupState.Paused)
-			{
-				trigger.State = "Paused";
-			}
+				var jobGroup = this._jobGroupRepository.Load(newTrigger.JobKey.ToGroupDictionary());
 
-			if (jobGroup == null)
-			{
-				jobGroup = new DynamoJobGroup () {
-					Name = newTrigger.JobKey.Group,
-					State = DynamoJobGroup.DynamoJobGroupState.Active
-				};
+				if (jobGroup != null && jobGroup.State == DynamoJobGroup.DynamoJobGroupState.Paused)
+				{
+					trigger.State = "Paused";
+				}
 
-				_jobGroupRepository.Store(jobGroup);
-			}
+				if (jobGroup == null)
+				{
+					jobGroup = new DynamoJobGroup () {
+						Name = newTrigger.JobKey.Group,
+						State = DynamoJobGroup.DynamoJobGroupState.Active
+					};
 
-			//todo: support blocked,PausedAndBlocked
+					_jobGroupRepository.Store(jobGroup);
+				}
 
-			//            if (this.PausedTriggerGroups.FindOneByIdAs<BsonDocument>(newTrigger.Key.Group) != null
+				//todo: support blocked,PausedAndBlocked
+
+				//            if (this.PausedTriggerGroups.FindOneByIdAs<BsonDocument>(newTrigger.Key.Group) != null
 //                || this.PausedJobGroups.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.Group) != null)
 //            {
 //                state = "Paused";
@@ -260,19 +279,22 @@ namespace Quartz.DynamoDB
 //                state = "Blocked";
 //            }
 
-			_triggerRepository.Store(trigger);
+				_triggerRepository.Store(trigger);
+			}
 		}
 
 		public bool RemoveTrigger(TriggerKey triggerKey)
 		{
 			bool found;
 
-			var trigger = this.RetrieveTrigger(triggerKey);
-			found = trigger != null;
-
-			if (found)
+			lock (lockObject)
 			{
-				_triggerRepository.Delete(triggerKey.ToDictionary());
+				var trigger = this.RetrieveTrigger(triggerKey);
+				found = trigger != null;
+
+				if (found)
+				{
+					_triggerRepository.Delete(triggerKey.ToDictionary());
 
 //					if (removeOrphanedJob)
 //					{
@@ -288,6 +310,7 @@ namespace Quartz.DynamoDB
 //							}
 //						}
 //					}
+				}
 			}
 
 			return found;
@@ -305,9 +328,12 @@ namespace Quartz.DynamoDB
 
 		public IOperableTrigger RetrieveTrigger(TriggerKey triggerKey)
 		{
-			var trigger = _triggerRepository.Load(triggerKey.ToDictionary());
+			lock (lockObject)
+			{
+				var trigger = _triggerRepository.Load(triggerKey.ToDictionary());
 
-			return trigger?.Trigger;
+				return trigger?.Trigger;
+			}
 		}
 
 		public bool CalendarExists(string calName)
@@ -317,12 +343,18 @@ namespace Quartz.DynamoDB
 
 		public bool CheckExists(JobKey jobKey)
 		{
-			return _jobRepository.Load(jobKey.ToDictionary()) == null;
+			lock (lockObject)
+			{
+				return _jobRepository.Load(jobKey.ToDictionary()) == null;
+			}
 		}
 
 		public bool CheckExists(TriggerKey triggerKey)
 		{
-			return _triggerRepository.Load(triggerKey.ToDictionary()) == null;
+			lock (lockObject)
+			{
+				return _triggerRepository.Load(triggerKey.ToDictionary()) == null;
+			}
 		}
 
 		/// <summary>
@@ -331,13 +363,16 @@ namespace Quartz.DynamoDB
 		/// </summary>
 		public void ClearAllSchedulingData()
 		{
-			// unschedule jobs (delete triggers)
-			_triggerRepository.DeleteTable();
+			lock(lockObject)
+			{
+				// unschedule jobs (delete triggers)
+				_triggerRepository.DeleteTable();
 
-			// delete jobs
-			_jobRepository.DeleteTable();
+				// delete jobs
+				_jobRepository.DeleteTable();
 
-			// delete calendars
+				// delete calendars
+			}
 		}
 
 		/// <summary>
@@ -354,25 +389,28 @@ namespace Quartz.DynamoDB
 		/// re-computed with the new <see cref="ICalendar" />.</param>
 		public void StoreCalendar(string name, ICalendar calendar, bool replaceExisting, bool updateTriggers)
 		{
-			var dynamoCal = new DynamoCalendar(){Name = name, Description = calendar.Description};
-
-			var existingRecord = _calendarRepository.Load(dynamoCal.Key);
-
-			if(existingRecord != null && replaceExisting == false)
+			lock (lockObject)
 			{
-				throw new ObjectAlreadyExistsException (string.Format(CultureInfo.InvariantCulture, "Calendar with name '{0}' already exists.", name));
-			}
+				var dynamoCal = new DynamoCalendar (){ Name = name, Description = calendar.Description };
 
-			_calendarRepository.Store(dynamoCal);
+				var existingRecord = _calendarRepository.Load(dynamoCal.Key);
 
-			if (updateTriggers)
-			{
-				var triggers = GetTriggersForCalendar(name);
-
-				foreach (var trigger in triggers)
+				if (existingRecord != null && replaceExisting == false)
 				{
-					trigger.Trigger.UpdateWithNewCalendar(calendar, MisfireThreshold);
-					_triggerRepository.Store(trigger);
+					throw new ObjectAlreadyExistsException (string.Format(CultureInfo.InvariantCulture, "Calendar with name '{0}' already exists.", name));
+				}
+
+				_calendarRepository.Store(dynamoCal);
+
+				if (updateTriggers)
+				{
+					var triggers = GetTriggersForCalendar(name);
+
+					foreach (var trigger in triggers)
+					{
+						trigger.Trigger.UpdateWithNewCalendar(calendar, MisfireThreshold);
+						_triggerRepository.Store(trigger);
+					}
 				}
 			}
 		}
@@ -503,34 +541,37 @@ namespace Quartz.DynamoDB
 
 		public TriggerState GetTriggerState(TriggerKey triggerKey)
 		{
-			var record = _triggerRepository.Load(triggerKey.ToDictionary());
+			lock (lockObject)
+			{
+				var record = _triggerRepository.Load(triggerKey.ToDictionary());
 
-			if (record == null)
-			{
-				return TriggerState.None;
-			}
-			if (record.State == "Complete")
-			{
-				return TriggerState.Complete;
-			}
-			if (record.State == "Paused")
-			{
-				return TriggerState.Paused;
-			}
-			if (record.State == "PausedAndBlocked")
-			{
-				return TriggerState.Paused;
-			}
-			if (record.State == "Blocked")
-			{
-				return TriggerState.Blocked;
-			}
-			if (record.State == "Error")
-			{
-				return TriggerState.Error;
-			}
+				if (record == null)
+				{
+					return TriggerState.None;
+				}
+				if (record.State == "Complete")
+				{
+					return TriggerState.Complete;
+				}
+				if (record.State == "Paused")
+				{
+					return TriggerState.Paused;
+				}
+				if (record.State == "PausedAndBlocked")
+				{
+					return TriggerState.Paused;
+				}
+				if (record.State == "Blocked")
+				{
+					return TriggerState.Blocked;
+				}
+				if (record.State == "Error")
+				{
+					return TriggerState.Error;
+				}
 
-			return TriggerState.Normal;
+				return TriggerState.Normal;
+			}
 		}
 
 		public void PauseTrigger(TriggerKey triggerKey)
@@ -736,131 +777,133 @@ namespace Quartz.DynamoDB
 
 		public IList<IOperableTrigger> AcquireNextTriggers(DateTimeOffset noLaterThan, int maxCount, TimeSpan timeWindow)
 		{
-			Debug.WriteLine("Acquiring triggers. No later than: {0}, timewindow: {1}", noLaterThan, timeWindow);
+			lock (lockObject)
+			{
+				Debug.WriteLine("Acquiring triggers. No later than: {0}, timewindow: {1}", noLaterThan, timeWindow);
 
-			// multiple instance management. Create a running scheduler for this instance.
-			// TODO: investigate: does this create duplicate active schedulers for the same instanceid?
-			CreateOrUpdateCurrentSchedulerInstance();
+				// multiple instance management. Create a running scheduler for this instance.
+				// TODO: investigate: does this create duplicate active schedulers for the same instanceid?
+				CreateOrUpdateCurrentSchedulerInstance();
 
-			DeleteExpiredSchedulers();
-			ResetTriggersAssociatedWithNonActiveSchedulers();
+				DeleteExpiredSchedulers();
+				ResetTriggersAssociatedWithNonActiveSchedulers();
 
-			List<IOperableTrigger> result = new List<IOperableTrigger> ();
-			Collection.ISet<JobKey> acquiredJobKeysForNoConcurrentExec = new Collection.HashSet<JobKey> ();
-			DateTimeOffset? firstAcquiredTriggerFireTime = null;
+				List<IOperableTrigger> result = new List<IOperableTrigger> ();
+				Collection.ISet<JobKey> acquiredJobKeysForNoConcurrentExec = new Collection.HashSet<JobKey> ();
+				DateTimeOffset? firstAcquiredTriggerFireTime = null;
 
-			string maxNextFireTime = (noLaterThan + timeWindow).UtcDateTime.ToUnixEpochTime().ToString();
+				string maxNextFireTime = (noLaterThan + timeWindow).UtcDateTime.ToUnixEpochTime().ToString();
             
-			var candidateExpressionAttributeNames = new Dictionary<string,string> {
-				{ "#S", "State" }
-			};
+				var candidateExpressionAttributeNames = new Dictionary<string,string> {
+					{ "#S", "State" }
+				};
 
-			var candidateExpressionAttributeValues = new Dictionary<string,AttributeValue> {
-				{ ":WaitingState", new AttributeValue { S = "Waiting" } },
-				{ ":MaxNextFireTime", new AttributeValue { N = maxNextFireTime } }
-			};
+				var candidateExpressionAttributeValues = new Dictionary<string,AttributeValue> {
+					{ ":WaitingState", new AttributeValue { S = "Waiting" } },
+					{ ":MaxNextFireTime", new AttributeValue { N = maxNextFireTime } }
+				};
 
-			var candidateFilterExpression = "#S = :WaitingState and NextFireTimeUtcEpoch <= :MaxNextFireTime";
+				var candidateFilterExpression = "#S = :WaitingState and NextFireTimeUtcEpoch <= :MaxNextFireTime";
 
-			var candidates = _triggerRepository.Scan(candidateExpressionAttributeValues, candidateExpressionAttributeNames, candidateFilterExpression)
+				var candidates = _triggerRepository.Scan(candidateExpressionAttributeValues, candidateExpressionAttributeNames, candidateFilterExpression)
 				.OrderBy(t => t.Trigger.GetNextFireTimeUtc()).ThenByDescending(t => t.Trigger.Priority);
 			
-			foreach (var trigger in candidates)
-			{
-				Debug.WriteLine("Processing candidate. Name: {0} Next fire time: {1}",  trigger.Trigger.Name, trigger.Trigger.GetNextFireTimeUtc());
-
-				if (trigger.Trigger.GetNextFireTimeUtc() == null)
+				foreach (var trigger in candidates)
 				{
-					Debug.WriteLine("Candidate has no next fire time. Excluding.");
-					continue;
-				}
+					Debug.WriteLine("Processing candidate. Name: {0} Next fire time: {1}", trigger.Trigger.Name, trigger.Trigger.GetNextFireTimeUtc());
 
-				// it's possible that we've selected triggers way outside of the max fire ahead time for batches 
-				// (up to idleWaitTime + fireAheadTime) so we need to make sure not to include such triggers.  
-				// So we select from the first next trigger to fire up until the max fire ahead time after that...
-				// which will perfectly honor the fireAheadTime window because the no firing will occur until
-				// the first acquired trigger's fire time arrives.
-				if (firstAcquiredTriggerFireTime != null
-				    && trigger.Trigger.GetNextFireTimeUtc() > (firstAcquiredTriggerFireTime.Value + timeWindow))
-				{
-					Debug.WriteLine("Breaking, have hit trigger beyond the time window.");
-					break;
-				}
-
-				if (this.ApplyMisfireIfNecessary(trigger))
-				{
-					Debug.WriteLine("Applied misfire. Next fire time: {0}", trigger.Trigger.GetNextFireTimeUtc());
-
-					if (trigger.Trigger.GetNextFireTimeUtc() == null
-					    || trigger.Trigger.GetNextFireTimeUtc() > noLaterThan + timeWindow)
+					if (trigger.Trigger.GetNextFireTimeUtc() == null)
 					{
-						Debug.WriteLine("Continuing. No next fire time, or fire time outside of window.");
+						Debug.WriteLine("Candidate has no next fire time. Excluding.");
 						continue;
 					}
-				}
 
-				// If trigger's job is set as @DisallowConcurrentExecution, and it has already been added to result, then
-				// put it back into the timeTriggers set and continue to search for next trigger.
-				JobKey jobKey = trigger.Trigger.JobKey;
-				IJobDetail job = RetrieveJob(jobKey);
-
-				if (job.ConcurrentExecutionDisallowed)
-				{
-					if (acquiredJobKeysForNoConcurrentExec.Contains(jobKey))
+					// it's possible that we've selected triggers way outside of the max fire ahead time for batches 
+					// (up to idleWaitTime + fireAheadTime) so we need to make sure not to include such triggers.  
+					// So we select from the first next trigger to fire up until the max fire ahead time after that...
+					// which will perfectly honor the fireAheadTime window because the no firing will occur until
+					// the first acquired trigger's fire time arrives.
+					if (firstAcquiredTriggerFireTime != null
+					    && trigger.Trigger.GetNextFireTimeUtc() > (firstAcquiredTriggerFireTime.Value + timeWindow))
 					{
-						Debug.WriteLine("Continuing. Added non-concurrent trigger twice.");
+						Debug.WriteLine("Breaking, have hit trigger beyond the time window.");
+						break;
+					}
 
-						continue; // go to next trigger in store.
-					} 
-					else
+					if (this.ApplyMisfireIfNecessary(trigger))
 					{
-						acquiredJobKeysForNoConcurrentExec.Add(jobKey);
+						Debug.WriteLine("Applied misfire. Next fire time: {0}", trigger.Trigger.GetNextFireTimeUtc());
+
+						if (trigger.Trigger.GetNextFireTimeUtc() == null
+						    || trigger.Trigger.GetNextFireTimeUtc() > noLaterThan + timeWindow)
+						{
+							Debug.WriteLine("Continuing. No next fire time, or fire time outside of window.");
+							continue;
+						}
+					}
+
+					// If trigger's job is set as @DisallowConcurrentExecution, and it has already been added to result, then
+					// put it back into the timeTriggers set and continue to search for next trigger.
+					JobKey jobKey = trigger.Trigger.JobKey;
+					IJobDetail job = RetrieveJob(jobKey);
+
+					if (job.ConcurrentExecutionDisallowed)
+					{
+						if (acquiredJobKeysForNoConcurrentExec.Contains(jobKey))
+						{
+							Debug.WriteLine("Continuing. Added non-concurrent trigger twice.");
+
+							continue; // go to next trigger in store.
+						} else
+						{
+							acquiredJobKeysForNoConcurrentExec.Add(jobKey);
+						}
+					}
+
+					var acquireTriggerConditionalExpressionAttributeNames = new Dictionary<string,string> {
+						{ "#S", "State" },
+						{ "#N", "Name" },
+						{ "#G", "Group" }
+					};
+
+					// Only grab a trigger if the state is still waiting (another scheduler hasn't grabbed it meanwhile)
+					var acquireTriggerConditionalExpression = "#N = :name and #G = :group and #S = :state";
+					Dictionary<string, AttributeValue> acquireTriggerExpressionAttributeValues = new Dictionary<string, AttributeValue> () {
+						{ ":name", new AttributeValue () { S = trigger.Trigger.Name } },
+						{ ":group", new AttributeValue () { S = trigger.Trigger.Group } },
+						{ ":state", new AttributeValue () { S = "Waiting" } }
+					};
+
+					trigger.Trigger.FireInstanceId = this.GetFiredTriggerRecordId();
+					trigger.SchedulerInstanceId = InstanceId;
+					trigger.State = "Acquired";
+
+					Debug.WriteLine("Acquiring the trigger.");
+
+					var acquiredTrigger = _triggerRepository.Store(trigger, acquireTriggerExpressionAttributeValues, acquireTriggerConditionalExpressionAttributeNames, acquireTriggerConditionalExpression);
+
+					if (acquiredTrigger.Any())
+					{
+						Debug.WriteLine("Acquired the trigger.");
+
+						result.Add(trigger.Trigger);
+
+						if (firstAcquiredTriggerFireTime == null)
+						{
+							firstAcquiredTriggerFireTime = trigger.Trigger.GetNextFireTimeUtc();
+						}
+					}
+
+					if (result.Count == maxCount)
+					{
+						Debug.WriteLine("Hit the max count.");
+
+						break;
 					}
 				}
 
-				var acquireTriggerConditionalExpressionAttributeNames = new Dictionary<string,string> {
-					{ "#S", "State" },
-					{ "#N", "Name" },
-					{ "#G", "Group" }
-				};
-
-				// Only grab a trigger if the state is still waiting (another scheduler hasn't grabbed it meanwhile)
-				var acquireTriggerConditionalExpression = "#N = :name and #G = :group and #S = :state";
-				Dictionary<string, AttributeValue> acquireTriggerExpressionAttributeValues = new Dictionary<string, AttributeValue> () {
-					{ ":name", new AttributeValue () { S = trigger.Trigger.Name } },
-					{ ":group", new AttributeValue () { S = trigger.Trigger.Group } },
-					{ ":state", new AttributeValue () { S = "Waiting" } }
-				};
-
-				trigger.Trigger.FireInstanceId = this.GetFiredTriggerRecordId();
-				trigger.SchedulerInstanceId = InstanceId;
-				trigger.State = "Acquired";
-
-				Debug.WriteLine("Acquiring the trigger.");
-
-				var acquiredTrigger = _triggerRepository.Store(trigger, acquireTriggerExpressionAttributeValues, acquireTriggerConditionalExpressionAttributeNames, acquireTriggerConditionalExpression);
-
-				if (acquiredTrigger.Any())
-				{
-					Debug.WriteLine("Acquired the trigger.");
-
-					result.Add(trigger.Trigger);
-
-					if (firstAcquiredTriggerFireTime == null)
-					{
-						firstAcquiredTriggerFireTime = trigger.Trigger.GetNextFireTimeUtc();
-					}
-				}
-
-				if (result.Count == maxCount)
-				{
-					Debug.WriteLine("Hit the max count.");
-
-					break;
-				}
+				return result;
 			}
-
-			return result;
 		}
 
 		/// <summary>
@@ -913,94 +956,211 @@ namespace Quartz.DynamoDB
 
 		public void ReleaseAcquiredTrigger(IOperableTrigger trigger)
 		{
-			var t = _triggerRepository.Load(trigger.Key.ToDictionary());
+			lock (lockObject)
+			{
+				var t = _triggerRepository.Load(trigger.Key.ToDictionary());
 
-			t.SchedulerInstanceId = string.Empty;
-			t.State = "Waiting";
+				t.SchedulerInstanceId = string.Empty;
+				t.State = "Waiting";
 
-			_triggerRepository.Store(t);
+				_triggerRepository.Store(t);
+			}
 		}
 
 		public IList<TriggerFiredResult> TriggersFired(IList<IOperableTrigger> triggers)
 		{
-			List<TriggerFiredResult> results = new List<TriggerFiredResult>();
-
-			foreach (IOperableTrigger trigger in triggers)
+			lock (lockObject)
 			{
-				var storedTrigger = _triggerRepository.Load(trigger.Key.ToDictionary());
-				// was the trigger deleted since being acquired?
-				if (storedTrigger == null)
-				{
-					continue;
-				}
-				// was the trigger completed, paused, blocked, etc. since being acquired?
-				if (storedTrigger.State != "Acquired")
-				{
-					continue;
-				}
+				List<TriggerFiredResult> results = new List<TriggerFiredResult> ();
 
-				ICalendar cal = null;
-				if (trigger.CalendarName != null)
+				foreach (IOperableTrigger trigger in triggers)
 				{
-					cal = this.RetrieveCalendar(trigger.CalendarName);
-					if (cal == null)
+					var storedTrigger = _triggerRepository.Load(trigger.Key.ToDictionary());
+					// was the trigger deleted since being acquired?
+					if (storedTrigger == null)
 					{
 						continue;
 					}
-				}
-
-				trigger.Triggered(cal);
-				storedTrigger.Trigger = (AbstractTrigger)trigger;
-				storedTrigger.State = "Executing";
-
-				_triggerRepository.Store(storedTrigger);
-
-				var storedJob = _jobRepository.Load(trigger.JobKey.ToDictionary());
-
-				TriggerFiredBundle bndle = new TriggerFiredBundle(storedJob.Job,
-					trigger,
-					cal,
-					false, 
-					SystemTime.UtcNow(),
-					trigger.GetPreviousFireTimeUtc(), 
-					trigger.GetPreviousFireTimeUtc(),
-					trigger.GetNextFireTimeUtc());
-
-				IJobDetail job = bndle.JobDetail;
-
-				if (job.ConcurrentExecutionDisallowed)
-				{
-					//concurrent execution not allowed so set triggers to Blocked (or PausedAndBlocked) and Jobs to Blocked.
-
-					var triggersForJob = this.GetDynamoTriggersForJob(job.Key);
-
-					foreach (var jobTrigger in triggersForJob)
+					// was the trigger completed, paused, blocked, etc. since being acquired?
+					if (storedTrigger.State != "Acquired")
 					{
-						if(jobTrigger.State == "Waiting")
+						continue;
+					}
+
+					ICalendar cal = null;
+					if (trigger.CalendarName != null)
+					{
+						cal = this.RetrieveCalendar(trigger.CalendarName);
+						if (cal == null)
 						{
-							jobTrigger.State = "Blocked";
+							continue;
 						}
+					}
 
-						if(jobTrigger.State == "Paused")
+					trigger.Triggered(cal);
+					storedTrigger.Trigger = (AbstractTrigger)trigger;
+					storedTrigger.State = "Executing";
+
+					_triggerRepository.Store(storedTrigger);
+
+					var storedJob = _jobRepository.Load(trigger.JobKey.ToDictionary());
+
+					TriggerFiredBundle bndle = new TriggerFiredBundle (storedJob.Job,
+						                          trigger,
+						                          cal,
+						                          false, 
+						                          SystemTime.UtcNow(),
+						                          trigger.GetPreviousFireTimeUtc(), 
+						                          trigger.GetPreviousFireTimeUtc(),
+						                          trigger.GetNextFireTimeUtc());
+
+					IJobDetail job = bndle.JobDetail;
+
+					if (job.ConcurrentExecutionDisallowed)
+					{
+						//concurrent execution not allowed so set triggers to Blocked (or PausedAndBlocked) and Jobs to Blocked.
+
+						var triggersForJob = this.GetDynamoTriggersForJob(job.Key);
+
+						foreach (var jobTrigger in triggersForJob)
 						{
-							jobTrigger.State = "PausedAndBlocked";
-						}
+							if (jobTrigger.State == "Waiting")
+							{
+								jobTrigger.State = "Blocked";
+							}
 
-						_triggerRepository.Store(jobTrigger);
-					}  
+							if (jobTrigger.State == "Paused")
+							{
+								jobTrigger.State = "PausedAndBlocked";
+							}
 
-					//todo: block the job
+							_triggerRepository.Store(jobTrigger);
+						}  
+
+						//todo: block the job
+					}
+
+					results.Add(new TriggerFiredResult (bndle));
 				}
-
-				results.Add(new TriggerFiredResult(bndle));
+				return results;
 			}
-			return results;
 		}
 
 		public void TriggeredJobComplete(IOperableTrigger trigger, IJobDetail jobDetail,
 		                                 SchedulerInstruction triggerInstCode)
 		{
-			throw new NotImplementedException ();
+			lock (lockObject)
+			{
+				this.ReleaseAcquiredTrigger(trigger);
+
+				// It's possible that the job is null if:
+				//   1- it was deleted during execution
+				//   2- RAMJobStore is being used only for volatile jobs / triggers
+				//      from the JDBC job store
+
+				var storedJob = _jobRepository.Load(jobDetail.Key.ToDictionary());
+
+				if (jobDetail.PersistJobDataAfterExecution)
+				{
+					storedJob.Job = jobDetail;
+					_jobRepository.Store(storedJob);
+				}
+
+				if (jobDetail.ConcurrentExecutionDisallowed)
+				{
+					var triggersForJob = this.GetDynamoTriggersForJob(jobDetail.Key);
+
+					foreach (var jobTrigger in triggersForJob)
+					{
+						if (jobTrigger.State == "Blocked")
+						{
+							jobTrigger.State = "Waiting";
+						}
+
+						if (jobTrigger.State == "PausedAndBlocked")
+						{
+							jobTrigger.State = "Waiting";
+						}
+
+						_triggerRepository.Store(jobTrigger);
+					} 
+
+					_signaler.SignalSchedulingChange(null);
+				}
+
+				//todo: Support blocked jobs
+				// even if it was deleted, there may be cleanup to do
+//			this.BlockedJobs.Remove(
+//				Query.EQ("_id", jobDetail.Key.ToBsonDocument()));
+
+				// check for trigger deleted during execution...
+				if (triggerInstCode == SchedulerInstruction.DeleteTrigger)
+				{
+					Debug.WriteLine("Deleting trigger");
+					DateTimeOffset? d = trigger.GetNextFireTimeUtc();
+					if (!d.HasValue)
+					{
+						// double check for possible reschedule within job 
+						// execution, which would cancel the need to delete...
+						d = trigger.GetNextFireTimeUtc();
+						if (!d.HasValue)
+						{
+							this.RemoveTrigger(trigger.Key);
+						} else
+						{
+							Debug.WriteLine("Deleting cancelled - trigger still active");
+						}
+					} else
+					{
+						this.RemoveTrigger(trigger.Key);
+						_signaler.SignalSchedulingChange(null);
+					}
+				} else if (triggerInstCode == SchedulerInstruction.SetTriggerComplete)
+				{
+					var record = _triggerRepository.Load(trigger.Key.ToDictionary());
+					record.State = "Complete";
+					_triggerRepository.Store(record);
+
+					_signaler.SignalSchedulingChange(null);
+				} else if (triggerInstCode == SchedulerInstruction.SetTriggerError)
+				{
+					Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "Trigger {0} set to ERROR state.", trigger.Key));
+			
+					var record = _triggerRepository.Load(trigger.Key.ToDictionary());
+					record.State = "Error";
+					_triggerRepository.Store(record);
+
+					_signaler.SignalSchedulingChange(null);
+				} else if (triggerInstCode == SchedulerInstruction.SetAllJobTriggersError)
+				{
+					Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "All triggers of Job {0} set to ERROR state.", trigger.JobKey));
+
+					IList<Spi.IOperableTrigger> jobTriggers = this.GetTriggersForJob(jobDetail.Key);
+
+					//todo: can this be done in one transaction lower down?
+					foreach (var trig in jobTriggers)
+					{
+						var record = _triggerRepository.Load(trig.Key.ToDictionary());
+						record.State = "Error";
+						_triggerRepository.Store(record);
+					}
+
+					_signaler.SignalSchedulingChange(null);
+				} else if (triggerInstCode == SchedulerInstruction.SetAllJobTriggersComplete)
+				{
+					IList<Spi.IOperableTrigger> jobTriggers = this.GetTriggersForJob(jobDetail.Key);
+
+					//todo: can this be done in one transaction lower down?
+					foreach (var trig in jobTriggers)
+					{
+						var record = _triggerRepository.Load(trig.Key.ToDictionary());
+						record.State = "Complete";
+						_triggerRepository.Store(record);
+					}
+
+					_signaler.SignalSchedulingChange(null);
+				}
+			}
 		}
 
 		/// <summary> 
@@ -1022,11 +1182,11 @@ namespace Quartz.DynamoDB
 			}
 		}
 
-		public bool SupportsPersistence { get; }
+		public bool SupportsPersistence { get { return true; } }
 
-		public long EstimatedTimeToReleaseAndAcquireTrigger { get; }
+		public long EstimatedTimeToReleaseAndAcquireTrigger { get { return 100; } }
 
-		public bool Clustered { get; }
+		public bool Clustered { get { return true; } }
 
 		/// <summary>
 		/// Inform the <see cref="IJobStore" /> of the Scheduler instance's Id, 

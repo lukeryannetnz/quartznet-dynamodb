@@ -1,5 +1,6 @@
 ﻿using System;
 using Quartz;
+using System.Threading;
 
 namespace QuartzNETDynamoDB.TestApp
 {
@@ -12,7 +13,7 @@ namespace QuartzNETDynamoDB.TestApp
 
 		public void Execute(IJobExecutionContext context)
 		{
-			Console.WriteLine("ConsoleLoggingJob executing. {0}", DateTime.Now);
+			Console.WriteLine("ConsoleLoggingJob executing. {0}, Thread {1}", DateTime.Now, Thread.CurrentThread.ManagedThreadId);
 		}
 	}
 }

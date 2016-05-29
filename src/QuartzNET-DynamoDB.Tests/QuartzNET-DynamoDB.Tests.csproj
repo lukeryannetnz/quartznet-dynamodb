@@ -96,6 +96,7 @@
     <Compile Include="Integration\JobStoreSchedulerIntegrationTests.cs" />
     <Compile Include="Integration\JobStoreTriggerPauseTests.cs" />
     <Compile Include="Integration\JobStoreJobPauseTests.cs" />
+    <Compile Include="Integration\JobStoreJobTriggerStoreTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="job_scheduling_data_2_0.xsd">

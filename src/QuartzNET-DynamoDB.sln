@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
+# Visual Studio 2012
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuartzNET-DynamoDB", "QuartzNET-DynamoDB\QuartzNET-DynamoDB.csproj", "{0834342B-7512-487B-829B-572F140655E8}"
@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\.travis.yml = ..\.travis.yml
 		VersionInfo.cs = VersionInfo.cs
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuartzNET-DynamoDB.TestApp", "QuartzNET-DynamoDB.TestApp\QuartzNET-DynamoDB.TestApp.csproj", "{40B8AE9E-ECFA-487E-920C-9890795E4764}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,12 @@ Global
 		{3F207083-D3A7-4784-ADD4-6EB05671CE68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3F207083-D3A7-4784-ADD4-6EB05671CE68}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3F207083-D3A7-4784-ADD4-6EB05671CE68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40B8AE9E-ECFA-487E-920C-9890795E4764}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40B8AE9E-ECFA-487E-920C-9890795E4764}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40B8AE9E-ECFA-487E-920C-9890795E4764}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40B8AE9E-ECFA-487E-920C-9890795E4764}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -2,6 +2,7 @@
 using Quartz;
 using Quartz.Impl;
 using System.Threading;
+using Quartz.Spi;
 
 namespace QuartzNETDynamoDB.TestApp
 {
@@ -45,10 +46,10 @@ namespace QuartzNETDynamoDB.TestApp
 
 			// Trigger the job to run now, and then repeat every 10 seconds
 			ITrigger trigger = TriggerBuilder.Create()
-				.WithIdentity("FiveSecondTrigger", "SimpleTriggersGroup")
+				.WithIdentity("SixtySecondTrigger", "SimpleTriggersGroup")
 				.StartNow()
 				.WithSimpleSchedule(x => x
-					.WithIntervalInSeconds(5)
+					.WithIntervalInSeconds(10)
 					.RepeatForever())
 				.Build();
 

@@ -5,6 +5,7 @@ using Quartz.Spi;
 using Quartz.Impl.Triggers;
 using System.Linq;
 using Quartz.DynamoDB.DataModel.Storage;
+using System.Diagnostics;
 
 namespace Quartz.DynamoDB.DataModel
 {
@@ -39,6 +40,7 @@ namespace Quartz.DynamoDB.DataModel
 		public void InitialiseFromDynamoRecord (Dictionary<string, AttributeValue> record)
 		{
 			string type = record.ContainsKey ("Type") ? record ["Type"].S : string.Empty;
+			Debug.WriteLine("Initialising trigger of Type: {0}", type);
 
 			switch (type)
 			{
@@ -126,6 +128,12 @@ namespace Quartz.DynamoDB.DataModel
 			if(record.ContainsKey("NextFireTimeUtcEpoch"))
 			{
 				Trigger.SetNextFireTimeUtc(dateTimeOffsetConverter.FromEntry(int.Parse(record["NextFireTimeUtcEpoch"].N)));
+				Debug.WriteLine("Setting Trigger NextFireTimeUTC {0}", Trigger.GetNextFireTimeUtc().Value);
+			}
+
+			if(record.ContainsKey("PreviousFireTimeUtcEpoch"))
+			{
+				Trigger.SetPreviousFireTimeUtc(dateTimeOffsetConverter.FromEntry(int.Parse(record["PreviousFireTimeUtcEpoch"].N)));
 			}
 
 			Trigger.Priority = int.Parse(record["Priority"].N);
@@ -229,6 +237,7 @@ namespace Quartz.DynamoDB.DataModel
 			if (Trigger.GetNextFireTimeUtc().HasValue)
 			{
 				record.Add("NextFireTimeUtcEpoch", new AttributeValue() { N = dateTimeOffsetConverter.ToEntry(Trigger.GetNextFireTimeUtc().Value).ToString()});
+				Debug.WriteLine("Storing Trigger NextFireTimeUTC {0}", Trigger.GetNextFireTimeUtc().Value);
 			}
 
             record.Add("Priority", new AttributeValue() { N = Trigger.Priority.ToString() });
@@ -255,8 +264,11 @@ namespace Quartz.DynamoDB.DataModel
             else if (Trigger is DailyTimeIntervalTriggerImpl)
             {
                 DailyTimeIntervalTriggerImpl t = (DailyTimeIntervalTriggerImpl)Trigger;
-                record.Add("previousFireTimeUtc", new AttributeValue() { S = t.GetPreviousFireTimeUtc().GetValueOrDefault().ToString() });
-                record.Add("DaysOfWeek", new AttributeValue() { L = t.DaysOfWeek.Select(dow => new AttributeValue(dow.ToString())).ToList() });
+				if (Trigger.GetPreviousFireTimeUtc().HasValue)
+				{
+					record.Add("PreviousFireTimeUtcEpoch", new AttributeValue() { N = dateTimeOffsetConverter.ToEntry(Trigger.GetPreviousFireTimeUtc().Value).ToString()});
+				}                
+				record.Add("DaysOfWeek", new AttributeValue() { L = t.DaysOfWeek.Select(dow => new AttributeValue(dow.ToString())).ToList() });
                 record.Add("EndTimeOfDay_Hour", new AttributeValue() { N = t.EndTimeOfDay.Hour.ToString() });
                 record.Add("EndTimeOfDay_Minute", new AttributeValue() { N = t.EndTimeOfDay.Minute.ToString() });
                 record.Add("EndTimeOfDay_Second", new AttributeValue() { N = t.EndTimeOfDay.Second.ToString() });
@@ -278,7 +290,11 @@ namespace Quartz.DynamoDB.DataModel
                 record.Add("RepeatCount", new AttributeValue() { N = t.RepeatCount.ToString() });
                 record.Add("RepeatInterval", new AttributeValue() { N = t.RepeatInterval.Ticks.ToString() });
                 record.Add("TimesTriggered", new AttributeValue() { N = t.TimesTriggered.ToString() });
-                record.Add("Type", new AttributeValue() { S = "SimpleTriggerImpl" });
+				if (Trigger.GetPreviousFireTimeUtc().HasValue)
+				{
+					record.Add("PreviousFireTimeUtcEpoch", new AttributeValue() { N = dateTimeOffsetConverter.ToEntry(Trigger.GetPreviousFireTimeUtc().Value).ToString()});
+				} 
+				record.Add("Type", new AttributeValue() { S = "SimpleTriggerImpl" });
             }
 
             return record;

@@ -23,7 +23,7 @@ namespace Quartz.DynamoDB
 	/// </summary>
 	public class JobStore : IJobStore, IDisposable
 	{
-		private readonly object lockObject = new object();
+		private static readonly object lockObject = new object();
 		private DynamoDBContext _context;
 		private IRepository<DynamoJob> _jobRepository;
 		private IRepository<DynamoJobGroup> _jobGroupRepository;
@@ -959,15 +959,12 @@ namespace Quartz.DynamoDB
 
 		public void ReleaseAcquiredTrigger(IOperableTrigger trigger)
 		{
-			lock (lockObject)
-			{
-				var t = _triggerRepository.Load(trigger.Key.ToDictionary());
+			var t = _triggerRepository.Load(trigger.Key.ToDictionary());
 
-				t.SchedulerInstanceId = string.Empty;
-				t.State = "Waiting";
+			t.SchedulerInstanceId = string.Empty;
+			t.State = "Waiting";
 
-				_triggerRepository.Store(t);
-			}
+			_triggerRepository.Store(t);
 		}
 
 		public IList<TriggerFiredResult> TriggersFired(IList<IOperableTrigger> triggers)
@@ -1057,117 +1054,114 @@ namespace Quartz.DynamoDB
 		public void TriggeredJobComplete(IOperableTrigger trigger, IJobDetail jobDetail,
 		                                 SchedulerInstruction triggerInstCode)
 		{
-			lock (lockObject)
+			this.ReleaseAcquiredTrigger(trigger);
+
+			// It's possible that the job is null if:
+			//   1- it was deleted during execution
+			//   2- RAMJobStore is being used only for volatile jobs / triggers
+			//      from the JDBC job store
+
+			var storedJob = _jobRepository.Load(jobDetail.Key.ToDictionary());
+
+			if (jobDetail.PersistJobDataAfterExecution)
 			{
-				this.ReleaseAcquiredTrigger(trigger);
+				storedJob.Job = jobDetail;
+				_jobRepository.Store(storedJob);
+			}
 
-				// It's possible that the job is null if:
-				//   1- it was deleted during execution
-				//   2- RAMJobStore is being used only for volatile jobs / triggers
-				//      from the JDBC job store
+			if (jobDetail.ConcurrentExecutionDisallowed)
+			{
+				var triggersForJob = this.GetDynamoTriggersForJob(jobDetail.Key);
 
-				var storedJob = _jobRepository.Load(jobDetail.Key.ToDictionary());
-
-				if (jobDetail.PersistJobDataAfterExecution)
+				foreach (var jobTrigger in triggersForJob)
 				{
-					storedJob.Job = jobDetail;
-					_jobRepository.Store(storedJob);
-				}
-
-				if (jobDetail.ConcurrentExecutionDisallowed)
-				{
-					var triggersForJob = this.GetDynamoTriggersForJob(jobDetail.Key);
-
-					foreach (var jobTrigger in triggersForJob)
+					if (jobTrigger.State == "Blocked")
 					{
-						if (jobTrigger.State == "Blocked")
-						{
-							jobTrigger.State = "Waiting";
-						}
+						jobTrigger.State = "Waiting";
+					}
 
-						if (jobTrigger.State == "PausedAndBlocked")
-						{
-							jobTrigger.State = "Waiting";
-						}
+					if (jobTrigger.State == "PausedAndBlocked")
+					{
+						jobTrigger.State = "Waiting";
+					}
 
-						_triggerRepository.Store(jobTrigger);
-					} 
+					_triggerRepository.Store(jobTrigger);
+				} 
 
-					_signaler.SignalSchedulingChange(null);
-				}
+				_signaler.SignalSchedulingChange(null);
+			}
 
-				//todo: Support blocked jobs
-				// even if it was deleted, there may be cleanup to do
+			//todo: Support blocked jobs
+			// even if it was deleted, there may be cleanup to do
 //			this.BlockedJobs.Remove(
 //				Query.EQ("_id", jobDetail.Key.ToBsonDocument()));
 
-				// check for trigger deleted during execution...
-				if (triggerInstCode == SchedulerInstruction.DeleteTrigger)
+			// check for trigger deleted during execution...
+			if (triggerInstCode == SchedulerInstruction.DeleteTrigger)
+			{
+				Debug.WriteLine("Deleting trigger");
+				DateTimeOffset? d = trigger.GetNextFireTimeUtc();
+				if (!d.HasValue)
 				{
-					Debug.WriteLine("Deleting trigger");
-					DateTimeOffset? d = trigger.GetNextFireTimeUtc();
+					// double check for possible reschedule within job 
+					// execution, which would cancel the need to delete...
+					d = trigger.GetNextFireTimeUtc();
 					if (!d.HasValue)
 					{
-						// double check for possible reschedule within job 
-						// execution, which would cancel the need to delete...
-						d = trigger.GetNextFireTimeUtc();
-						if (!d.HasValue)
-						{
-							this.RemoveTrigger(trigger.Key);
-						} else
-						{
-							Debug.WriteLine("Deleting cancelled - trigger still active");
-						}
+						this.RemoveTrigger(trigger.Key);
 					} else
 					{
-						this.RemoveTrigger(trigger.Key);
-						_signaler.SignalSchedulingChange(null);
+						Debug.WriteLine("Deleting cancelled - trigger still active");
 					}
-				} else if (triggerInstCode == SchedulerInstruction.SetTriggerComplete)
+				} else
 				{
-					var record = _triggerRepository.Load(trigger.Key.ToDictionary());
-					record.State = "Complete";
-					_triggerRepository.Store(record);
-
-					_signaler.SignalSchedulingChange(null);
-				} else if (triggerInstCode == SchedulerInstruction.SetTriggerError)
-				{
-					Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "Trigger {0} set to ERROR state.", trigger.Key));
-			
-					var record = _triggerRepository.Load(trigger.Key.ToDictionary());
-					record.State = "Error";
-					_triggerRepository.Store(record);
-
-					_signaler.SignalSchedulingChange(null);
-				} else if (triggerInstCode == SchedulerInstruction.SetAllJobTriggersError)
-				{
-					Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "All triggers of Job {0} set to ERROR state.", trigger.JobKey));
-
-					IList<Spi.IOperableTrigger> jobTriggers = this.GetTriggersForJob(jobDetail.Key);
-
-					//todo: can this be done in one transaction lower down?
-					foreach (var trig in jobTriggers)
-					{
-						var record = _triggerRepository.Load(trig.Key.ToDictionary());
-						record.State = "Error";
-						_triggerRepository.Store(record);
-					}
-
-					_signaler.SignalSchedulingChange(null);
-				} else if (triggerInstCode == SchedulerInstruction.SetAllJobTriggersComplete)
-				{
-					IList<Spi.IOperableTrigger> jobTriggers = this.GetTriggersForJob(jobDetail.Key);
-
-					//todo: can this be done in one transaction lower down?
-					foreach (var trig in jobTriggers)
-					{
-						var record = _triggerRepository.Load(trig.Key.ToDictionary());
-						record.State = "Complete";
-						_triggerRepository.Store(record);
-					}
-
+					this.RemoveTrigger(trigger.Key);
 					_signaler.SignalSchedulingChange(null);
 				}
+			} else if (triggerInstCode == SchedulerInstruction.SetTriggerComplete)
+			{
+				var record = _triggerRepository.Load(trigger.Key.ToDictionary());
+				record.State = "Complete";
+				_triggerRepository.Store(record);
+
+				_signaler.SignalSchedulingChange(null);
+			} else if (triggerInstCode == SchedulerInstruction.SetTriggerError)
+			{
+				Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "Trigger {0} set to ERROR state.", trigger.Key));
+		
+				var record = _triggerRepository.Load(trigger.Key.ToDictionary());
+				record.State = "Error";
+				_triggerRepository.Store(record);
+
+				_signaler.SignalSchedulingChange(null);
+			} else if (triggerInstCode == SchedulerInstruction.SetAllJobTriggersError)
+			{
+				Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "All triggers of Job {0} set to ERROR state.", trigger.JobKey));
+
+				IList<Spi.IOperableTrigger> jobTriggers = this.GetTriggersForJob(jobDetail.Key);
+
+				//todo: can this be done in one transaction lower down?
+				foreach (var trig in jobTriggers)
+				{
+					var record = _triggerRepository.Load(trig.Key.ToDictionary());
+					record.State = "Error";
+					_triggerRepository.Store(record);
+				}
+
+				_signaler.SignalSchedulingChange(null);
+			} else if (triggerInstCode == SchedulerInstruction.SetAllJobTriggersComplete)
+			{
+				IList<Spi.IOperableTrigger> jobTriggers = this.GetTriggersForJob(jobDetail.Key);
+
+				//todo: can this be done in one transaction lower down?
+				foreach (var trig in jobTriggers)
+				{
+					var record = _triggerRepository.Load(trig.Key.ToDictionary());
+					record.State = "Complete";
+					_triggerRepository.Store(record);
+				}
+
+				_signaler.SignalSchedulingChange(null);
 			}
 		}
 

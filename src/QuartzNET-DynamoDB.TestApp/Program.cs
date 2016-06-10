@@ -46,10 +46,10 @@ namespace QuartzNETDynamoDB.TestApp
 
 			// Trigger the job to run now, and then repeat every 10 seconds
 			ITrigger trigger = TriggerBuilder.Create()
-				.WithIdentity("ThreeMinuteTrigger", "SimpleTriggersGroup")
+				.WithIdentity("OneMinuteTrigger", "SimpleTriggersGroup")
 				.StartNow()
 				.WithSimpleSchedule(x => x
-					.WithIntervalInSeconds(180)
+					.WithIntervalInSeconds(60)
 					.RepeatForever())
 				.Build();
 

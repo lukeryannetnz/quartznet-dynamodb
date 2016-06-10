@@ -779,7 +779,7 @@ namespace Quartz.DynamoDB
 		{
 			lock (lockObject)
 			{
-				Console.WriteLine("Acquiring triggers. No later than: {0}, timewindow: {1}", noLaterThan, timeWindow);
+				Debug.WriteLine("Acquiring triggers. No later than: {0}, timewindow: {1}", noLaterThan, timeWindow);
 
 				// multiple instance management. Create a running scheduler for this instance.
 				// TODO: investigate: does this create duplicate active schedulers for the same instanceid?
@@ -810,11 +810,11 @@ namespace Quartz.DynamoDB
 			
 				foreach (var trigger in candidates)
 				{
-					Console.WriteLine("Processing candidate. Name: {0} Next fire time: {1}", trigger.Trigger.Name, trigger.Trigger.GetNextFireTimeUtc());
+					Debug.WriteLine("Processing candidate. Name: {0} Next fire time: {1}", trigger.Trigger.Name, trigger.Trigger.GetNextFireTimeUtc());
 
 					if (trigger.Trigger.GetNextFireTimeUtc() == null)
 					{
-						Console.WriteLine("Candidate has no next fire time. Excluding.");
+						Debug.WriteLine("Candidate has no next fire time. Excluding.");
 						continue;
 					}
 
@@ -826,18 +826,18 @@ namespace Quartz.DynamoDB
 					if (firstAcquiredTriggerFireTime != null
 					    && trigger.Trigger.GetNextFireTimeUtc() > (firstAcquiredTriggerFireTime.Value + timeWindow))
 					{
-						Console.WriteLine("Breaking, have hit trigger beyond the time window.");
+						Debug.WriteLine("Breaking, have hit trigger beyond the time window.");
 						break;
 					}
 
 					if (this.ApplyMisfireIfNecessary(trigger))
 					{
-						Console.WriteLine("Applied misfire. Next fire time: {0}", trigger.Trigger.GetNextFireTimeUtc());
+						Debug.WriteLine("Applied misfire. Next fire time: {0}", trigger.Trigger.GetNextFireTimeUtc());
 
 						if (trigger.Trigger.GetNextFireTimeUtc() == null
 						    || trigger.Trigger.GetNextFireTimeUtc() > noLaterThan + timeWindow)
 						{
-							Console.WriteLine("Continuing. No next fire time, or fire time outside of window.");
+							Debug.WriteLine("Continuing. No next fire time, or fire time outside of window.");
 							continue;
 						}
 					}
@@ -851,7 +851,7 @@ namespace Quartz.DynamoDB
 					{
 						if (acquiredJobKeysForNoConcurrentExec.Contains(jobKey))
 						{
-							Console.WriteLine("Continuing. Added non-concurrent trigger twice.");
+							Debug.WriteLine("Continuing. Added non-concurrent trigger twice.");
 
 							continue; // go to next trigger in store.
 						} else
@@ -878,13 +878,13 @@ namespace Quartz.DynamoDB
 					trigger.SchedulerInstanceId = InstanceId;
 					trigger.State = "Acquired";
 
-					Console.WriteLine("Acquiring the trigger.");
+					Debug.WriteLine("Acquiring the trigger.");
 
 					var acquiredTrigger = _triggerRepository.Store(trigger, acquireTriggerExpressionAttributeValues, acquireTriggerConditionalExpressionAttributeNames, acquireTriggerConditionalExpression);
 
 					if (acquiredTrigger.Any())
 					{
-						Console.WriteLine("Acquired the trigger.");
+						Debug.WriteLine("Acquired the trigger.");
 
 						result.Add(trigger.Trigger);
 
@@ -896,7 +896,7 @@ namespace Quartz.DynamoDB
 
 					if (result.Count == maxCount)
 					{
-						Console.WriteLine("Hit the max count.");
+						Debug.WriteLine("Hit the max count.");
 
 						break;
 					}
@@ -922,6 +922,7 @@ namespace Quartz.DynamoDB
 			}
 
 			DateTimeOffset? tnft = trigger.Trigger.GetNextFireTimeUtc();
+
 			if (!tnft.HasValue || tnft.Value > misfireTime
 			    || trigger.Trigger.MisfireInstruction == MisfireInstruction.IgnoreMisfirePolicy)
 			{
@@ -936,6 +937,7 @@ namespace Quartz.DynamoDB
 			}
 
 			_signaler.NotifyTriggerListenersMisfired(trigger.Trigger);
+			Debug.WriteLine("Misfired. Time now: {0}. Trigger fire time: {1}", misfireTime.Ticks, tnft.Value.Ticks);
 
 			trigger.Trigger.UpdateAfterMisfire(cal);
 			this.StoreTrigger(trigger.Trigger, true);
@@ -946,7 +948,8 @@ namespace Quartz.DynamoDB
 				this.StoreTrigger(trigger.Trigger, true);
 
 				_signaler.NotifySchedulerListenersFinalized(trigger.Trigger);
-			} else if (tnft.Equals(trigger.Trigger.GetNextFireTimeUtc()))
+			} 
+			else if (tnft.Equals(trigger.Trigger.GetNextFireTimeUtc()))
 			{
 				return false;
 			}
@@ -999,23 +1002,10 @@ namespace Quartz.DynamoDB
 
 					DateTimeOffset? prevFireTime = trigger.GetPreviousFireTimeUtc();
 
-					Console.WriteLine("Triggering Trigger! Previous Fire Time: {0}. Next Fire Time: {1}. Repeat Interval: {2}.  Calendar: {3}. Times Triggered: {4}", trigger.GetPreviousFireTimeUtc(), trigger.GetNextFireTimeUtc(), ((SimpleTriggerImpl)trigger).RepeatInterval, trigger.CalendarName, ((SimpleTriggerImpl)trigger).TimesTriggered );
-
-					// calling triggered twice here makes it work.
-					// observations from debugger: 
-					// 1. On first call, the next fire time is not updated (therefore algorithm returns the same value?!)
-					// 2. On second call, the next fire time is updated.
-					// 3. Manually setting the next fire time gives the program the correct behaviour.
-					// 4. Calling Triggered() twice gives the program the correct behaviour.
-					// 5. Calling the GetFireTimeAfter method with the same input multiple times doesn't result in different output in unittest. This method appears deterministic from inspection.
-					// 6. StartTime does not appear to change.
-					// 7. I suspect (but cannot prove) that perhaps the trigger is being qcquired too many times, resulting in this method being called when it shouldn't?! Nothing else seems to make sense. Occasionally in the debugger I observe the correct behaviour when Triggered is called only once...
+					Debug.WriteLine("Triggering Trigger! Previous Fire Time: {0}. Next Fire Time: {1}. Repeat Interval: {2}.  Calendar: {3}. Times Triggered: {4}", trigger.GetPreviousFireTimeUtc(), trigger.GetNextFireTimeUtc(), ((SimpleTriggerImpl)trigger).RepeatInterval, trigger.CalendarName, ((SimpleTriggerImpl)trigger).TimesTriggered );
 
 					trigger.Triggered(cal);
-					trigger.Triggered(cal);
-					//trigger.SetNextFireTimeUtc(((SimpleTriggerImpl)trigger).GetFireTimeAfter(trigger.GetNextFireTimeUtc()));
-					Console.WriteLine("Triggered Trigger! Previous Fire Time: {0}. Next Fire Time: {1}.", trigger.GetPreviousFireTimeUtc(), trigger.GetNextFireTimeUtc());
-					//Console.WriteLine("next fire time: {0}", ((SimpleTriggerImpl)trigger).GetFireTimeAfter(trigger.GetNextFireTimeUtc()));
+					Debug.WriteLine("Triggered Trigger! Previous Fire Time: {0}. Next Fire Time: {1}.", trigger.GetPreviousFireTimeUtc(), trigger.GetNextFireTimeUtc());
 					storedTrigger.Trigger = (SimpleTriggerImpl)trigger;
 					storedTrigger.State = "Executing";
 
@@ -1114,7 +1104,7 @@ namespace Quartz.DynamoDB
 				// check for trigger deleted during execution...
 				if (triggerInstCode == SchedulerInstruction.DeleteTrigger)
 				{
-					Console.WriteLine("Deleting trigger");
+					Debug.WriteLine("Deleting trigger");
 					DateTimeOffset? d = trigger.GetNextFireTimeUtc();
 					if (!d.HasValue)
 					{
@@ -1126,7 +1116,7 @@ namespace Quartz.DynamoDB
 							this.RemoveTrigger(trigger.Key);
 						} else
 						{
-							Console.WriteLine("Deleting cancelled - trigger still active");
+							Debug.WriteLine("Deleting cancelled - trigger still active");
 						}
 					} else
 					{
@@ -1142,7 +1132,7 @@ namespace Quartz.DynamoDB
 					_signaler.SignalSchedulingChange(null);
 				} else if (triggerInstCode == SchedulerInstruction.SetTriggerError)
 				{
-					Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "Trigger {0} set to ERROR state.", trigger.Key));
+					Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "Trigger {0} set to ERROR state.", trigger.Key));
 			
 					var record = _triggerRepository.Load(trigger.Key.ToDictionary());
 					record.State = "Error";
@@ -1151,7 +1141,7 @@ namespace Quartz.DynamoDB
 					_signaler.SignalSchedulingChange(null);
 				} else if (triggerInstCode == SchedulerInstruction.SetAllJobTriggersError)
 				{
-					Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "All triggers of Job {0} set to ERROR state.", trigger.JobKey));
+					Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "All triggers of Job {0} set to ERROR state.", trigger.JobKey));
 
 					IList<Spi.IOperableTrigger> jobTriggers = this.GetTriggersForJob(jobDetail.Key);
 
@@ -1192,7 +1182,7 @@ namespace Quartz.DynamoDB
 			get { return _misfireThreshold; }
 			set
 			{
-				if (value.TotalMilliseconds < 1)
+				if (value.TotalMilliseconds < 0)
 				{
 					throw new ArgumentException ("Misfirethreshold must be larger than 0");
 				}

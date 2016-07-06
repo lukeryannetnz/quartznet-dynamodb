@@ -21,7 +21,7 @@ namespace Quartz.DynamoDB
 	/// </summary>
 	public class JobStore : IJobStore, IDisposable
 	{
-		private static readonly object lockObject = new object();
+		private static readonly object lockObject = new object ();
 		private DynamoDBContext _context;
 		private IRepository<DynamoJob> _jobRepository;
 		private IRepository<DynamoJobGroup> _jobGroupRepository;
@@ -41,18 +41,16 @@ namespace Quartz.DynamoDB
 
 		private ISchedulerSignaler _signaler;
 
-		public void Initialize(ITypeLoadHelper loadHelper, ISchedulerSignaler signaler)
+		public void Initialize (ITypeLoadHelper loadHelper, ISchedulerSignaler signaler)
 		{
-			if (loadHelper == null)
-			{
-				throw new ArgumentNullException (nameof(loadHelper));
+			if (loadHelper == null) {
+				throw new ArgumentNullException (nameof (loadHelper));
 			}
-			if (signaler == null)
-			{
-				throw new ArgumentNullException (nameof(signaler));
+			if (signaler == null) {
+				throw new ArgumentNullException (nameof (signaler));
 			}
 
-			var client = DynamoDbClientFactory.Create();
+			var client = DynamoDbClientFactory.Create ();
 			_context = new DynamoDBContext (client);
 			_jobRepository = new Repository<DynamoJob> (client);
 			_jobGroupRepository = new Repository<DynamoJobGroup> (client);
@@ -61,143 +59,139 @@ namespace Quartz.DynamoDB
 			_triggerGroupRepository = new Repository<DynamoTriggerGroup> (client);
 			_calendarRepository = new Repository<DynamoCalendar> (client);
 
-			lock (lockObject)
-			{
-				new DynamoBootstrapper ().BootStrap(client);
+			lock (lockObject) {
+				new DynamoBootstrapper ().BootStrap (client);
 
 				//_loadHelper = loadHelper;
 				_signaler = signaler;
 
 				// We should have had an instance id assigned by now, but if we haven't assign one.
-				if (string.IsNullOrEmpty(InstanceId))
-				{
-					InstanceId = Guid.NewGuid().ToString();
+				if (string.IsNullOrEmpty (InstanceId)) {
+					InstanceId = Guid.NewGuid ().ToString ();
 				}
 			}
 		}
 
-		public void SchedulerStarted()
+		public void SchedulerStarted ()
 		{
-			lock (lockObject)
-			{
-				CreateOrUpdateCurrentSchedulerInstance();
+			lock (lockObject) {
+				CreateOrUpdateCurrentSchedulerInstance ();
 			}
 		}
 
-		public void SchedulerPaused()
+		public void SchedulerPaused ()
 		{
-			var scheduler = _schedulerRepository.Load(DynamoScheduler.CreateKeyDictionary(InstanceId));
+			var scheduler = _schedulerRepository.Load (DynamoScheduler.CreateKeyDictionary (InstanceId));
 
 			scheduler.State = "Paused";
 
-			_schedulerRepository.Store(scheduler);
+			_schedulerRepository.Store (scheduler);
 		}
 
-		public void SchedulerResumed()
+		public void SchedulerResumed ()
 		{
-			var scheduler = _schedulerRepository.Load(DynamoScheduler.CreateKeyDictionary(InstanceId));
+			var scheduler = _schedulerRepository.Load (DynamoScheduler.CreateKeyDictionary (InstanceId));
 
 			scheduler.State = "Resumed";
 
-			_schedulerRepository.Store(scheduler);        
+			_schedulerRepository.Store (scheduler);
 		}
 
-		public void Shutdown()
+		public void Shutdown ()
 		{
 			// todo: remove scheduler instance from db?
-			Dispose();
+			Dispose ();
 		}
 
-		public void StoreJobAndTrigger(IJobDetail newJob, IOperableTrigger newTrigger)
+		public void StoreJobAndTrigger (IJobDetail newJob, IOperableTrigger newTrigger)
 		{
-			lock (lockObject)
-			{
-				StoreJob(newJob, false);
-				StoreTrigger(newTrigger, false);
+			lock (lockObject) {
+				StoreJob (newJob, false);
+				StoreTrigger (newTrigger, false);
 			}
 		}
 
-		public bool IsJobGroupPaused(string groupName)
+		public bool IsJobGroupPaused (string groupName)
 		{
-			var group = _jobGroupRepository.Load(new JobKey (string.Empty, groupName).ToGroupDictionary());
+			var group = _jobGroupRepository.Load (new JobKey (string.Empty, groupName).ToGroupDictionary ());
 
-			if (group == null)
-			{
+			if (group == null) {
 				return false;
 			}
 
 			return group.State == DynamoJobGroup.DynamoJobGroupState.Paused;
 		}
 
-		public bool IsTriggerGroupPaused(string groupName)
+		public bool IsTriggerGroupPaused (string groupName)
 		{
-			var group = _triggerGroupRepository.Load(new TriggerKey (string.Empty, groupName).ToGroupDictionary());
+			var group = _triggerGroupRepository.Load (new TriggerKey (string.Empty, groupName).ToGroupDictionary ());
 
-			if (group == null)
-			{
+			if (group == null) {
 				return false;
 			}
 
 			return group.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused;
 		}
 
-		public void StoreJob(IJobDetail newJob, bool replaceExisting)
+		public void StoreJob (IJobDetail newJob, bool replaceExisting)
 		{
-			lock (lockObject)
-			{
+			lock (lockObject) {
 				DynamoJob job = new DynamoJob (newJob);
 
-				if (!replaceExisting && _jobRepository.Load(job.Key) != null)
-				{
+				if (!replaceExisting && _jobRepository.Load (job.Key) != null) {
 					throw new ObjectAlreadyExistsException (newJob);
 				}
 
-				var jobGroup = this._jobGroupRepository.Load(newJob.Key.ToGroupDictionary());
+				var jobGroup = this._jobGroupRepository.Load (newJob.Key.ToGroupDictionary ());
 
-				if (jobGroup == null)
-				{
+				if (jobGroup == null) {
 					jobGroup = new DynamoJobGroup () {
 						Name = newJob.Key.Group,
 						State = DynamoJobGroup.DynamoJobGroupState.Active
 					};
 
-					_jobGroupRepository.Store(jobGroup);
+					_jobGroupRepository.Store (jobGroup);
 				}
 
-				_jobRepository.Store(job);
+				_jobRepository.Store (job);
 			}
 		}
 
-		public void StoreJobsAndTriggers(IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs,
-		                                 bool replace)
+		public void StoreJobsAndTriggers (IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs,
+										 bool replace)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public bool RemoveJob(JobKey jobKey)
+		public bool RemoveJob (JobKey jobKey)
 		{
-			lock (lockObject)
-			{
+			lock (lockObject) {
 				// keep separated to clean up any staled trigger
-				IList<IOperableTrigger> triggersForJob = this.GetTriggersForJob(jobKey);
-				foreach (IOperableTrigger trigger in triggersForJob)
-				{
-					this.RemoveTrigger(trigger.Key);
+				IList<IOperableTrigger> triggersForJob = this.GetTriggersForJob (jobKey);
+				foreach (IOperableTrigger trigger in triggersForJob) {
+					this.RemoveTrigger (trigger.Key);
 				}
 
-				var found = this.CheckExists(jobKey);
-				if (found)
-				{
-					_jobRepository.Delete(jobKey.ToDictionary());
+				var found = this.CheckExists (jobKey);
+				if (found) {
+					_jobRepository.Delete (jobKey.ToDictionary ());
 				}
 
 				return found;
 			}
 		}
 
-		public bool RemoveJobs(IList<JobKey> jobKeys)
+		public bool RemoveJobs (IList<JobKey> jobKeys)
 		{
-			throw new NotImplementedException ();
+			bool allFound = true;
+
+			lock (lockObject) {
+				foreach (JobKey key in jobKeys) {
+					allFound = RemoveJob (key) && allFound;
+				}
+			}
+
+			return allFound;
 		}
 
 		public IJobDetail RetrieveJob(JobKey jobKey)
@@ -343,7 +337,7 @@ namespace Quartz.DynamoDB
 		{
 			lock (lockObject)
 			{
-				return _jobRepository.Load(jobKey.ToDictionary()) == null;
+				return _jobRepository.Load(jobKey.ToDictionary()) != null;
 			}
 		}
 
@@ -351,7 +345,7 @@ namespace Quartz.DynamoDB
 		{
 			lock (lockObject)
 			{
-				return _triggerRepository.Load(triggerKey.ToDictionary()) == null;
+				return _triggerRepository.Load(triggerKey.ToDictionary()) != null;
 			}
 		}
 

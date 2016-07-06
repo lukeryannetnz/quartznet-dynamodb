@@ -53,8 +53,11 @@ namespace QuartzNETDynamoDB.TestApp
 					.RepeatForever())
 				.Build();
 
-			// Tell quartz to schedule the job using our trigger
-			scheduler.ScheduleJob(job, trigger);
+			if (!scheduler.CheckExists(trigger.Key))
+			{
+				// Tell quartz to schedule the job using our trigger
+				scheduler.ScheduleJob(job, trigger);
+			}
 		}
 	}
 }

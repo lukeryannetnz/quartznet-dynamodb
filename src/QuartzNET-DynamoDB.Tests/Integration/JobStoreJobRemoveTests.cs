@@ -25,7 +25,7 @@ namespace Quartz.DynamoDB.Tests
 		}
 
 		/// <summary>
-		/// Tests that when Remove Jobs is called with two groups it removes all jobs
+		/// Tests that when Remove Jobs is called with two jobs it removes all jobs
 		/// </summary>
 		[Fact]
 		[Trait ("Category", "Integration")]
@@ -46,6 +46,33 @@ namespace Quartz.DynamoDB.Tests
 			var result = _sut.RemoveJobs (jobKeys);
 
 			Assert.True (result);
+		}
+
+		/// <summary>
+		/// Tests that when Remove Jobs is called with three keys and one that doesn't exist, it removes the ones that exist.
+		/// </summary>
+		[Fact]
+		[Trait ("Category", "Integration")]
+		public void RemoveJobsOneJobDoesntExist ()
+		{
+			IList<JobKey> jobKeys = new List<JobKey> ();
+
+			jobKeys.Add(new JobKey ("ThisDoesn'tExist"));
+
+			for (int i = 0; i < 2; i++) {
+				string jobGroup = Guid.NewGuid ().ToString ();
+				// Create a random job, store it.
+				string jobName = Guid.NewGuid ().ToString ();
+				JobDetailImpl detail = new JobDetailImpl (jobName, jobGroup, typeof (NoOpJob));
+				_sut.StoreJob (detail, false);
+
+				jobKeys.Add (detail.Key);
+			}
+
+			var result = _sut.RemoveJobs (jobKeys);
+
+			// Should return false as not all jobs were removed.
+            Assert.False(result);
 		}
 	}
 }

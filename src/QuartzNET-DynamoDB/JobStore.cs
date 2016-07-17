@@ -383,7 +383,7 @@ namespace Quartz.DynamoDB
 		{
 			lock (lockObject)
 			{
-				var dynamoCal = new DynamoCalendar (){ Name = name, Description = calendar.Description };
+				var dynamoCal = new DynamoCalendar (name, calendar);
 
 				var existingRecord = _calendarRepository.Load(dynamoCal.Key);
 
@@ -430,8 +430,11 @@ namespace Quartz.DynamoDB
 
 		public ICalendar RetrieveCalendar(string calName)
 		{
-			throw new NotImplementedException ();
-		}
+			var cal = new DynamoCalendar () { Name = calName };
+			var calendar = _calendarRepository.Load (cal.Key);
+
+			return calendar.Calendar;
+         }
 
 		public int GetNumberOfJobs()
 		{

@@ -85,8 +85,23 @@ namespace Quartz.DynamoDB
             if (Calendar is MonthlyCalendar)
             {
                 record.Add("Type", new AttributeValue { S = "MonthlyCalendar" });
-                List<AttributeValue> excludedDays = ((MonthlyCalendar)Calendar).DaysExcluded.Select(d => new AttributeValue() { N = (d ? "1" : "0") }).ToList();
-                record.Add("ExcludedDays", new AttributeValue { L = excludedDays });
+                List<AttributeValue> excludedDays = new List<AttributeValue>();
+
+                bool[] days = ((MonthlyCalendar)Calendar).DaysExcluded;
+
+                for (int i = 1; i <= days.Length; i++)
+                {
+                    if (days[i - 1])
+                    {
+                        excludedDays.Add(new AttributeValue { N = i.ToString() });
+                    }
+                }
+
+                record.Add("ExcludedDays", new AttributeValue
+                {
+                    L =
+                    excludedDays
+                });
 
             }
             if (Calendar is WeeklyCalendar)
@@ -157,6 +172,11 @@ namespace Quartz.DynamoDB
                     case "MonthlyCalendar":
                         {
                             var monthlyCal = new MonthlyCalendar();
+
+                            foreach (var excluded in record["ExcludedDays"].L)
+                            {
+                                monthlyCal.SetDayExcluded(int.Parse(excluded.N), true);
+                            }
 
                             Calendar = monthlyCal;
                             break;

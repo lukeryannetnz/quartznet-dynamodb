@@ -123,5 +123,24 @@ namespace Quartz.DynamoDB.Tests
             Assert.True(((HolidayCalendar)deserialised.Calendar).ExcludedDates.Contains(DateTime.Today));
             Assert.True(((HolidayCalendar)deserialised.Calendar).ExcludedDates.Contains(importantDate));
         }
+
+        /// <summary>
+        /// Tests that the excluded days property of the monthly calendar serialises and deserialises correctly.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void MonthlyDaysExcluded()
+        {
+            MonthlyCalendar cal = new MonthlyCalendar();
+            cal.SetDayExcluded(1, true);
+            cal.SetDayExcluded(13, true);
+
+            var sut = new DynamoCalendar("test", cal);
+            var serialised = sut.ToDynamo();
+            var deserialised = new DynamoCalendar(serialised);
+
+            Assert.True(((MonthlyCalendar)deserialised.Calendar).IsDayExcluded(1));
+            Assert.True(((MonthlyCalendar)deserialised.Calendar).IsDayExcluded(13));
+        }
     }
 }

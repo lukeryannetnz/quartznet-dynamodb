@@ -62,7 +62,11 @@ namespace Quartz.DynamoDB
             {
                 record.Add("Type", new AttributeValue { S = "AnnualCalendar" });
                 List<AttributeValue> excludedDays = ((AnnualCalendar)Calendar).DaysExcluded.Select(d => new AttributeValue() { S = (d.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")) }).ToList();
-                record.Add("ExcludedDays", new AttributeValue { L = excludedDays });
+
+                if (excludedDays.Count > 0)
+                {
+                    record.Add("ExcludedDays", new AttributeValue { L = excludedDays });
+                }
             }
             if (Calendar is CronCalendar)
             {
@@ -79,8 +83,12 @@ namespace Quartz.DynamoDB
             if (Calendar is HolidayCalendar)
             {
                 record.Add("Type", new AttributeValue { S = "HolidayCalendar" });
-                var tickStringList = ((HolidayCalendar)Calendar).ExcludedDates.Select(d => new AttributeValue() { S = d.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz") }).ToList();
-                record.Add("ExcludedDates", new AttributeValue { L = tickStringList });
+                var excludedDates = ((HolidayCalendar)Calendar).ExcludedDates.Select(d => new AttributeValue() { S = d.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz") }).ToList();
+
+                if (excludedDates.Count > 0)
+                {
+                    record.Add("ExcludedDates", new AttributeValue { L = excludedDates });
+                }
             }
             if (Calendar is MonthlyCalendar)
             {
@@ -89,26 +97,39 @@ namespace Quartz.DynamoDB
 
                 bool[] days = ((MonthlyCalendar)Calendar).DaysExcluded;
 
-                for (int i = 1; i <= days.Length; i++)
+                for (int i = 0; i < days.Length; i++)
                 {
-                    if (days[i - 1])
+                    if (days[i])
                     {
-                        excludedDays.Add(new AttributeValue { N = i.ToString() });
+                        excludedDays.Add(new AttributeValue { N = (i + 1).ToString() });
                     }
                 }
 
-                record.Add("ExcludedDays", new AttributeValue
+                if (excludedDays.Count > 0)
                 {
-                    L =
-                    excludedDays
-                });
+                    record.Add("ExcludedDays", new AttributeValue { L = excludedDays });
+                }
 
             }
             if (Calendar is WeeklyCalendar)
             {
                 record.Add("Type", new AttributeValue { S = "WeeklyCalendar" });
-                List<AttributeValue> excludedDays = ((MonthlyCalendar)Calendar).DaysExcluded.Select(d => new AttributeValue() { N = (d ? "1" : "0") }).ToList();
-                record.Add("ExcludedDays", new AttributeValue { L = excludedDays });
+                List<AttributeValue> excludedDays = new List<AttributeValue>();
+
+                bool[] days = ((WeeklyCalendar)Calendar).DaysExcluded;
+
+                for (int i = 0; i < days.Length; i++)
+                {
+                    if (days[i])
+                    {
+                        excludedDays.Add(new AttributeValue { N = i.ToString() });
+                    }
+                }
+
+                if (excludedDays.Count > 0)
+                {
+                    record.Add("ExcludedDays", new AttributeValue { L = excludedDays });
+                }
             }
 
             return record;
@@ -127,12 +148,14 @@ namespace Quartz.DynamoDB
                         {
                             var annualCal = new AnnualCalendar();
 
-                            foreach (var excluded in record["ExcludedDays"].L)
+                            if (record.ContainsKey("ExcludedDays"))
                             {
-                                DateTimeOffset day = DateTimeOffset.Parse(excluded.S);
-                                annualCal.SetDayExcluded(day, true);
+                                foreach (var excluded in record["ExcludedDays"].L)
+                                {
+                                    DateTimeOffset day = DateTimeOffset.Parse(excluded.S);
+                                    annualCal.SetDayExcluded(day, true);
+                                }
                             }
-
                             Calendar = annualCal;
                             break;
                         }
@@ -159,12 +182,14 @@ namespace Quartz.DynamoDB
                         {
                             var holidayCal = new HolidayCalendar();
 
-                            foreach (var excluded in record["ExcludedDates"].L)
+                            if (record.ContainsKey("ExcludedDates"))
                             {
-                                DateTime day = DateTime.Parse(excluded.S);
-                                holidayCal.AddExcludedDate(day);
+                                foreach (var excluded in record["ExcludedDates"].L)
+                                {
+                                    DateTime day = DateTime.Parse(excluded.S);
+                                    holidayCal.AddExcludedDate(day);
+                                }
                             }
-
                             Calendar = holidayCal;
 
                             break;
@@ -173,16 +198,28 @@ namespace Quartz.DynamoDB
                         {
                             var monthlyCal = new MonthlyCalendar();
 
-                            foreach (var excluded in record["ExcludedDays"].L)
+                            if (record.ContainsKey("ExcludedDays"))
                             {
-                                monthlyCal.SetDayExcluded(int.Parse(excluded.N), true);
+                                foreach (var excluded in record["ExcludedDays"].L)
+                                {
+                                    monthlyCal.SetDayExcluded(int.Parse(excluded.N), true);
+                                }
                             }
-
                             Calendar = monthlyCal;
                             break;
                         }
                     case "WeeklyCalendar":
                         {
+                            var monthlyCal = new WeeklyCalendar();
+
+                            if (record.ContainsKey("ExcludedDays"))
+                            {
+                                foreach (var excluded in record["ExcludedDays"].L)
+                                {
+                                    monthlyCal.SetDayExcluded((DayOfWeek)Enum.Parse(typeof(DayOfWeek), excluded.N), true);
+                                }
+                            }
+                            Calendar = monthlyCal;
                             break;
                         }
                 }

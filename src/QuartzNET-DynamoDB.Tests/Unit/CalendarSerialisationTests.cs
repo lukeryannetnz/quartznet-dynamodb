@@ -142,5 +142,59 @@ namespace Quartz.DynamoDB.Tests
             Assert.True(((MonthlyCalendar)deserialised.Calendar).IsDayExcluded(1));
             Assert.True(((MonthlyCalendar)deserialised.Calendar).IsDayExcluded(31));
         }
+
+        /// <summary>
+        /// Tests that the excluded days property of the monthly calendar serialises and deserialises correctly when no days are excluded.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void MonthlyNoDaysExcluded()
+        {
+            MonthlyCalendar cal = new MonthlyCalendar();
+
+            var sut = new DynamoCalendar("test", cal);
+            var serialised = sut.ToDynamo();
+            var deserialised = new DynamoCalendar(serialised);
+
+            for (int i = 1; i <= 31; i++)
+            {
+                Assert.False(((MonthlyCalendar)deserialised.Calendar).IsDayExcluded(i));
+            }
+        }
+
+        /// <summary>
+        /// Tests that the excluded days property of the weekly calendar serialises and deserialises correctly.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void WeeklyDaysExcluded()
+        {
+            WeeklyCalendar cal = new WeeklyCalendar();
+            cal.SetDayExcluded(DayOfWeek.Monday, true);
+            cal.SetDayExcluded(DayOfWeek.Sunday, true);
+
+            var sut = new DynamoCalendar("test", cal);
+            var serialised = sut.ToDynamo();
+            var deserialised = new DynamoCalendar(serialised);
+
+            Assert.True(((WeeklyCalendar)deserialised.Calendar).IsDayExcluded(DayOfWeek.Monday));
+            Assert.True(((WeeklyCalendar)deserialised.Calendar).IsDayExcluded(DayOfWeek.Sunday));
+        }
+
+        /// <summary>
+        /// Tests that the excluded days property of the weekly calendar serialises and deserialises correctly when no days are excluded.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void WeeklyDaysNoExcluded()
+        {
+            WeeklyCalendar cal = new WeeklyCalendar();
+           
+            var sut = new DynamoCalendar("test", cal);
+            var serialised = sut.ToDynamo();
+            var deserialised = new DynamoCalendar(serialised);
+
+            Assert.False(((WeeklyCalendar)deserialised.Calendar).IsDayExcluded(DayOfWeek.Monday));
+        }
     }
 }

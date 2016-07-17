@@ -28,7 +28,7 @@ namespace Quartz.DynamoDB.Tests
         /// </summary>
         [Fact]
         [Trait("Category", "Integration")]
-        public void GetNumberOfJobsIncrementsWhenJobAdded()
+        public void GetNumberOfCalendarsIncrementsWhenJobAdded()
         {
             var jobCount = _sut.GetNumberOfCalendars();
 

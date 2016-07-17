@@ -16,9 +16,13 @@ namespace Quartz.DynamoDB
         {
         }
 
-        public DynamoCalendar(string name, ICalendar calendar)
+        public DynamoCalendar(string name)
         {
             this.Name = name;
+        }
+
+        public DynamoCalendar(string name, ICalendar calendar) : this(name)
+        {
             this.Description = calendar.Description;
             this.Calendar = calendar;
         }
@@ -246,9 +250,12 @@ namespace Quartz.DynamoDB
         {
             get
             {
-                return new Dictionary<string, AttributeValue> {
-                        { "Name", new AttributeValue (){ S = Name } }
-                    };
+                return new Dictionary<string, AttributeValue>
+                {
+                    {
+                        "Name", new AttributeValue (){ S = Name}
+                    }
+                };
             }
         }
 

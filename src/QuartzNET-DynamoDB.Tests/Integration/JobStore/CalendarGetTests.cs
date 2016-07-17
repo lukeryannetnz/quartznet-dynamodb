@@ -28,9 +28,9 @@ namespace Quartz.DynamoDB.Tests
         /// </summary>
         [Fact]
         [Trait("Category", "Integration")]
-        public void GetNumberOfCalendarsIncrementsWhenJobAdded()
+        public void GetNumberOfCalendarsIncrementsWhenCalendarAdded()
         {
-            var jobCount = _sut.GetNumberOfCalendars();
+            var calendarCount = _sut.GetNumberOfCalendars();
 
             MonthlyCalendar cal = new MonthlyCalendar();
             string calName = Guid.NewGuid().ToString();
@@ -41,8 +41,25 @@ namespace Quartz.DynamoDB.Tests
 
             var newCount = _sut.GetNumberOfCalendars();
 
-            Assert.Equal(jobCount + 1, newCount);
+            Assert.Equal(calendarCount + 1, newCount);
+        }
 
+
+        /// <summary>
+        /// Tests that after a calendar is added, the calendar exists method returns true.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void CalendarExistsWhenCalendarAdded()
+        {
+            MonthlyCalendar cal = new MonthlyCalendar();
+            string calName = Guid.NewGuid().ToString();
+
+            Assert.False(_sut.CalendarExists(calName));
+
+            _sut.StoreCalendar(calName, cal, false, true);
+
+            Assert.True(_sut.CalendarExists(calName));
         }
     }
 }

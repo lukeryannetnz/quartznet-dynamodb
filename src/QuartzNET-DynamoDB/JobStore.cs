@@ -349,7 +349,12 @@ namespace Quartz.DynamoDB
 
         public bool CalendarExists(string calName)
         {
-            throw new NotImplementedException();
+            lock (lockObject)
+            {
+                var key = new DynamoCalendar(calName).Key;
+
+                return _calendarRepository.Load(key) != null;
+            }
         }
 
         public bool CheckExists(JobKey jobKey)

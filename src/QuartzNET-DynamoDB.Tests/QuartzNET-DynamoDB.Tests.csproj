@@ -103,7 +103,7 @@
     <Compile Include="Integration\Repository\RepositoryTests.cs" />
     <Compile Include="Integration\TestJobFactory.cs" />
     <Compile Include="Integration\JobStore\GetTriggerTests.cs" />
-    <Compile Include="TestTriggerFactory.cs" />
+    <Compile Include="Integration\TestTriggerFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="job_scheduling_data_2_0.xsd">

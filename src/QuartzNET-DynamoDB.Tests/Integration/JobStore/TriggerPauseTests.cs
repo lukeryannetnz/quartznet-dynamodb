@@ -8,6 +8,7 @@ using Quartz.DynamoDB.DataModel.Storage;
 using Quartz.DynamoDB.DataModel;
 using Quartz.Impl;
 using Quartz.Job;
+using Quartz.DynamoDB.Tests.Integration;
 
 namespace Quartz.DynamoDB.Tests
 {

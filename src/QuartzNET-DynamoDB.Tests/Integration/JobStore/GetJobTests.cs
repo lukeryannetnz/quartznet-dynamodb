@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Impl;
 using Quartz.Simpl;
 using Quartz.Spi;

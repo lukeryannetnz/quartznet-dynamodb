@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Impl;
 using Quartz.Job;
 using Quartz.Simpl;

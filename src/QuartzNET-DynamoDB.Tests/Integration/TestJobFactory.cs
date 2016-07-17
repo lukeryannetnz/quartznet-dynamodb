@@ -2,7 +2,7 @@
 using Quartz.Impl;
 using Quartz.Job;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration
 {
 	public class TestJobFactory
 	{

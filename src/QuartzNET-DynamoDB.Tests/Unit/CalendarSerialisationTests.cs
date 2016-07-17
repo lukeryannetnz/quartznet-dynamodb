@@ -62,5 +62,37 @@ namespace Quartz.DynamoDB.Tests
 
             Assert.Equal(cal.CronExpression.ToString(), ((CronCalendar)deserialised.Calendar).CronExpression.ToString());
         }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void DailyTimeRange()
+        {
+            DailyCalendar cal = new DailyCalendar(new DateTime(2015, 04, 02, 14, 00, 00), new DateTime(2015, 04, 02, 23, 30, 00));
+
+            var sut = new DynamoCalendar("test", cal);
+            var serialised = sut.ToDynamo();
+            var deserialised = new DynamoCalendar(serialised);
+
+            DateTime now = DateTime.Now;
+
+            Assert.Equal(cal.GetTimeRangeStartingTimeUtc(now), ((DailyCalendar)deserialised.Calendar).GetTimeRangeStartingTimeUtc(now));
+            Assert.Equal(cal.GetTimeRangeEndingTimeUtc(now), ((DailyCalendar)deserialised.Calendar).GetTimeRangeEndingTimeUtc(now));
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void DailyInvertTimeRange()
+        {
+            DailyCalendar cal = new DailyCalendar(new DateTime(2015, 04, 02, 14, 00, 00), new DateTime(2015, 04, 02, 23, 30, 00));
+            cal.InvertTimeRange = true;
+
+            var sut = new DynamoCalendar("test", cal);
+            var serialised = sut.ToDynamo();
+            var deserialised = new DynamoCalendar(serialised);
+
+            DateTime now = DateTime.Now;
+
+            Assert.Equal(cal.InvertTimeRange, ((DailyCalendar)deserialised.Calendar).InvertTimeRange);
+        }
     }
 }

@@ -72,8 +72,8 @@ namespace Quartz.DynamoDB
             if (Calendar is DailyCalendar)
             {
                 record.Add("Type", new AttributeValue { S = "DailyCalendar" });
-                record.Add("RangeStartingTimeUTC", AttributeValueHelper.StringOrNull(((DailyCalendar)Calendar).GetTimeRangeStartingTimeUtc(DateTime.UtcNow).ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
-                record.Add("RangeEndingTimeUTC", AttributeValueHelper.StringOrNull(((DailyCalendar)Calendar).GetTimeRangeEndingTimeUtc(DateTime.UtcNow).ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
+                record.Add("RangeStartingTimeUTC", AttributeValueHelper.StringOrNull(((DailyCalendar)Calendar).GetTimeRangeStartingTimeUtc(DateTime.Now).ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
+                record.Add("RangeEndingTimeUTC", AttributeValueHelper.StringOrNull(((DailyCalendar)Calendar).GetTimeRangeEndingTimeUtc(DateTime.Now).ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
                 record.Add("InvertTimeRange", new AttributeValue { BOOL = ((DailyCalendar)Calendar).InvertTimeRange });
             }
             if (Calendar is HolidayCalendar)
@@ -131,6 +131,13 @@ namespace Quartz.DynamoDB
                         }
                     case "DailyCalendar":
                         {
+                            var startTime = DateTime.Parse(record["RangeStartingTimeUTC"].S);
+                            var endTime = DateTime.Parse(record["RangeEndingTimeUTC"].S);
+
+                            var dailyCal = new DailyCalendar(startTime, endTime);
+                            dailyCal.InvertTimeRange = record["InvertTimeRange"].BOOL;
+
+                            Calendar = dailyCal;    
                             break;
                         }
                     case "HolidayCalendar":

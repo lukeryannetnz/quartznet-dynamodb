@@ -106,6 +106,7 @@
     <Compile Include="Integration\TestTriggerFactory.cs" />
     <Compile Include="Integration\JobStore\CalendarAddTests.cs" />
     <Compile Include="Unit\CalendarSerialisationTests.cs" />
+    <Compile Include="Integration\JobStore\CalendarGetTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="job_scheduling_data_2_0.xsd">

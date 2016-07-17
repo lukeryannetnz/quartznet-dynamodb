@@ -123,6 +123,10 @@ namespace Quartz.DynamoDB
                         }
                     case "CronCalendar":
                         {
+                            var expression = record["CronExpression"].S;
+                            var cronCal = new CronCalendar(expression);
+
+                            Calendar = cronCal;
                             break;
                         }
                     case "DailyCalendar":

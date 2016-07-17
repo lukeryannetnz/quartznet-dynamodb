@@ -46,5 +46,21 @@ namespace Quartz.DynamoDB.Tests
             Assert.True(((AnnualCalendar)deserialised.Calendar).IsDayExcluded(DateTime.Today));
             Assert.True(((AnnualCalendar)deserialised.Calendar).IsDayExcluded(importantDate));
         }
+
+        /// <summary>
+        /// Tests that the expression property of the cron calendar serialises and deserialises correctly.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void CronExpression()
+        {
+            CronCalendar cal = new CronCalendar("0 0 0/1 1/1 * ? *");
+
+            var sut = new DynamoCalendar("test", cal);
+            var serialised = sut.ToDynamo();
+            var deserialised = new DynamoCalendar(serialised);
+
+            Assert.Equal(cal.CronExpression.ToString(), ((CronCalendar)deserialised.Calendar).CronExpression.ToString());
+        }
     }
 }

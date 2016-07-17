@@ -133,14 +133,14 @@ namespace Quartz.DynamoDB.Tests
         {
             MonthlyCalendar cal = new MonthlyCalendar();
             cal.SetDayExcluded(1, true);
-            cal.SetDayExcluded(13, true);
+            cal.SetDayExcluded(31, true);
 
             var sut = new DynamoCalendar("test", cal);
             var serialised = sut.ToDynamo();
             var deserialised = new DynamoCalendar(serialised);
 
             Assert.True(((MonthlyCalendar)deserialised.Calendar).IsDayExcluded(1));
-            Assert.True(((MonthlyCalendar)deserialised.Calendar).IsDayExcluded(13));
+            Assert.True(((MonthlyCalendar)deserialised.Calendar).IsDayExcluded(31));
         }
     }
 }

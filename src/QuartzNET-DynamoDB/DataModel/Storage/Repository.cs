@@ -142,6 +142,13 @@ namespace Quartz.DynamoDB.DataModel.Storage
 				throw new JobPersistenceException($"Non 200 response code received from dynamo {response.ToString()}");
 			}
 		}
+
+		public DescribeTableResponse DescribeTable()
+		{
+			T entity = new T ();
+
+			return _client.DescribeTable(entity.DynamoTableName);
+		}
 	}
 }
 

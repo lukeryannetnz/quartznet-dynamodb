@@ -51,6 +51,13 @@ namespace Quartz.DynamoDB.DataModel.Storage
 		/// Deletes the table. This permanently deletes ALL DATA in the table!
 		/// </summary>
 		void DeleteTable();
+
+		/// <summary>
+		/// Returns information about the table, including the current status of the table, when it was created, the primary key schema, and any indexes on the table.
+		/// <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTable.html"/> 
+		/// </summary>
+		/// <returns>The table.</returns>
+		DescribeTableResponse DescribeTable();
 	}
 }
 

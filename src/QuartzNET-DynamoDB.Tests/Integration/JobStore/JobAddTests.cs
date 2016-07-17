@@ -31,8 +31,11 @@ namespace Quartz.DynamoDB.Tests
 		[Trait ("Category", "Integration")]
 		public void CheckExistsWhenJobExsits ()
 		{
-			CreateTestJob ();
-			throw new Exception("todo");
+			JobDetailImpl detail = TestJobFactory.CreateTestJob ();
+			_sut.StoreJob (detail, false);
+
+			bool result = _sut.CheckExists (detail.Key);
+			Assert.True (result);
 		}
 
 		/// <summary>
@@ -43,18 +46,14 @@ namespace Quartz.DynamoDB.Tests
 		[Trait ("Category", "Integration")]
 		public void StoreNewJob ()
 		{
-			string jobName = Guid.NewGuid ().ToString ();
-			string jobGroup = Guid.NewGuid ().ToString ();
-
-			JobDetailImpl detail = new JobDetailImpl (jobName, jobGroup, typeof (NoOpJob));
-
+			JobDetailImpl detail = TestJobFactory.CreateTestJob ();
 			_sut.StoreJob (detail, false);
 
-			var result = _sut.RetrieveJob (new JobKey (jobName, jobGroup));
+			var result = _sut.RetrieveJob (new JobKey (detail.Name, detail.Group));
 
 			Assert.NotNull (result);
-			Assert.Equal (jobName, result.Key.Name);
-			Assert.Equal (jobGroup, result.Key.Group);
+			Assert.Equal (detail.Name, result.Key.Name);
+			Assert.Equal (detail.Group, result.Key.Group);
 			Assert.Equal (typeof (NoOpJob), result.JobType);
 		}
 
@@ -65,10 +64,7 @@ namespace Quartz.DynamoDB.Tests
 		[Trait ("Category", "Integration")]
 		public void StoreExistingJobOverwrite ()
 		{
-			string jobName = Guid.NewGuid ().ToString ();
-			string jobGroup = Guid.NewGuid ().ToString ();
-
-			JobDetailImpl detail = new JobDetailImpl (jobName, jobGroup, typeof (NoOpJob));
+			JobDetailImpl detail = TestJobFactory.CreateTestJob ();
 			detail.Description = "Original";
 
 			_sut.StoreJob (detail, false);
@@ -76,7 +72,7 @@ namespace Quartz.DynamoDB.Tests
 			detail.Description = "Updated";
 			_sut.StoreJob (detail, true);
 
-			var result = _sut.RetrieveJob (new JobKey (jobName, jobGroup));
+			var result = _sut.RetrieveJob (new JobKey (detail.Name, detail.Group));
 
 			Assert.Equal ("Updated", result.Description);
 		}
@@ -88,25 +84,10 @@ namespace Quartz.DynamoDB.Tests
 		[Trait ("Category", "Integration")]
 		public void StoreExistingJobDontOverwriteThrows ()
 		{
-			string jobName = Guid.NewGuid ().ToString ();
-			string jobGroup = Guid.NewGuid ().ToString ();
-
-			JobDetailImpl detail = new JobDetailImpl (jobName, jobGroup, typeof (NoOpJob));
-
+			JobDetailImpl detail = TestJobFactory.CreateTestJob ();
 			_sut.StoreJob (detail, false);
 
 			Assert.Throws<ObjectAlreadyExistsException> (() => _sut.StoreJob (detail, false));
-		}
-
-		JobDetailImpl CreateTestJob ()
-		{
-			string jobGroup = Guid.NewGuid ().ToString ();
-			// Create a random job, store it.
-			string jobName = Guid.NewGuid ().ToString ();
-			JobDetailImpl detail = new JobDetailImpl (jobName, jobGroup, typeof (NoOpJob));
-			_sut.StoreJob (detail, false);
-
-			return detail;
 		}
 	}
 }

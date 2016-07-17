@@ -535,7 +535,10 @@ namespace Quartz.DynamoDB
 
         public IList<string> GetCalendarNames()
         {
-            throw new NotImplementedException();
+            //todo: surely there is a better way to do this than scanning?
+            var allCalendars = this._calendarRepository.Scan(null, null, string.Empty);
+
+            return allCalendars.Select(c => c.Name).ToList();
         }
 
         public IList<IOperableTrigger> GetTriggersForJob(JobKey jobKey)

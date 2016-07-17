@@ -61,6 +61,23 @@ namespace Quartz.DynamoDB.Tests
 
             Assert.True(_sut.CalendarExists(calName));
         }
+
+        /// <summary>
+        /// Tests that after a calendar is added, the get calendar names method returns its name.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void CalendarNamesReturned()
+        {
+            MonthlyCalendar cal = new MonthlyCalendar();
+            string calName = Guid.NewGuid().ToString();
+
+            _sut.StoreCalendar(calName, cal, false, true);
+
+            var result = _sut.GetCalendarNames();
+
+            Assert.True(result.Contains(calName));
+        }
     }
 }
 

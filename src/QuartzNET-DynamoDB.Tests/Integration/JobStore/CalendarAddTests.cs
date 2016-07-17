@@ -6,35 +6,35 @@ using Xunit;
 
 namespace Quartz.DynamoDB.Tests
 {
-	/// <summary>
-	/// Contains tests related to the addition of calendars.
-	/// </summary>
-	public class CalendarAddTests
-	{
-		IJobStore _sut;
+    /// <summary>
+    /// Contains tests related to the addition of calendars.
+    /// </summary>
+    public class CalendarAddTests
+    {
+        IJobStore _sut;
 
-		public CalendarAddTests ()
-		{
-			_sut = new JobStore ();
-			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler ();
-			var loadHelper = new SimpleTypeLoadHelper ();
+        public CalendarAddTests()
+        {
+            _sut = new JobStore();
+            var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
+            var loadHelper = new SimpleTypeLoadHelper();
 
-			_sut.Initialize (loadHelper, signaler);
-		}
+            _sut.Initialize(loadHelper, signaler);
+        }
 
-		[Fact]
-		[Trait ("Category", "Integration")]
-		public void StoreNewCalendar ()
-		{
-			var calendarName = Guid.NewGuid ().ToString();
-			ICalendar cal = new MonthlyCalendar ();
-			_sut.StoreCalendar (calendarName, cal, false, true);
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void StoreNewCalendar()
+        {
+            var calendarName = Guid.NewGuid().ToString();
+            ICalendar cal = new MonthlyCalendar();
+            _sut.StoreCalendar(calendarName, cal, false, true);
 
-			var storedCalendar = _sut.RetrieveCalendar (calendarName);
+            var storedCalendar = _sut.RetrieveCalendar(calendarName);
 
-			Assert.NotNull(storedCalendar);
-			Assert.Equal (cal.GetType (), storedCalendar.GetType());
-		}
-	}
+            Assert.NotNull(storedCalendar);
+            Assert.Equal(cal.GetType(), storedCalendar.GetType());
+        }
+    }
 }
 

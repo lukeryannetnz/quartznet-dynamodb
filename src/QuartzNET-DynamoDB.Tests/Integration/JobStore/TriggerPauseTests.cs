@@ -62,14 +62,14 @@ namespace Quartz.DynamoDB.Tests
 		[Trait("Category", "Integration")]
 		public void PauseTriggersStartsWithOneMatch()
 		{
-			string triggerGroup = Guid.NewGuid().ToString();
 			// Create a random job, store it.
 			string jobName = Guid.NewGuid().ToString();
 			JobDetailImpl detail = new JobDetailImpl (jobName, "JobGroup", typeof(NoOpJob));
 			_sut.StoreJob(detail, false);
 
 			// Create a trigger for the job, in the trigger group.
-			IOperableTrigger tr = new SimpleTriggerImpl ("test", triggerGroup, jobName, "JobGroup", DateTimeOffset.UtcNow, null, 1, TimeSpan.FromHours(1));
+			IOperableTrigger tr = TestTriggerFactory.CreateTestTrigger (jobName);
+			var triggerGroup = tr.Key.Group;
 			_sut.StoreTrigger(tr, false);
 
 			var result = _sut.PauseTriggers(Quartz.Impl.Matchers.GroupMatcher<TriggerKey>.GroupStartsWith(triggerGroup.Substring(0, 8)));

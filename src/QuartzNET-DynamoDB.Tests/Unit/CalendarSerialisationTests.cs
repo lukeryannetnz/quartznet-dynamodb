@@ -101,5 +101,27 @@ namespace Quartz.DynamoDB.Tests
 
             Assert.Equal(cal.InvertTimeRange, ((DailyCalendar)deserialised.Calendar).InvertTimeRange);
         }
+
+        /// <summary>
+        /// Tests that the excluded days collection on the holiday calendar type is serialised correctly.
+        /// </summary>
+        /// <returns>The calendar excluded days.</returns>
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void HolidayCalendarExcludedDays()
+        {
+            var importantDate = new DateTime(2015, 04, 02);
+
+            HolidayCalendar cal = new HolidayCalendar();
+            cal.AddExcludedDate(DateTime.Today);
+            cal.AddExcludedDate(importantDate);
+
+            var sut = new DynamoCalendar("test", cal);
+            var serialised = sut.ToDynamo();
+            var deserialised = new DynamoCalendar(serialised);
+
+            Assert.True(((HolidayCalendar)deserialised.Calendar).ExcludedDates.Contains(DateTime.Today));
+            Assert.True(((HolidayCalendar)deserialised.Calendar).ExcludedDates.Contains(importantDate));
+        }
     }
 }

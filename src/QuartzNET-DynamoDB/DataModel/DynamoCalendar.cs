@@ -79,7 +79,7 @@ namespace Quartz.DynamoDB
             if (Calendar is HolidayCalendar)
             {
                 record.Add("Type", new AttributeValue { S = "HolidayCalendar" });
-                var tickStringList = ((HolidayCalendar)Calendar).ExcludedDates.Select(d => new AttributeValue() { N = d.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz") }).ToList();
+                var tickStringList = ((HolidayCalendar)Calendar).ExcludedDates.Select(d => new AttributeValue() { S = d.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz") }).ToList();
                 record.Add("ExcludedDates", new AttributeValue { L = tickStringList });
             }
             if (Calendar is MonthlyCalendar)
@@ -137,11 +137,21 @@ namespace Quartz.DynamoDB
                             var dailyCal = new DailyCalendar(startTime, endTime);
                             dailyCal.InvertTimeRange = record["InvertTimeRange"].BOOL;
 
-                            Calendar = dailyCal;    
+                            Calendar = dailyCal;
                             break;
                         }
                     case "HolidayCalendar":
                         {
+                            var holidayCal = new HolidayCalendar();
+
+                            foreach (var excluded in record["ExcludedDates"].L)
+                            {
+                                DateTime day = DateTime.Parse(excluded.S);
+                                holidayCal.AddExcludedDate(day);
+                            }
+
+                            Calendar = holidayCal;
+
                             break;
                         }
                     case "MonthlyCalendar":

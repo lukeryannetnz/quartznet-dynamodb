@@ -31,7 +31,7 @@ namespace Quartz.DynamoDB.Tests
         /// </summary>
         [Fact]
         [Trait("Category", "Unit")]
-        public void Annual()
+        public void AnnualDaysExcluded()
         {
             var importantDate = new DateTime(2015, 04, 02);
 

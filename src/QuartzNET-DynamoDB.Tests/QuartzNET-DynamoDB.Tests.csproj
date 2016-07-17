@@ -93,7 +93,7 @@
     <Compile Include="Unit\SchedulerTests.cs" />
     <Compile Include="Integration\RamJobStoreTests.cs" />
     <Compile Include="Unit\SimpleTriggerImplTests.cs" />
-    <Compile Include="Integration\JobStore\GetJobTests.cs" />
+    <Compile Include="Integration\JobStore\JobGetTests.cs" />
     <Compile Include="Integration\JobStore\JobAddTests.cs" />
     <Compile Include="Integration\JobStore\JobPauseTests.cs" />
     <Compile Include="Integration\JobStore\JobRemoveTests.cs" />
@@ -102,7 +102,7 @@
     <Compile Include="Integration\JobStore\TriggersFiredTests.cs" />
     <Compile Include="Integration\Repository\RepositoryTests.cs" />
     <Compile Include="Integration\TestJobFactory.cs" />
-    <Compile Include="Integration\JobStore\GetTriggerTests.cs" />
+    <Compile Include="Integration\JobStore\TriggerGetTests.cs" />
     <Compile Include="Integration\TestTriggerFactory.cs" />
   </ItemGroup>
   <ItemGroup>

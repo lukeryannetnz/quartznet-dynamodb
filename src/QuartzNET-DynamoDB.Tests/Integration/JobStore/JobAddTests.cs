@@ -26,7 +26,7 @@ namespace Quartz.DynamoDB.Tests
 		}
 
 		/// <summary>
-		/// Tests that when CheckExit is called for a job that exists, it returns true.
+		/// Tests that when CheckExists is called for a job that exists, it returns true.
 		/// </summary>
 		[Fact]
 		[Trait ("Category", "Integration")]

@@ -27,7 +27,6 @@ namespace Quartz.DynamoDB.Tests
 		/// <summary>
 		/// Tests that after a job is added, the number of jobs increments.
 		/// </summary>
-		/// <returns>The number of jobs returns zero.</returns>
 		[Fact]
 		[Trait ("Category", "Integration")]
 		public void GetNumberOfJobsIncrementsWhenJobAdded ()

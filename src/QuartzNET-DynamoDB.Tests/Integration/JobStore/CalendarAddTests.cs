@@ -33,6 +33,7 @@ namespace Quartz.DynamoDB.Tests
             var storedCalendar = _sut.RetrieveCalendar(calendarName);
 
             Assert.NotNull(storedCalendar);
+            Assert.Equal(cal.Description, storedCalendar.Description);
             Assert.Equal(cal.GetType(), storedCalendar.GetType());
         }
     }

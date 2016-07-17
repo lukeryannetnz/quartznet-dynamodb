@@ -23,7 +23,27 @@ namespace Quartz.DynamoDB.Tests
 			_sut.Initialize (loadHelper, signaler);
 		}
 
+		/// <summary>
+		/// Tests that after a job is added, the number of jobs increments.
+		/// </summary>
+		/// <returns>The number of jobs returns zero.</returns>
+		[Fact]
+		[Trait ("Category", "Integration")]
+		public void GetNumberOfJobsIncrementsWhenJobAdded ()
+		{
+			var jobCount = _sut.GetNumberOfJobs();
 
+			JobDetailImpl detail = TestJobFactory.CreateTestJob ();
+			_sut.StoreJob (detail, false);
+
+			// Dynamo describe table is eventually consistent so give it a little time. Flaky I know, but hey - what are you going to do?
+			Thread.Sleep (50); 
+
+			var newCount = _sut.GetNumberOfJobs ();
+
+			Assert.Equal(jobCount + 1, newCount);
+
+		}
 	}
 }
 

@@ -435,14 +435,16 @@ namespace Quartz.DynamoDB
 
 		public int GetNumberOfJobs()
 		{
-			var table = _triggerRepository.DescribeTable();
+			var table = _jobRepository.DescribeTable();
 
 			return (int)table.Table.ItemCount;
 		}
 
 		public int GetNumberOfTriggers()
 		{
-			throw new NotImplementedException ();
+			var table = _triggerRepository.DescribeTable ();
+
+			return (int)table.Table.ItemCount;		
 		}
 
 		public int GetNumberOfCalendars()

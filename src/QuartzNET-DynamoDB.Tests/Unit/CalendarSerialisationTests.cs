@@ -63,6 +63,10 @@ namespace Quartz.DynamoDB.Tests
             Assert.Equal(cal.CronExpression.ToString(), ((CronCalendar)deserialised.Calendar).CronExpression.ToString());
         }
 
+        /// <summary>
+        /// Tests that the time range serialises correctly for the daily calendar.
+        /// TODO: I think there may be a timezone bug here that requires the author and recipient servers to share timezone.
+        /// </summary>
         [Fact]
         [Trait("Category", "Unit")]
         public void DailyTimeRange()
@@ -79,6 +83,9 @@ namespace Quartz.DynamoDB.Tests
             Assert.Equal(cal.GetTimeRangeEndingTimeUtc(now), ((DailyCalendar)deserialised.Calendar).GetTimeRangeEndingTimeUtc(now));
         }
 
+        /// <summary>
+        /// Tests that the invert time range property serialises correclty for the daily calendar type.
+        /// </summary>
         [Fact]
         [Trait("Category", "Unit")]
         public void DailyInvertTimeRange()

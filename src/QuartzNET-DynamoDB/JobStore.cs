@@ -329,7 +329,17 @@ namespace Quartz.DynamoDB
 
         public bool RemoveTriggers(IList<TriggerKey> triggerKeys)
         {
-            throw new NotImplementedException();
+            bool allFound = true;
+
+            lock (lockObject)
+            {
+                foreach (TriggerKey key in triggerKeys)
+                {
+                    allFound = RemoveTrigger(key) && allFound;
+                }
+            }
+
+            return allFound;
         }
 
         public bool ReplaceTrigger(TriggerKey triggerKey, IOperableTrigger newTrigger)

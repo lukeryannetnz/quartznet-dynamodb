@@ -344,7 +344,34 @@ namespace Quartz.DynamoDB
 
         public bool ReplaceTrigger(TriggerKey triggerKey, IOperableTrigger newTrigger)
         {
-            throw new NotImplementedException();
+            lock (lockObject)
+            {
+                var record = _triggerRepository.Load(triggerKey.ToDictionary());
+
+                if (record != null && record.Trigger != null)
+                {
+                    if (!record.Trigger.JobKey.Equals(newTrigger.JobKey))
+                    {
+                        throw new JobPersistenceException("New trigger is not related to the same job as the old trigger.");
+                    }
+
+                    this.RemoveTrigger(triggerKey);
+
+                    try
+                    {
+                        this.StoreTrigger(newTrigger, false);
+                    }
+                    catch (JobPersistenceException)
+                    {
+                        this.StoreTrigger(record.Trigger, false); // put previous trigger back...
+                        throw;
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;        
         }
 
         public IOperableTrigger RetrieveTrigger(TriggerKey triggerKey)

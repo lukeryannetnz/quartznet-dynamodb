@@ -9,7 +9,7 @@ namespace Quartz.DynamoDB.Tests.Integration
 		public static JobDetailImpl CreateTestJob ()
 		{
 			string jobGroup = Guid.NewGuid ().ToString ();
-			// Create a random job, store it.
+			// Create a random job
 			string jobName = Guid.NewGuid ().ToString ();
 			JobDetailImpl detail = new JobDetailImpl (jobName, jobGroup, typeof (NoOpJob));
 

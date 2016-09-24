@@ -15,11 +15,11 @@ namespace Quartz.DynamoDB.Tests
 	/// <summary>
 	/// Contains tests related to the Pausing of Triggers and Trigger Groups.
 	/// </summary>
-	public class JobStoreTriggerPauseTests
+	public class TriggerPauseTests
 	{
 		IJobStore _sut;
 
-		public JobStoreTriggerPauseTests ()
+		public TriggerPauseTests ()
 		{
 			_sut = new JobStore ();
 			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler ();

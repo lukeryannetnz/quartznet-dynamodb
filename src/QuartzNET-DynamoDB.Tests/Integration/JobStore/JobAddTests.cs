@@ -12,11 +12,11 @@ namespace Quartz.DynamoDB.Tests
 	/// <summary>
 	/// Contains tests related to the Addition of Jobs and Job Groups.
 	/// </summary>
-	public class JobStoreJobAddTests
+	public class JobAddTests
 	{
 		IJobStore _sut;
 
-		public JobStoreJobAddTests ()
+		public JobAddTests ()
 		{
 			_sut = new JobStore ();
 			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler ();

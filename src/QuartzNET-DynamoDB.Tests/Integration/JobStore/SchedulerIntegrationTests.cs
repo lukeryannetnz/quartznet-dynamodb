@@ -7,9 +7,9 @@ using Quartz.Simpl;
 
 namespace Quartz.DynamoDB.Tests
 {
-	public class JobStoreSchedulerIntegrationTests
+	public class SchedulerIntegrationTests
 	{
-		public JobStoreSchedulerIntegrationTests ()
+		public SchedulerIntegrationTests ()
 		{
 		}
 			

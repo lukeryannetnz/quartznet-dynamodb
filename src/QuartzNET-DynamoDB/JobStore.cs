@@ -372,7 +372,7 @@ namespace Quartz.DynamoDB
                 }
             }
 
-            return false;        
+            return false;
         }
 
         public IOperableTrigger RetrieveTrigger(TriggerKey triggerKey)

@@ -806,7 +806,19 @@ namespace Quartz.DynamoDB
 
         public Collection.ISet<string> GetPausedTriggerGroups()
         {
-            throw new NotImplementedException();
+            var expressionAttributeNames = new Dictionary<string, string> {
+                    { "#S", "State" }
+                };
+
+            var expressionAttributeValues = new Dictionary<string, AttributeValue> {
+                { ":PausedState", new AttributeValue { S = DynamoTriggerGroup.DynamoTriggerGroupState.Paused.ToString() } }
+                };
+
+            var filterExpression = "#S = :PausedState";
+
+            var results = _triggerGroupRepository.Scan(expressionAttributeValues, expressionAttributeNames, filterExpression);
+
+            return new Collection.HashSet<string>(results.Select(o => o.Name).ToList());
         }
 
         public void ResumeJob(JobKey jobKey)

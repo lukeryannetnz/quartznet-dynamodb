@@ -307,6 +307,7 @@ namespace Quartz.DynamoDB
                 {
                     _triggerRepository.Delete(triggerKey.ToDictionary());
 
+                    //todo: support orphaned job removal
                     //					if (removeOrphanedJob)
                     //					{
                     //						IJobDetail jobDetail = this.RetrieveJob(trigger.JobKey);
@@ -424,7 +425,7 @@ namespace Quartz.DynamoDB
                 // delete jobs
                 _jobRepository.DeleteTable();
 
-                // delete calendars
+                // todo: delete calendars
             }
         }
 
@@ -480,7 +481,7 @@ namespace Quartz.DynamoDB
             var triggers = this.GetTriggersForCalendar(calName);
             if (triggers != null && triggers.Count() > 0)
             {
-                throw new JobPersistenceException("Calender cannot be removed if it is referenced by a Trigger!");
+                throw new JobPersistenceException("Calendar cannot be removed if it is referenced by a Trigger!");
             }
 
             var calendar = new DynamoCalendar() { Name = calName };
@@ -767,12 +768,10 @@ namespace Quartz.DynamoDB
             this._jobGroupRepository.Store(jobGroup);
         }
 
-
         public void ResumeTrigger(TriggerKey triggerKey)
         {
             var record = _triggerRepository.Load(triggerKey.ToDictionary());
 
-            // does the trigger exist?
             if (record == null)
             {
                 return;
@@ -785,6 +784,7 @@ namespace Quartz.DynamoDB
                 return;
             }
 
+            //todo: support blocked jobs
             //if (this.BlockedJobs.FindOneByIdAs<BsonDocument>(trigger.JobKey.ToBsonDocument()) != null)
             //{
             //    triggerState["State"] = "Blocked";

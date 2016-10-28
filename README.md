@@ -11,6 +11,7 @@ Aiming to provide a fully functioning Amazon DynamoDB JobStore for Quartz.NET us
 
 ##Current State
 Jul-2016: Work in progress. Functioning! Completing functionality and polishing.
+
 Oct-2016: @ddhi004 joins project to work towards goal of publishing as complete nuget package. :-)
 
 ##Building locally

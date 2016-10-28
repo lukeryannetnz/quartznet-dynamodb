@@ -83,6 +83,7 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
     <Compile Include="Unit\DateTimeOffsetConverterTests.cs" />
+    <Compile Include="Unit\DynamoJobSerialisationTests.cs" />
     <Compile Include="Unit\DynamoTriggerTests.cs" />
     <Compile Include="Unit\JobDataMapConverterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -127,10 +128,7 @@
       <Name>QuartzNET-DynamoDB</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Integration\JobStore\" />
-    <Folder Include="Integration\Repository\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

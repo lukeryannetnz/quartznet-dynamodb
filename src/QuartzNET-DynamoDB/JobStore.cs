@@ -823,7 +823,14 @@ namespace Quartz.DynamoDB
 
         public void ResumeJob(JobKey jobKey)
         {
-            throw new NotImplementedException();
+            lock (lockObject)
+            {
+                IList<IOperableTrigger> triggersForJob = GetTriggersForJob(jobKey);
+                foreach (IOperableTrigger trigger in triggersForJob)
+                {
+                    this.ResumeTrigger(trigger.Key);
+                }
+            }
         }
 
         public Collection.ISet<string> ResumeJobs(GroupMatcher<JobKey> matcher)

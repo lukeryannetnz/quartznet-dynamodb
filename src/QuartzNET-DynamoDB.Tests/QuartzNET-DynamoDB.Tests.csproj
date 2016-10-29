@@ -27,7 +27,10 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <CustomCommands>
       <CustomCommands>
-        <Command type="Execute" command="../packages/xunit.runner.console.2.1.0/tools/xunit.console.x86.exe ${TargetFile} -trait &quot;Category=Integration&quot;" />
+        <Command>
+          <type>Execute</type>
+          <command>../packages/xunit.runner.console.2.1.0/tools/xunit.console.x86.exe ${TargetFile} -trait "Category=Integration"</command>
+        </Command>
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
@@ -111,6 +114,7 @@
     <Compile Include="Integration\JobStore\TriggerRemoveTests.cs" />
     <Compile Include="Integration\JobStore\TriggerAddTests.cs" />
     <Compile Include="Integration\JobStore\TriggerGroupGetTests.cs" />
+    <Compile Include="Integration\JobStore\JobResumeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="job_scheduling_data_2_0.xsd">

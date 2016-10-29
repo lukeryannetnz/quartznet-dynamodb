@@ -85,6 +85,7 @@
     <Compile Include="..\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Integration\JobStore\JobsAndTriggersAddTests.cs" />
     <Compile Include="Unit\DateTimeOffsetConverterTests.cs" />
     <Compile Include="Unit\DynamoJobSerialisationTests.cs" />
     <Compile Include="Unit\DynamoTriggerTests.cs" />

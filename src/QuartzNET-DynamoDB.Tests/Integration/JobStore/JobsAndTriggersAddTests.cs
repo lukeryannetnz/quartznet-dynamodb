@@ -86,6 +86,7 @@ namespace Quartz.DynamoDB.Tests
                 {job, new Collection.HashSet<ITrigger>()},
             };
 
+            // Throws because we have passed false for the replace parameter and the job already exists in dynamo.
             Assert.Throws<ObjectAlreadyExistsException>(() => { _sut.StoreJobsAndTriggers(triggersAndJobs, false); });
 
             var storedJob = _sut.RetrieveJob(job.Key);

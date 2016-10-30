@@ -6,7 +6,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.Repository
 {
 	/// <summary>
 	/// Contains tests for the repository class.

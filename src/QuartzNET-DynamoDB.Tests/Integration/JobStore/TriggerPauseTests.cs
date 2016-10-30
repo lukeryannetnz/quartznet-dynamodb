@@ -10,7 +10,7 @@ using Quartz.Impl;
 using Quartz.Job;
 using Quartz.DynamoDB.Tests.Integration;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
     /// <summary>
     /// Contains tests related to the Pausing of Triggers and Trigger Groups.
@@ -21,7 +21,7 @@ namespace Quartz.DynamoDB.Tests
 
         public TriggerPauseTests()
         {
-            _sut = new JobStore();
+            _sut = new Quartz.DynamoDB.JobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 

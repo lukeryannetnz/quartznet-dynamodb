@@ -5,7 +5,7 @@ using Quartz.Simpl;
 using Quartz.Spi;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
 	public class GetTriggerTests
 	{
@@ -13,7 +13,7 @@ namespace Quartz.DynamoDB.Tests
 
 		public GetTriggerTests ()
 		{
-			_sut = new JobStore ();
+			_sut = new Quartz.DynamoDB.JobStore ();
 			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler ();
 			var loadHelper = new SimpleTypeLoadHelper ();
 

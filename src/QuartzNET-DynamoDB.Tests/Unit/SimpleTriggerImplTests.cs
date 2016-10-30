@@ -2,7 +2,7 @@
 using Quartz.Impl.Triggers;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Unit
 {
 	/// <summary>
 	/// Contains tests for the SimpleTriggerImpl Quartz.NET trigger. I wrote these to help me understand how this class works.

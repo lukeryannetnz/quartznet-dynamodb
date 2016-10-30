@@ -7,7 +7,7 @@ using Quartz.Simpl;
 using Quartz.Impl.Triggers;
 using System.Collections.Generic;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
 	/// <summary>
 	/// Contains tests for the JobStore when triggers are fired.
@@ -18,7 +18,7 @@ namespace Quartz.DynamoDB.Tests
 
 		public JobStoreTriggersFiredTests ()
 		{
-			_sut = new JobStore ();
+			_sut = new Quartz.DynamoDB.JobStore ();
 			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler ();
 			var loadHelper = new SimpleTypeLoadHelper ();
 

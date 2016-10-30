@@ -5,7 +5,7 @@ using Quartz.DynamoDB.DataModel;
 using System.Linq;
 using Quartz.Simpl;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
 	public class SchedulerIntegrationTests
 	{
@@ -21,7 +21,7 @@ namespace Quartz.DynamoDB.Tests
 		/// </summary>
 		public void SingleSchedulerCreated()
 		{
-			var sut = new JobStore ();
+			var sut = new Quartz.DynamoDB.JobStore ();
 			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
 			var loadHelper = new SimpleTypeLoadHelper();
 

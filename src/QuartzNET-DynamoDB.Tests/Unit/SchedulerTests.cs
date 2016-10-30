@@ -2,7 +2,7 @@
 using Quartz.DynamoDB.DataModel;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Unit
 {
 	/// <summary>
 	/// Tests the DynamoScheduler serialisation.

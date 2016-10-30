@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using Quartz.DynamoDB.Tests.Integration;
+using Quartz.DynamoDB;
 using Quartz.Job;
 using Quartz.Simpl;
 using Quartz.Spi;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
     /// <summary>
     /// Contains tests related to the addition of Jobs and Triggers.
@@ -16,7 +16,7 @@ namespace Quartz.DynamoDB.Tests
 
         public JobsAndTriggersAddTests()
         {
-            _sut = new JobStore();
+            _sut = new Quartz.DynamoDB.JobStore();
             var signaler = new RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 

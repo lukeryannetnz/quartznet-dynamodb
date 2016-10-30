@@ -6,7 +6,7 @@ using System.Linq;
 using Quartz.Impl;
 using Quartz.Job;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
     /// <summary>
     /// Contains tests related to the Pausing of Jobs and Job Groups.
@@ -17,7 +17,7 @@ namespace Quartz.DynamoDB.Tests
 
         public JobPauseTests()
         {
-            _sut = new JobStore();
+            _sut = new Quartz.DynamoDB.JobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 

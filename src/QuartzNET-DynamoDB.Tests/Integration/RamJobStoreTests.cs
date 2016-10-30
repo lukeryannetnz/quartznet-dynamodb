@@ -49,7 +49,7 @@ namespace Quartz.DynamoDB.Tests.Integration
 
         public RamJobStoreTests()
         {
-            fJobStore = new JobStore();
+            fJobStore = new Quartz.DynamoDB.JobStore();
             fSignaler = new SampleSignaler();
             ITypeLoadHelper loadHelper = new SimpleTypeLoadHelper();
             fJobStore.Initialize(loadHelper, fSignaler);
@@ -375,7 +375,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             ITypeLoadHelper loadHelper = new SimpleTypeLoadHelper();
             loadHelper.Initialize();
 
-            IJobStore store = new JobStore();
+            IJobStore store = new Quartz.DynamoDB.JobStore();
             store.Initialize(loadHelper, schedSignaler);
 
             // Setup: Store jobs and triggers.
@@ -418,7 +418,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             ITypeLoadHelper loadHelper = new SimpleTypeLoadHelper();
             loadHelper.Initialize();
 
-            IJobStore store = new JobStore();
+            IJobStore store = new Quartz.DynamoDB.JobStore();
             store.Initialize(loadHelper, schedSignaler);
 
             // Setup: Store jobs and triggers.

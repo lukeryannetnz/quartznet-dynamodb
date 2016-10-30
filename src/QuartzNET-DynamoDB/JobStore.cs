@@ -172,7 +172,38 @@ namespace Quartz.DynamoDB
         public void StoreJobsAndTriggers(IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs,
                                          bool replace)
         {
-            throw new NotImplementedException();
+            lock (lockObject)
+            {
+                // fail fast if there are collisions.
+                // ensuring there will be no collisions upfront eliminates the need
+                // to cleanup if a collision occurs part way through processing.
+                if (!replace)
+                {
+                    foreach (var job in triggersAndJobs.Keys)
+                    {
+                        if (CheckExists(job.Key))
+                        {
+                            throw new ObjectAlreadyExistsException(job);
+                        }
+                        foreach (var trigger in triggersAndJobs[job])
+                        {
+                            if (CheckExists(trigger.Key))
+                            {
+                                throw new ObjectAlreadyExistsException(trigger);
+                            }
+                        }
+                    }
+                }
+
+                foreach (var triggersAndJob in triggersAndJobs)
+                {
+                    StoreJob(triggersAndJob.Key, true);
+                    foreach (var trigger in triggersAndJob.Value)
+                    {
+                        StoreTrigger((IOperableTrigger) trigger, true);
+                    }
+                }
+            }
         }
 
         public bool RemoveJob(JobKey jobKey)

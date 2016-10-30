@@ -64,5 +64,33 @@ namespace Quartz.DynamoDB.Tests
             Assert.Equal(1, retrievedtriggers2.Count);
             Assert.Equal(trigger2.Key, retrievedtriggers2[0].Key);
         }
+
+        /// <summary>
+        /// Tests that when storing an existing job with overwrite false an object already exists exception is thrown
+        /// and no changes are made to the stored record.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void StoreExistingJobOverwriteFalse()
+        {
+            const string initialJobDescription = "This is a job that is used to test.";
+
+            var job = TestJobFactory.CreateTestJob();
+            job.Description = initialJobDescription;
+            _sut.StoreJob(job, false);
+
+            job.Description += "UPDATED";
+
+            var triggersAndJobs = new Dictionary<IJobDetail, Collection.ISet<ITrigger>>
+            {
+                {job, new Collection.HashSet<ITrigger>()},
+            };
+
+            // Throws because we have passed false for the replace parameter and the job already exists in dynamo.
+            Assert.Throws<ObjectAlreadyExistsException>(() => { _sut.StoreJobsAndTriggers(triggersAndJobs, false); });
+
+            var storedJob = _sut.RetrieveJob(job.Key);
+            Assert.Equal(initialJobDescription, storedJob.Description);
+        }
     }
 }

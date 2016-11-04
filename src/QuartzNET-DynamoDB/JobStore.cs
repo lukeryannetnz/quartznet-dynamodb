@@ -456,7 +456,8 @@ namespace Quartz.DynamoDB
                 // delete jobs
                 _jobRepository.DeleteTable();
 
-                // todo: delete calendars
+                // delete calendars
+                _calendarRepository.DeleteTable();
             }
         }
 

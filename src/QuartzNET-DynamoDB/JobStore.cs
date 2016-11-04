@@ -738,6 +738,20 @@ namespace Quartz.DynamoDB
             this._triggerGroupRepository.Store(triggerGroup);
         }
 
+        private void ResumeTriggerGroup(string groupName)
+        {
+            var triggerGroup = _triggerGroupRepository.Load(new TriggerKey(string.Empty, groupName).ToGroupDictionary());
+            if (triggerGroup == null)
+            {
+                triggerGroup = new DynamoTriggerGroup()
+                {
+                    Name = groupName
+                };
+            }
+            triggerGroup.State = DynamoTriggerGroup.DynamoTriggerGroupState.Active;
+            _triggerGroupRepository.Store(triggerGroup);
+        }
+
         public void PauseJob(JobKey jobKey)
         {
             IList<IOperableTrigger> triggersForJob = this.GetTriggersForJob(jobKey);
@@ -832,7 +846,39 @@ namespace Quartz.DynamoDB
 
         public IList<string> ResumeTriggers(GroupMatcher<TriggerKey> matcher)
         {
-            throw new NotImplementedException();
+            IList<string> resumedGroups = new List<string>();
+
+            var op = matcher.CompareWithOperator;
+            if (Equals(op, StringOperator.Equality))
+            {
+                ResumeTriggerGroup(matcher.CompareToValue);
+                resumedGroups.Add(matcher.CompareToValue);
+            }
+            else
+            {
+                var groups = GetTriggerGroupNames();
+
+                foreach (var group in groups)
+                {
+                    if (op.Evaluate(group, matcher.CompareToValue))
+                    {
+                        ResumeTriggerGroup(matcher.CompareToValue);
+                        resumedGroups.Add(matcher.CompareToValue);
+                    }
+                }
+            }
+
+            foreach (var resumedGroup in resumedGroups)
+            {
+                var keys = GetTriggerKeys(GroupMatcher<TriggerKey>.GroupEquals(resumedGroup));
+
+                foreach (var key in keys)
+                {
+                    ResumeTrigger(key);
+                }
+            }
+
+            return resumedGroups;
         }
 
         public Collection.ISet<string> GetPausedTriggerGroups()

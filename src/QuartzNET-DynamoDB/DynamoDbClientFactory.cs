@@ -1,5 +1,4 @@
-﻿using System;
-using Amazon.DynamoDBv2;
+﻿using Amazon.DynamoDBv2;
 
 namespace Quartz.DynamoDB
 {

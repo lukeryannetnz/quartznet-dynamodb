@@ -77,6 +77,9 @@
     <Reference Include="xunit.assert">
       <HintPath>..\packages\xunit.assert.2.2.0-beta3-build3402\lib\netstandard1.0\xunit.assert.dll</HintPath>
     </Reference>
+    <Reference Include="xunit.execution.desktop">
+      <HintPath>..\packages\xunit.core.2.2.0-beta3-build3402\build\_desktop\xunit.execution.desktop.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\VersionInfo.cs">

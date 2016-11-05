@@ -872,7 +872,15 @@ namespace Quartz.DynamoDB
 
         public void PauseAll()
         {
-            throw new NotImplementedException();
+            lock (lockObject)
+            {
+                var triggerGroupNames = GetTriggerGroupNames();
+
+                foreach (var groupName in triggerGroupNames)
+                {
+                    PauseTriggers(GroupMatcher<TriggerKey>.GroupEquals(groupName));
+                }
+            }
         }
 
         public void ResumeAll()

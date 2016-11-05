@@ -12,8 +12,6 @@ namespace Quartz.DynamoDB
         {
             if (!string.IsNullOrWhiteSpace(Quartz.DynamoDB.DynamoConfiguration.ServiceUrl))
             {
-                Console.WriteLine("Found service url: " + DynamoConfiguration.ServiceUrl);
-
                 // First, set up a DynamoDB client for DynamoDB Local
                 AmazonDynamoDBConfig ddbConfig = new AmazonDynamoDBConfig();
                 ddbConfig.ServiceURL = Quartz.DynamoDB.DynamoConfiguration.ServiceUrl;

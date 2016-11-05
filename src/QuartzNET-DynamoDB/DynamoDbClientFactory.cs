@@ -13,7 +13,7 @@ namespace Quartz.DynamoDB
             //{
                 // First, set up a DynamoDB client for DynamoDB Local
                 AmazonDynamoDBConfig ddbConfig = new AmazonDynamoDBConfig();
-                ddbConfig.ServiceURL = Quartz.DynamoDB.DynamoConfiguration.ServiceUrl;
+                ddbConfig.ServiceURL = "http://localhost:8000";//Quartz.DynamoDB.DynamoConfiguration.ServiceUrl;
 
                 return new AmazonDynamoDBClient(ddbConfig);
             //}

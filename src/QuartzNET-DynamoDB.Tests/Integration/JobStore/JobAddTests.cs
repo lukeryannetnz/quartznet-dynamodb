@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Impl;
@@ -12,9 +12,9 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 	/// <summary>
 	/// Contains tests related to the Addition of Jobs and Job Groups.
 	/// </summary>
-	public class JobAddTests
+    public class JobAddTests : IDisposable
 	{
-		IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
 		public JobAddTests ()
 		{
@@ -90,6 +90,11 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
 			Assert.Throws<ObjectAlreadyExistsException> (() => _sut.StoreJob (detail, false));
 		}
+
+        public void Dispose()
+        {
+            _sut.Dispose();
+        }
 	}
 }
 

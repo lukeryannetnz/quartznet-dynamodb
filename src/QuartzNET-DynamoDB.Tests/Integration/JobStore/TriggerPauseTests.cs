@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xunit;
 using Quartz.Simpl;
 using Quartz.Spi;
@@ -15,9 +15,9 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the Pausing of Triggers and Trigger Groups.
     /// </summary>
-    public class TriggerPauseTests
+    public class TriggerPauseTests : IDisposable
     {
-        IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public TriggerPauseTests()
         {
@@ -181,6 +181,11 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             paused = _sut.IsTriggerGroupPaused(triggerGroup);
             Assert.Equal(true, paused);
+        }
+
+        public void Dispose()
+        {
+            _sut.Dispose();
         }
     }
 }

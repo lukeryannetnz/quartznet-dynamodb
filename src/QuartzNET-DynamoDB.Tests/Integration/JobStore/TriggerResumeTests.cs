@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xunit;
 using Quartz.Simpl;
 using Quartz.Spi;
@@ -11,9 +11,9 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to Resuming Triggers and Trigger Groups.
     /// </summary>
-    public class TriggerResumeTests
+    public class TriggerResumeTests : IDisposable
     {
-        IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public TriggerResumeTests()
         {
@@ -89,6 +89,11 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             triggerState2 = _sut.GetTriggerState(tr2.Key);
             Assert.Equal("Normal", triggerState2.ToString());
+        }
+
+        public void Dispose()
+        {
+            _sut.Dispose();
         }
     }
 }

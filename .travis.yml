@@ -15,4 +15,4 @@ before_script:
 
 script:
   - xbuild /p:Configuration=Release src/QuartzNET-DynamoDB.sln
-  - mono --gc=sgen src/packages/xunit.runner.console.2.2.0-beta3-build3402/tools/xunit.console.exe src/QuartzNET-DynamoDB.Tests/bin/Release/QuartzNET-DynamoDB.Tests.dll -verbose -noappdomain -maxthreads 1 -diagnostics -serialize -parallel none #-trait 'category=unit'
+  - mono --debug src/packages/xunit.runner.console.2.2.0-beta3-build3402/tools/xunit.console.exe src/QuartzNET-DynamoDB.Tests/bin/Release/QuartzNET-DynamoDB.Tests.dll -verbose -noappdomain -maxthreads 1 -diagnostics -serialize -parallel none #-trait 'category=unit'

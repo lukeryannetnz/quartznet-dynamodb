@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using Quartz.DynamoDB;
+using System;
+using System.Collections.Generic;
 using Quartz.Job;
 using Quartz.Simpl;
-using Quartz.Spi;
 using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
@@ -10,9 +9,9 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the addition of Jobs and Triggers.
     /// </summary>
-    public class JobsAndTriggersAddTests
+    public class JobsAndTriggersAddTests : IDisposable
     {
-        private readonly IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public JobsAndTriggersAddTests()
         {
@@ -91,6 +90,11 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             var storedJob = _sut.RetrieveJob(job.Key);
             Assert.Equal(initialJobDescription, storedJob.Description);
+        }
+
+        public void Dispose()
+        {
+            _sut.Dispose();
         }
     }
 }

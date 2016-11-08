@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Quartz.Simpl;
 using Quartz.Spi;
 using Xunit;
@@ -11,9 +11,9 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the Pausing of Jobs and Job Groups.
     /// </summary>
-    public class JobPauseTests
+    public class JobPauseTests : IDisposable
     {
-        IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public JobPauseTests()
         {
@@ -85,6 +85,11 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             paused = _sut.IsJobGroupPaused(jobGroup);
             Assert.Equal(true, paused);
+        }
+
+        public void Dispose()
+        {
+            _sut.Dispose();
         }
     }
 }

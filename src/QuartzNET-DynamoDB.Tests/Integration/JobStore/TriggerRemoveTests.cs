@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Impl;
@@ -9,9 +9,9 @@ using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
-    public class TriggerRemoveTests
+    public class TriggerRemoveTests : IDisposable
     {
-        IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public TriggerRemoveTests()
         {
@@ -80,6 +80,11 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             var result = _sut.RemoveTriggers(new List<TriggerKey>() { tr.Key, inMemoryTr.Key });
             Assert.False(result);
+        }
+
+        public void Dispose()
+        {
+            _sut.Dispose();
         }
     }
 }

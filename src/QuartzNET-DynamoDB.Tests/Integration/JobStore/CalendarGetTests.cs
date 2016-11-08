@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using Quartz.Impl.Calendar;
 using Quartz.Simpl;
@@ -10,9 +10,9 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the loading of calendars.
     /// </summary>
-    public class CalendarGetTests
+    public class CalendarGetTests : IDisposable
     {
-        IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public CalendarGetTests()
         {
@@ -43,7 +43,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             Assert.Equal(calendarCount + 1, newCount);
         }
-
 
         /// <summary>
         /// Tests that after a calendar is added, the calendar exists method returns true.
@@ -77,6 +76,11 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             var result = _sut.GetCalendarNames();
 
             Assert.True(result.Contains(calName));
+        }
+
+        public void Dispose()
+        {
+            _sut.Dispose();
         }
     }
 }

@@ -813,6 +813,19 @@ namespace Quartz.DynamoDB
             jobGroup.State = DynamoJobGroup.DynamoJobGroupState.Paused;
             this._jobGroupRepository.Store(jobGroup);
         }
+        private void ResumeJobGroup(string groupName)
+        {
+            var jobGroup = _jobGroupRepository.Load(new JobKey(string.Empty, groupName).ToGroupDictionary());
+            if (jobGroup == null)
+            {
+                jobGroup = new DynamoJobGroup()
+                {
+                    Name = groupName
+                };
+            }
+            jobGroup.State = DynamoJobGroup.DynamoJobGroupState.Active;
+            _jobGroupRepository.Store(jobGroup);
+        }
 
         public void ResumeTrigger(TriggerKey triggerKey)
         {
@@ -913,7 +926,37 @@ namespace Quartz.DynamoDB
 
         public Collection.ISet<string> ResumeJobs(GroupMatcher<JobKey> matcher)
         {
-            throw new NotImplementedException();
+            var resumedGroups = new List<String>();
+            var op = matcher.CompareWithOperator;
+            if (Equals(op, StringOperator.Equality))
+            {
+                ResumeJobGroup(matcher.CompareToValue);
+                resumedGroups.Add(matcher.CompareToValue);
+            }
+            else
+            {
+                var groups = GetJobGroupNames();
+
+                foreach (var @group in groups.Where(@group => op.Evaluate(@group, matcher.CompareToValue)))
+                {
+                    ResumeJobGroup(matcher.CompareToValue);
+                    resumedGroups.Add(matcher.CompareToValue);
+                }
+            }
+
+            foreach (var groupName in resumedGroups)
+            {
+                foreach (var jobKey in GetJobKeys(GroupMatcher<JobKey>.GroupEquals(groupName)))
+                {
+                    var triggers = GetTriggersForJob(jobKey);
+                    foreach (var trigger in triggers)
+                    {
+                        ResumeTrigger(trigger.Key);
+                    }
+                }
+            }
+
+            return new Collection.HashSet<string>(resumedGroups);
         }
 
         public void PauseAll()
@@ -931,7 +974,15 @@ namespace Quartz.DynamoDB
 
         public void ResumeAll()
         {
-            throw new NotImplementedException();
+            lock (lockObject)
+            {
+                var triggerGroupNames = GetTriggerGroupNames();
+
+                foreach (var groupName in triggerGroupNames)
+                {
+                    ResumeTriggers(GroupMatcher<TriggerKey>.GroupEquals(groupName));
+                }
+            }
         }
 
         /// <summary>

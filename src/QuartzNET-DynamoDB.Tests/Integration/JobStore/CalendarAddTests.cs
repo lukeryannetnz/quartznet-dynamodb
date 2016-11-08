@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Quartz.Impl.Calendar;
 using Quartz.Simpl;
 using Quartz.Spi;
@@ -9,9 +9,9 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the addition of calendars.
     /// </summary>
-    public class CalendarAddTests
+    public class CalendarAddTests : IDisposable
     {
-        IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public CalendarAddTests()
         {
@@ -35,6 +35,11 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             Assert.NotNull(storedCalendar);
             Assert.Equal(cal.Description, storedCalendar.Description);
             Assert.Equal(cal.GetType(), storedCalendar.GetType());
+        }
+
+        public void Dispose()
+        {
+            _sut.Dispose();
         }
     }
 }

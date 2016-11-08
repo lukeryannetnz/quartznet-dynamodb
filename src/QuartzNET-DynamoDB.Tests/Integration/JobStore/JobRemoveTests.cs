@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Quartz.Impl;
 using Quartz.Job;
@@ -11,9 +11,9 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 	/// <summary>
 	/// Contains tests related to the Removal of Jobs and Job Groups.
 	/// </summary>
-	public class JobRemoveTests
+    public class JobRemoveTests : IDisposable
 	{
-		IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
 		public JobRemoveTests ()
 		{
@@ -74,6 +74,11 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 			// Should return false as not all jobs were removed.
             Assert.False(result);
 		}
+
+        public void Dispose()
+        {
+            _sut.Dispose();
+        }
 	}
 }
 

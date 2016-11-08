@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Impl;
@@ -11,9 +11,9 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 	/// <summary>
 	/// Contains tests related to retrieving Jobs and Job Groups.
 	/// </summary>
-	public class JobGetTests
+    public class JobGetTests : IDisposable
 	{
-		IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
 		public JobGetTests ()
 		{
@@ -44,6 +44,11 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 			Assert.Equal(jobCount + 1, newCount);
 
 		}
+
+        public void Dispose()
+        {
+            _sut.Dispose();
+        }
 	}
 }
 

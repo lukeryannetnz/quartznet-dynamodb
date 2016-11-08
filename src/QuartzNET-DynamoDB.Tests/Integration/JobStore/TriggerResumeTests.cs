@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xunit;
 using Quartz.Simpl;
 using Quartz.Spi;
@@ -11,9 +11,9 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to Resuming Triggers and Trigger Groups.
     /// </summary>
-    public class TriggerResumeTests
+    public class TriggerResumeTests : IDisposable
     {
-        IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public TriggerResumeTests()
         {
@@ -53,6 +53,47 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             // Check the trigger has been resumed
             triggerState = _sut.GetTriggerState(tr.Key);
             Assert.Equal("Normal", triggerState.ToString());
+        }
+
+        /// <summary>
+        /// Tests that when ResumeAll is called, the triggers in all trigger groups are resumed.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void ResumeAll()
+        {
+            // Create a random job, store it.
+            var detail = TestJobFactory.CreateTestJob();
+            _sut.StoreJob(detail, false);
+
+            // Create a trigger for the job, in the trigger group.
+            var tr1 = TestTriggerFactory.CreateTestTrigger(detail.Name, detail.Group);
+            _sut.StoreTrigger(tr1, false);
+
+            // Create another trigger for the job, in another trigger group.
+            var tr2 = TestTriggerFactory.CreateTestTrigger(detail.Name, detail.Group);
+            _sut.StoreTrigger(tr2, false);
+
+            // Pause all triggers and check they have been paused
+            _sut.PauseAll();
+            var triggerState1 = _sut.GetTriggerState(tr1.Key);
+            Assert.Equal("Paused", triggerState1.ToString());
+            var triggerState2 = _sut.GetTriggerState(tr2.Key);
+            Assert.Equal("Paused", triggerState2.ToString());
+            
+            _sut.ResumeAll();
+
+            // Ensure all triggers have been resumed
+            triggerState1 = _sut.GetTriggerState(tr1.Key);
+            Assert.Equal("Normal", triggerState1.ToString());
+
+            triggerState2 = _sut.GetTriggerState(tr2.Key);
+            Assert.Equal("Normal", triggerState2.ToString());
+        }
+
+        public void Dispose()
+        {
+            _sut.Dispose();
         }
     }
 }

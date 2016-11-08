@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Simpl;
 using Quartz.Spi;
@@ -6,9 +6,9 @@ using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
-    public class TriggerAddTests
+    public class TriggerAddTests : IDisposable
     {
-        IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public TriggerAddTests()
         {
@@ -74,6 +74,10 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             Assert.Equal(TriggerState.Normal, newTriggerState);
         }
 
+        public void Dispose()
+        {
+            _sut.Dispose();
+        }
     }
 }
 

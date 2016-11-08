@@ -42,7 +42,7 @@ namespace Quartz.DynamoDB.Tests.Integration
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "This is a test class. No need to implement dispose.")]
     public class RamJobStoreTests : IDisposable
     {
-        private readonly IJobStore fJobStore;
+        private readonly DynamoDB.JobStore fJobStore;
         private readonly JobDetailImpl fJobDetail;
         private readonly SampleSignaler fSignaler;
         private readonly string testIdentifier = DateTime.UtcNow.Ticks.ToString();
@@ -487,6 +487,7 @@ namespace Quartz.DynamoDB.Tests.Integration
                 if (disposing)
                 {
                     fJobStore.ClearAllSchedulingData();
+                    fJobStore.Dispose();
                 }
 
                 _disposedValue = true;

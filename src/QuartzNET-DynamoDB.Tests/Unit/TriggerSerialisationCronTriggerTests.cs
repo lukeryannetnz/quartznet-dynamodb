@@ -39,7 +39,7 @@ namespace Quartz.DynamoDB.Tests.Unit
             var jobKey = new JobKey("test");
             var trigger = (CronTriggerImpl)TriggerBuilder.Create()
                 .ForJob(jobKey)
-                .WithCronSchedule("0 0 5 ? * *", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time")))
+                .WithCronSchedule("0 0 5 ? * *")
                 .Build();
             return trigger;
         }

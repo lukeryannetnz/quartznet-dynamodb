@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Impl;
@@ -7,18 +7,18 @@ using Quartz.Simpl;
 using Quartz.Spi;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
 	/// <summary>
 	/// Contains tests related to the Addition of Jobs and Job Groups.
 	/// </summary>
-	public class JobAddTests
+    public class JobAddTests : IDisposable
 	{
-		IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
 		public JobAddTests ()
 		{
-			_sut = new JobStore ();
+			_sut = new Quartz.DynamoDB.JobStore ();
 			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler ();
 			var loadHelper = new SimpleTypeLoadHelper ();
 
@@ -90,6 +90,11 @@ namespace Quartz.DynamoDB.Tests
 
 			Assert.Throws<ObjectAlreadyExistsException> (() => _sut.StoreJob (detail, false));
 		}
+
+        public void Dispose()
+        {
+            _sut.Dispose();
+        }
 	}
 }
 

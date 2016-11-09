@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Impl;
@@ -7,15 +7,15 @@ using Quartz.Simpl;
 using Quartz.Spi;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
-    public class TriggerRemoveTests
+    public class TriggerRemoveTests : IDisposable
     {
-        IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public TriggerRemoveTests()
         {
-            _sut = new JobStore();
+            _sut = new Quartz.DynamoDB.JobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -80,6 +80,11 @@ namespace Quartz.DynamoDB.Tests
 
             var result = _sut.RemoveTriggers(new List<TriggerKey>() { tr.Key, inMemoryTr.Key });
             Assert.False(result);
+        }
+
+        public void Dispose()
+        {
+            _sut.Dispose();
         }
     }
 }

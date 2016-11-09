@@ -1,19 +1,19 @@
-﻿using System;
+using System;
 using System.Threading;
 using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Simpl;
 using Quartz.Spi;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
-	public class GetTriggerTests
+    public class GetTriggerTests : IDisposable
 	{
-		IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
 		public GetTriggerTests ()
 		{
-			_sut = new JobStore ();
+			_sut = new Quartz.DynamoDB.JobStore ();
 			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler ();
 			var loadHelper = new SimpleTypeLoadHelper ();
 
@@ -36,6 +36,11 @@ namespace Quartz.DynamoDB.Tests
 			int newTriggerCount = _sut.GetNumberOfTriggers ();
 			Assert.Equal (triggerCount + 1, newTriggerCount);
 		}
+
+        public void Dispose()
+        {
+            _sut.Dispose();
+        }
 	}
 }
 

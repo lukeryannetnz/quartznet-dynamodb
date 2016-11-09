@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xunit;
 using Quartz.Simpl;
 using Quartz.Spi;
@@ -10,18 +10,18 @@ using Quartz.Impl;
 using Quartz.Job;
 using Quartz.DynamoDB.Tests.Integration;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
     /// <summary>
     /// Contains tests related to the Pausing of Triggers and Trigger Groups.
     /// </summary>
-    public class TriggerPauseTests
+    public class TriggerPauseTests : IDisposable
     {
-        IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public TriggerPauseTests()
         {
-            _sut = new JobStore();
+            _sut = new Quartz.DynamoDB.JobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -133,6 +133,39 @@ namespace Quartz.DynamoDB.Tests
         }
 
         /// <summary>
+        /// Tests that when PauseAll is called, the triggers in all trigger groups are paused.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void PauseAll()
+        {
+            var triggerGroup1 = Guid.NewGuid().ToString();
+            var triggerGroup2 = Guid.NewGuid().ToString();
+
+            // Create a random job, store it.
+            var jobName = Guid.NewGuid().ToString();
+            var detail = new JobDetailImpl(jobName, "JobGroup", typeof(NoOpJob));
+            _sut.StoreJob(detail, false);
+
+            // Create a trigger for the job, in the trigger group.
+            var tr1 = new SimpleTriggerImpl("test1", triggerGroup1, jobName, "JobGroup", DateTimeOffset.UtcNow, null, 1, TimeSpan.FromHours(1));
+            _sut.StoreTrigger(tr1, false);
+
+            // Create another trigger for the job, in another trigger group.
+            var tr2 = new SimpleTriggerImpl("test2", triggerGroup2, jobName, "JobGroup", DateTimeOffset.UtcNow, null, 1, TimeSpan.FromHours(1));
+            _sut.StoreTrigger(tr2, false);
+
+            _sut.PauseAll();
+
+            // Ensure all triggers in all trigger groups have been paused
+            var triggerState1 = _sut.GetTriggerState(tr1.Key);
+            Assert.Equal("Paused", triggerState1.ToString());
+
+            var triggerState2 = _sut.GetTriggerState(tr2.Key);
+            Assert.Equal("Paused", triggerState2.ToString());
+        }
+
+        /// <summary>
         /// Tests that when Pause triggers is called IsTriggerGroup paused returns true.
         /// </summary>
         [Fact]
@@ -148,6 +181,11 @@ namespace Quartz.DynamoDB.Tests
 
             paused = _sut.IsTriggerGroupPaused(triggerGroup);
             Assert.Equal(true, paused);
+        }
+
+        public void Dispose()
+        {
+            _sut.Dispose();
         }
     }
 }

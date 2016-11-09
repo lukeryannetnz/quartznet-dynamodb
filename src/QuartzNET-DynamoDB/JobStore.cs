@@ -456,7 +456,8 @@ namespace Quartz.DynamoDB
                 // delete jobs
                 _jobRepository.DeleteTable();
 
-                // todo: delete calendars
+                // delete calendars
+                _calendarRepository.DeleteTable();
             }
         }
 
@@ -738,6 +739,20 @@ namespace Quartz.DynamoDB
             this._triggerGroupRepository.Store(triggerGroup);
         }
 
+        private void ResumeTriggerGroup(string groupName)
+        {
+            var triggerGroup = _triggerGroupRepository.Load(new TriggerKey(string.Empty, groupName).ToGroupDictionary());
+            if (triggerGroup == null)
+            {
+                triggerGroup = new DynamoTriggerGroup()
+                {
+                    Name = groupName
+                };
+            }
+            triggerGroup.State = DynamoTriggerGroup.DynamoTriggerGroupState.Active;
+            _triggerGroupRepository.Store(triggerGroup);
+        }
+
         public void PauseJob(JobKey jobKey)
         {
             IList<IOperableTrigger> triggersForJob = this.GetTriggersForJob(jobKey);
@@ -798,6 +813,19 @@ namespace Quartz.DynamoDB
             jobGroup.State = DynamoJobGroup.DynamoJobGroupState.Paused;
             this._jobGroupRepository.Store(jobGroup);
         }
+        private void ResumeJobGroup(string groupName)
+        {
+            var jobGroup = _jobGroupRepository.Load(new JobKey(string.Empty, groupName).ToGroupDictionary());
+            if (jobGroup == null)
+            {
+                jobGroup = new DynamoJobGroup()
+                {
+                    Name = groupName
+                };
+            }
+            jobGroup.State = DynamoJobGroup.DynamoJobGroupState.Active;
+            _jobGroupRepository.Store(jobGroup);
+        }
 
         public void ResumeTrigger(TriggerKey triggerKey)
         {
@@ -832,7 +860,39 @@ namespace Quartz.DynamoDB
 
         public IList<string> ResumeTriggers(GroupMatcher<TriggerKey> matcher)
         {
-            throw new NotImplementedException();
+            IList<string> resumedGroups = new List<string>();
+
+            var op = matcher.CompareWithOperator;
+            if (Equals(op, StringOperator.Equality))
+            {
+                ResumeTriggerGroup(matcher.CompareToValue);
+                resumedGroups.Add(matcher.CompareToValue);
+            }
+            else
+            {
+                var groups = GetTriggerGroupNames();
+
+                foreach (var group in groups)
+                {
+                    if (op.Evaluate(group, matcher.CompareToValue))
+                    {
+                        ResumeTriggerGroup(matcher.CompareToValue);
+                        resumedGroups.Add(matcher.CompareToValue);
+                    }
+                }
+            }
+
+            foreach (var resumedGroup in resumedGroups)
+            {
+                var keys = GetTriggerKeys(GroupMatcher<TriggerKey>.GroupEquals(resumedGroup));
+
+                foreach (var key in keys)
+                {
+                    ResumeTrigger(key);
+                }
+            }
+
+            return resumedGroups;
         }
 
         public Collection.ISet<string> GetPausedTriggerGroups()
@@ -866,17 +926,63 @@ namespace Quartz.DynamoDB
 
         public Collection.ISet<string> ResumeJobs(GroupMatcher<JobKey> matcher)
         {
-            throw new NotImplementedException();
+            var resumedGroups = new List<String>();
+            var op = matcher.CompareWithOperator;
+            if (Equals(op, StringOperator.Equality))
+            {
+                ResumeJobGroup(matcher.CompareToValue);
+                resumedGroups.Add(matcher.CompareToValue);
+            }
+            else
+            {
+                var groups = GetJobGroupNames();
+
+                foreach (var @group in groups.Where(@group => op.Evaluate(@group, matcher.CompareToValue)))
+                {
+                    ResumeJobGroup(matcher.CompareToValue);
+                    resumedGroups.Add(matcher.CompareToValue);
+                }
+            }
+
+            foreach (var groupName in resumedGroups)
+            {
+                foreach (var jobKey in GetJobKeys(GroupMatcher<JobKey>.GroupEquals(groupName)))
+                {
+                    var triggers = GetTriggersForJob(jobKey);
+                    foreach (var trigger in triggers)
+                    {
+                        ResumeTrigger(trigger.Key);
+                    }
+                }
+            }
+
+            return new Collection.HashSet<string>(resumedGroups);
         }
 
         public void PauseAll()
         {
-            throw new NotImplementedException();
+            lock (lockObject)
+            {
+                var triggerGroupNames = GetTriggerGroupNames();
+
+                foreach (var groupName in triggerGroupNames)
+                {
+                    PauseTriggers(GroupMatcher<TriggerKey>.GroupEquals(groupName));
+                }
+            }
         }
 
         public void ResumeAll()
         {
-            throw new NotImplementedException();
+            lock (lockObject)
+            {
+                var triggerGroupNames = GetTriggerGroupNames();
+
+                foreach (var groupName in triggerGroupNames)
+                {
+                    ResumeTriggers(GroupMatcher<TriggerKey>.GroupEquals(groupName));
+                }
+            }
         }
 
         /// <summary>

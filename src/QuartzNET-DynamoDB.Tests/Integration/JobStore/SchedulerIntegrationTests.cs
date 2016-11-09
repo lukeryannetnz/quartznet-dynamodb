@@ -1,16 +1,20 @@
-﻿using System;
+using System;
 using Xunit;
 using Quartz.DynamoDB.DataModel.Storage;
 using Quartz.DynamoDB.DataModel;
 using System.Linq;
 using Quartz.Simpl;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
-	public class SchedulerIntegrationTests
+    public class SchedulerIntegrationTests : IDisposable
 	{
+        private readonly DynamoDB.JobStore _sut;
+
 		public SchedulerIntegrationTests ()
 		{
+            _sut = new Quartz.DynamoDB.JobStore();
+
 		}
 			
 		[Fact]
@@ -21,35 +25,39 @@ namespace Quartz.DynamoDB.Tests
 		/// </summary>
 		public void SingleSchedulerCreated()
 		{
-			var sut = new JobStore ();
 			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
 			var loadHelper = new SimpleTypeLoadHelper();
 
-			sut.Initialize(loadHelper, signaler);
+			_sut.Initialize(loadHelper, signaler);
 			var client = DynamoDbClientFactory.Create();
 			var schedulerRepository = new Repository<DynamoScheduler> (client);
 
 			int intialSchedulerCount = schedulerRepository.Scan (null, null, null).Count();
 
-			sut.SchedulerStarted ();
+			_sut.SchedulerStarted ();
 
 			int schedulerStartedCount = schedulerRepository.Scan (null, null, null).Count();
 
 			Assert.Equal (intialSchedulerCount + 1, schedulerStartedCount);
 
-			sut.SchedulerPaused ();
+			_sut.SchedulerPaused ();
 
 			int schedulerPausedCount = schedulerRepository.Scan (null, null, null).Count();
 
 			Assert.Equal (intialSchedulerCount + 1, schedulerPausedCount);
 
-			sut.AcquireNextTriggers (new DateTimeOffset(DateTime.Now), 1, TimeSpan.FromMinutes(5));
+			_sut.AcquireNextTriggers (new DateTimeOffset(DateTime.Now), 1, TimeSpan.FromMinutes(5));
 
 			int triggersAcquiredCount = schedulerRepository.Scan (null, null, null).Count();
 
 			Assert.Equal (intialSchedulerCount + 1, triggersAcquiredCount);
 
 		}
+
+        public void Dispose()
+        {
+            _sut.Dispose();
+        }
 	}
 }
 

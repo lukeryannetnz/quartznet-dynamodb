@@ -2,7 +2,7 @@
 using Quartz.Impl.Calendar;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Unit
 {
     /// <summary>
     /// Tests the DynamoCalendar serialisation for all quartz derived calendar types.

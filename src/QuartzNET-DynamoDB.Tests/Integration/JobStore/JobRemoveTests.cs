@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Quartz.Impl;
 using Quartz.Job;
@@ -6,18 +6,18 @@ using Quartz.Simpl;
 using Quartz.Spi;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
 	/// <summary>
 	/// Contains tests related to the Removal of Jobs and Job Groups.
 	/// </summary>
-	public class JobRemoveTests
+    public class JobRemoveTests : IDisposable
 	{
-		IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
 		public JobRemoveTests ()
 		{
-			_sut = new JobStore ();
+			_sut = new Quartz.DynamoDB.JobStore ();
 			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler ();
 			var loadHelper = new SimpleTypeLoadHelper ();
 
@@ -74,6 +74,11 @@ namespace Quartz.DynamoDB.Tests
 			// Should return false as not all jobs were removed.
             Assert.False(result);
 		}
+
+        public void Dispose()
+        {
+            _sut.Dispose();
+        }
 	}
 }
 

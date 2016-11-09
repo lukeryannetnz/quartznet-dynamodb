@@ -1,22 +1,21 @@
-﻿using System.Collections.Generic;
-using Quartz.DynamoDB.Tests.Integration;
+using System;
+using System.Collections.Generic;
 using Quartz.Job;
 using Quartz.Simpl;
-using Quartz.Spi;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
     /// <summary>
     /// Contains tests related to the addition of Jobs and Triggers.
     /// </summary>
-    public class JobsAndTriggersAddTests
+    public class JobsAndTriggersAddTests : IDisposable
     {
-        private readonly IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
         public JobsAndTriggersAddTests()
         {
-            _sut = new JobStore();
+            _sut = new Quartz.DynamoDB.JobStore();
             var signaler = new RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -63,6 +62,39 @@ namespace Quartz.DynamoDB.Tests
             var retrievedtriggers2 = _sut.GetTriggersForJob(jobdetail2.Key);
             Assert.Equal(1, retrievedtriggers2.Count);
             Assert.Equal(trigger2.Key, retrievedtriggers2[0].Key);
+        }
+
+        /// <summary>
+        /// Tests that when storing an existing job with overwrite false an object already exists exception is thrown
+        /// and no changes are made to the stored record.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void StoreExistingJobOverwriteFalse()
+        {
+            const string initialJobDescription = "This is a job that is used to test.";
+
+            var job = TestJobFactory.CreateTestJob();
+            job.Description = initialJobDescription;
+            _sut.StoreJob(job, false);
+
+            job.Description += "UPDATED";
+
+            var triggersAndJobs = new Dictionary<IJobDetail, Collection.ISet<ITrigger>>
+            {
+                {job, new Collection.HashSet<ITrigger>()},
+            };
+
+            // Throws because we have passed false for the replace parameter and the job already exists in dynamo.
+            Assert.Throws<ObjectAlreadyExistsException>(() => { _sut.StoreJobsAndTriggers(triggersAndJobs, false); });
+
+            var storedJob = _sut.RetrieveJob(job.Key);
+            Assert.Equal(initialJobDescription, storedJob.Description);
+        }
+
+        public void Dispose()
+        {
+            _sut.Dispose();
         }
     }
 }

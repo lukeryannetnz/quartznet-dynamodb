@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xunit;
 using Quartz.Impl;
 using Quartz.Job;
@@ -7,18 +7,18 @@ using Quartz.Simpl;
 using Quartz.Impl.Triggers;
 using System.Collections.Generic;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
 	/// <summary>
 	/// Contains tests for the JobStore when triggers are fired.
 	/// </summary>
-	public class JobStoreTriggersFiredTests
+    public class JobStoreTriggersFiredTests : IDisposable
 	{
-		IJobStore _sut;
+        private readonly DynamoDB.JobStore _sut;
 
 		public JobStoreTriggersFiredTests ()
 		{
-			_sut = new JobStore ();
+			_sut = new Quartz.DynamoDB.JobStore ();
 			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler ();
 			var loadHelper = new SimpleTypeLoadHelper ();
 
@@ -57,6 +57,11 @@ namespace Quartz.DynamoDB.Tests
 			Assert.Equal(jobName, result [0].TriggerFiredBundle.JobDetail.Key.Name);
 			Assert.Equal(jobGroup, result [0].TriggerFiredBundle.JobDetail.Key.Group);
 		}
+
+        public void Dispose()
+        {
+            _sut.Dispose();
+        }
 	}
 }
 

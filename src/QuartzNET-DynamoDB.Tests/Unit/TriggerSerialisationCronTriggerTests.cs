@@ -31,7 +31,7 @@ namespace Quartz.DynamoDB.Tests.Unit
             var serialized = new DynamoTrigger(trigger).ToDynamo();
             var result = (CronTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
-            Assert.Equal(trigger.TimeZone, result.TimeZone);
+            Assert.Equal(trigger.TimeZone.ToString(), result.TimeZone.ToString());
         }
 
         private static CronTriggerImpl CreateCronTrigger()

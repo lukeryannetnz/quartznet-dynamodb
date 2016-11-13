@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
 using Quartz.Impl.Calendar;
 using System.Linq;
+using Quartz.DynamoDB.DataModel;
 
 namespace Quartz.DynamoDB
 {
@@ -12,6 +13,9 @@ namespace Quartz.DynamoDB
     /// </summary>
     public class DynamoCalendar : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType
     {
+        private readonly DateTimeOffsetConverter _dateTimeOffsetConverter = new DateTimeOffsetConverter();
+        private readonly DateTimeConverter _dateTimeConverter = new DateTimeConverter();
+
         public DynamoCalendar()
         {
         }
@@ -65,11 +69,11 @@ namespace Quartz.DynamoDB
             if (Calendar is AnnualCalendar)
             {
                 record.Add("Type", new AttributeValue { S = "AnnualCalendar" });
-                List<AttributeValue> excludedDays = ((AnnualCalendar)Calendar).DaysExcluded.Select(d => new AttributeValue() { S = (d.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")) }).ToList();
+                List<AttributeValue> excludedDays = ((AnnualCalendar)Calendar).DaysExcluded.Select(d => new AttributeValue() { N = _dateTimeOffsetConverter.ToEntry(d).ToString() }).ToList();
 
                 if (excludedDays.Count > 0)
                 {
-                    record.Add("ExcludedDays", new AttributeValue { L = excludedDays });
+                    record.Add("ExcludedDaysEpoch", new AttributeValue { L = excludedDays });
                 }
             }
             if (Calendar is CronCalendar)
@@ -80,18 +84,18 @@ namespace Quartz.DynamoDB
             if (Calendar is DailyCalendar)
             {
                 record.Add("Type", new AttributeValue { S = "DailyCalendar" });
-                record.Add("RangeStartingTimeUTC", AttributeValueHelper.StringOrNull(((DailyCalendar)Calendar).GetTimeRangeStartingTimeUtc(DateTime.Now).ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
-                record.Add("RangeEndingTimeUTC", AttributeValueHelper.StringOrNull(((DailyCalendar)Calendar).GetTimeRangeEndingTimeUtc(DateTime.Now).ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
+                record.Add("RangeStartingTimeUTCEpoch", new AttributeValue() { N = _dateTimeOffsetConverter.ToEntry(((DailyCalendar)Calendar).GetTimeRangeStartingTimeUtc(DateTime.UtcNow)).ToString() });
+                record.Add("RangeEndingTimeUTCEpoch", new AttributeValue() { N = _dateTimeOffsetConverter.ToEntry(((DailyCalendar)Calendar).GetTimeRangeEndingTimeUtc(DateTime.UtcNow)).ToString() });
                 record.Add("InvertTimeRange", new AttributeValue { BOOL = ((DailyCalendar)Calendar).InvertTimeRange });
             }
             if (Calendar is HolidayCalendar)
             {
                 record.Add("Type", new AttributeValue { S = "HolidayCalendar" });
-                var excludedDates = ((HolidayCalendar)Calendar).ExcludedDates.Select(d => new AttributeValue() { S = d.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz") }).ToList();
+                var excludedDates = ((HolidayCalendar)Calendar).ExcludedDates.Select(d => new AttributeValue() { N = _dateTimeConverter.ToEntry(d).ToString() }).ToList();
 
                 if (excludedDates.Count > 0)
                 {
-                    record.Add("ExcludedDates", new AttributeValue { L = excludedDates });
+                    record.Add("ExcludedDatesEpoch", new AttributeValue { L = excludedDates });
                 }
             }
             if (Calendar is MonthlyCalendar)
@@ -152,11 +156,11 @@ namespace Quartz.DynamoDB
                         {
                             var annualCal = new AnnualCalendar();
 
-                            if (record.ContainsKey("ExcludedDays"))
+                            if (record.ContainsKey("ExcludedDaysEpoch"))
                             {
-                                foreach (var excluded in record["ExcludedDays"].L)
+                                foreach (var excluded in record["ExcludedDaysEpoch"].L)
                                 {
-                                    DateTimeOffset day = DateTimeOffset.Parse(excluded.S);
+                                    var day = _dateTimeOffsetConverter.FromEntry(int.Parse(excluded.N));
                                     annualCal.SetDayExcluded(day, true);
                                 }
                             }
@@ -173,8 +177,8 @@ namespace Quartz.DynamoDB
                         }
                     case "DailyCalendar":
                         {
-                            var startTime = DateTime.Parse(record["RangeStartingTimeUTC"].S);
-                            var endTime = DateTime.Parse(record["RangeEndingTimeUTC"].S);
+                            var startTime = _dateTimeConverter.FromEntry(int.Parse(record["RangeStartingTimeUTCEpoch"].N));
+                            var endTime = _dateTimeConverter.FromEntry(int.Parse(record["RangeEndingTimeUTCEpoch"].N));
 
                             var dailyCal = new DailyCalendar(startTime, endTime);
                             dailyCal.InvertTimeRange = record["InvertTimeRange"].BOOL;
@@ -186,11 +190,11 @@ namespace Quartz.DynamoDB
                         {
                             var holidayCal = new HolidayCalendar();
 
-                            if (record.ContainsKey("ExcludedDates"))
+                            if (record.ContainsKey("ExcludedDatesEpoch"))
                             {
-                                foreach (var excluded in record["ExcludedDates"].L)
+                                foreach (var excluded in record["ExcludedDatesEpoch"].L)
                                 {
-                                    DateTime day = DateTime.Parse(excluded.S);
+                                    var day = _dateTimeConverter.FromEntry(int.Parse(excluded.N));
                                     holidayCal.AddExcludedDate(day);
                                 }
                             }

@@ -113,12 +113,14 @@ namespace Quartz.DynamoDB.Tests.Unit
             var importantDate = new DateTime(2015, 04, 02, 5, 5, 5, DateTimeKind.Utc);
             var cal = new HolidayCalendar();
             cal.AddExcludedDate(importantDate.Date);
+            cal.AddExcludedDate(DateTime.UtcNow.Date);
 
             var sut = new DynamoCalendar("test", cal);
             var serialised = sut.ToDynamo();
             var deserialised = new DynamoCalendar(serialised);
 
             Assert.True(((HolidayCalendar)deserialised.Calendar).ExcludedDates.Contains(importantDate.Date));
+            Assert.True(((HolidayCalendar)deserialised.Calendar).ExcludedDates.Contains(DateTime.UtcNow.Date));
         }
 
         /// <summary>

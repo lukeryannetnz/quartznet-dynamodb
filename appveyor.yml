@@ -1,0 +1,33 @@
+#These are required by the AWS SDK even though they aren't used with dynamo db local.
+environment:
+  AWS_ACCESS_KEY_ID: AKID
+  AWS_SECRET_ACCESS_KEY: SECRET
+  AWS_REGION: us-east-1
+
+#---------------------------------#
+#       build configuration       #
+#---------------------------------#
+before_build:
+  - nuget restore src\QuartzNET-DynamoDB.sln 
+platform:
+  - Any CPU
+configuration: Release
+build:
+  parallel: true                  
+  project: src\QuartzNET-DynamoDB.sln    
+
+#---------------------------------#
+#       test configuration        #
+#---------------------------------#
+before_test:
+  - ps: mkdir c:/tmp
+  - ps: write-host "Downloading latest version of DynamoDB local"
+  - ps: (new-object net.webclient).DownloadFile('http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.zip', 'c:/tmp/dynamodb_local.zip')
+  - ps: write-host "Extracting latest version of DynamoDB local"
+  - ps: Expand-Archive c:/tmp/dynamodb_local.zip -DestinationPath c:/tmp
+  - ps: write-host "Running DynamoDB local in a new PS process in the background..."
+  - ps: $MyProcess = Start-Process javaw.exe -PassThru -ArgumentList '-Djava.library.path=c:/tmp/DynamoDBLocal_lib', '-jar', 'c:/tmp/DynamoDBLocal.jar', '-inMemory' 
+
+test:
+  assemblies: 
+    - QuartzNET-DynamoDB.Tests.dll

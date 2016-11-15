@@ -1,7 +1,7 @@
 # quartznet-dynamo
 Amazon DynamoDB jobstore for Quartz.NET
 
-![Travis build status](https://travis-ci.org/lukeryannetnz/quartznet-dynamodb.svg?branch=master) [Builds by Travis-CI](https://travis-ci.org/lukeryannetnz/quartznet-dynamodb)
+[![Build status](https://ci.appveyor.com/api/projects/status/mgrgaj6ox3yhmrgg?svg=true)](https://ci.appveyor.com/project/lukeryannetnz/quartznet-dynamodb) [Builds by AppVeyor](https://ci.appveyor.com/project/lukeryannetnz/quartznet-dynamodb)
 
 ##Overview
 

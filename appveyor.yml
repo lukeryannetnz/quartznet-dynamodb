@@ -26,6 +26,3 @@ test:
     only:
       - Unit
       - Integration
-
-after-test:
-  - ps: Stop-Process -Id $MyProcess.Id

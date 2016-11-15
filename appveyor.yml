@@ -1,3 +1,4 @@
+#These are required by the AWS SDK even though they aren't used with dynamo db local.
 environment:
   AWS_ACCESS_KEY_ID: AKID
   AWS_SECRET_ACCESS_KEY: SECRET

@@ -1,0 +1,20 @@
+#---------------------------------#
+#       build configuration       #
+#---------------------------------#
+platform:
+  - x86
+  - Any CPU
+configuration: Release
+build:
+  parallel: true                  
+  project: src\QuartzNET-DynamoDB.sln    
+
+#---------------------------------#
+#       test configuration        #
+#---------------------------------#
+test:
+  assemblies: 
+    - QuartzNET-DynamoDB.Tests.dll
+  categories:
+    only:
+      - Unit

@@ -17,7 +17,7 @@ before_test:
   - ps: mkdir c:/tmp
   - ps: (new-object net.webclient).DownloadFile('http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.zip', 'c:/tmp/dynamodb_local.zip')
   - ps: Expand-Archive c:/tmp/dynamodb_local.zip -DestinationPath c:/tmp
-  - cmd: START javaw.exe -Djava.library.path=c:/tmp/DynamoDBLocal_lib -jar c:/tmp/DynamoDBLocal.jar -inMemory 
+  - cmd: javaw.exe -Djava.library.path=c:/tmp/DynamoDBLocal_lib -jar c:/tmp/DynamoDBLocal.jar -inMemory 
 
 test:
   assemblies: 

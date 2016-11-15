@@ -17,7 +17,7 @@ before_test:
   - ps: mkdir c:/tmp
   - ps: (new-object net.webclient).DownloadFile('http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.zip', 'c:/tmp/dynamodb_local.zip')
   - ps: Expand-Archive c:/tmp/dynamodb_local.zip -DestinationPath c:/tmp
-  - cmd: javaw.exe -Djava.library.path=c:/tmp/DynamoDBLocal_lib -jar c:/tmp/DynamoDBLocal.jar -inMemory 
+  - ps: $MyProcess = Start-Process javaw.exe -Djava.library.path=c:/tmp/DynamoDBLocal_lib -jar c:/tmp/DynamoDBLocal.jar -inMemory -PassThru
 
 test:
   assemblies: 
@@ -26,3 +26,6 @@ test:
     only:
       - Unit
       - Integration
+
+after-test:
+  - ps: Stop-Process -Id $MyProcess.Id

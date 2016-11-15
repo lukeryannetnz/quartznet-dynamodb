@@ -27,7 +27,3 @@ before_test:
 test:
   assemblies: 
     - QuartzNET-DynamoDB.Tests.dll
-  categories:
-    only:
-      - Unit
-      - Integration

@@ -1,5 +1,18 @@
 language: csharp
 solution: src/QuartzNET-DynamoDB.sln
+
+env:
+  global:
+    - AWS_ACCESS_KEY_ID=AKID
+    - AWS_SECRET_ACCESS_KEY=SECRET
+    - AWS_REGION=us-east-1
+
+before_script:
+  - wget http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.tar.gz -O /tmp/dynamodb_local_latest.tar.gz
+  - tar -xzf /tmp/dynamodb_local_latest.tar.gz -C /tmp
+  - java -Djava.library.path=/tmp/DynamoDBLocal_lib -jar /tmp/DynamoDBLocal.jar -inMemory &
+  - sleep 2
+
 script:
   - xbuild /p:Configuration=Release src/QuartzNET-DynamoDB.sln
-  - mono src/packages/xunit.runner.console.2.1.0/tools/xunit.console.x86.exe src/QuartzNET-DynamoDB.Tests/bin/Release/QuartzNET-DynamoDB.Tests.dll -verbose -noappdomain -trait 'category=unit'
+  - mono --debug src/packages/xunit.runner.console.2.2.0-beta3-build3402/tools/xunit.console.exe src/QuartzNET-DynamoDB.Tests/bin/Release/QuartzNET-DynamoDB.Tests.dll -verbose -noappdomain -maxthreads 1 -diagnostics -serialize -parallel none #-trait 'category=unit'

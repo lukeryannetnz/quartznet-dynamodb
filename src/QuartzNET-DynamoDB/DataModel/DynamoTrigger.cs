@@ -9,33 +9,33 @@ using System.Diagnostics;
 
 namespace Quartz.DynamoDB.DataModel
 {
-    /// <summary>
-    /// A wrapper class for a Quartz Trigger instance that can be serialized and stored in Amazon DynamoDB.
-    /// </summary>
+	/// <summary>
+	/// A wrapper class for a Quartz Trigger instance that can be serialized and stored in Amazon DynamoDB.
+	/// </summary>
 	public class DynamoTrigger : IInitialisableFromDynamoRecord,IConvertibleToDynamoRecord, IDynamoTableType
-    {
+	{
 		private readonly JobDataMapConverter jobDataMapConverter = new JobDataMapConverter();
 		private readonly DateTimeOffsetConverter dateTimeOffsetConverter = new DateTimeOffsetConverter();
 
-        public DynamoTrigger()
-        {
-            State = "Waiting";
-        }
+		public DynamoTrigger()
+		{
+			State = "Waiting";
+		}
 
-        public DynamoTrigger(IOperableTrigger trigger) : this()
-        {
-            if (!(trigger is AbstractTrigger))
-            {
-                throw new ArgumentException("Trigger must be of type Quartz.Impl.Triggers.AbstractTrigger", nameof(trigger));
-            }
+		public DynamoTrigger(IOperableTrigger trigger) : this()
+		{
+			if (!(trigger is AbstractTrigger))
+			{
+				throw new ArgumentException("Trigger must be of type Quartz.Impl.Triggers.AbstractTrigger", nameof(trigger));
+			}
 
-            Trigger = (AbstractTrigger)trigger;
-        }
+			Trigger = (AbstractTrigger)trigger;
+		}
 
-        public DynamoTrigger(Dictionary<string, AttributeValue> item)
-        {
+		public DynamoTrigger(Dictionary<string, AttributeValue> item)
+		{
 			InitialiseFromDynamoRecord(item);
-        }
+		}
 			
 		public void InitialiseFromDynamoRecord (Dictionary<string, AttributeValue> record)
 		{
@@ -58,8 +58,11 @@ namespace Quartz.DynamoDB.DataModel
 				}
 			case "CronTriggerImpl":
 				{
-					Trigger = new CronTriggerImpl();
-					//todo: support CronTrigger
+					var cronTrigger = new CronTriggerImpl();
+					Trigger = cronTrigger;
+
+					cronTrigger.CronExpressionString = record["CronExpressionString"].S;
+					cronTrigger.TimeZone = TimeZoneInfo.FromSerializedString(record["TimeZone"].S);
 					break;
 				}
 
@@ -155,84 +158,84 @@ namespace Quartz.DynamoDB.DataModel
 			}
 		}
 			
-        public AbstractTrigger Trigger { get; set; }
+		public AbstractTrigger Trigger { get; set; }
 
-        /// <summary>
-        /// The scheduler instance currently working on this trigger.
-        /// TODO: is this correct?
-        /// </summary>
-        public string SchedulerInstanceId { get; set; }
+		/// <summary>
+		/// The scheduler instance currently working on this trigger.
+		/// TODO: is this correct?
+		/// </summary>
+		public string SchedulerInstanceId { get; set; }
 
-        /// <summary>
-        /// The current state of this trigger. Generally a value from the Quartz.TriggerState
-        /// enum but occasionally an internal value including: Waiting, PausedAndBlocked.
-        /// </summary>
-        public string State { get; set; }
+		/// <summary>
+		/// The current state of this trigger. Generally a value from the Quartz.TriggerState
+		/// enum but occasionally an internal value including: Waiting, PausedAndBlocked.
+		/// </summary>
+		public string State { get; set; }
 
-        /// <summary>
-        /// Returns the State property as the TriggerState enumeration required by the JobStore contract.
-        /// </summary>
-        public TriggerState TriggerState
-        {
-            get
-            {
-                switch (State)
-                {
-                    case "":
-                        {
-                            return TriggerState.None;
-                        }
-                    case "Complete":
-                        {
-                            return TriggerState.Complete;
-                        }
-                    case "Paused":
-                        {
-                            return TriggerState.Paused;
-                        }
-                    case "PausedAndBlocked":
-                        {
-                            return TriggerState.Paused;
-                        }
-                    case "Blocked":
-                        {
-                            return TriggerState.Blocked;
-                        }
-                    case "Error":
-                        {
-                            return TriggerState.Error;
-                        }
-                    default:
-                        {
-                            return TriggerState.Normal;
-                        }
-                }
-            }
-        }
+		/// <summary>
+		/// Returns the State property as the TriggerState enumeration required by the JobStore contract.
+		/// </summary>
+		public TriggerState TriggerState
+		{
+			get
+			{
+				switch (State)
+				{
+					case "":
+						{
+							return TriggerState.None;
+						}
+					case "Complete":
+						{
+							return TriggerState.Complete;
+						}
+					case "Paused":
+						{
+							return TriggerState.Paused;
+						}
+					case "PausedAndBlocked":
+						{
+							return TriggerState.Paused;
+						}
+					case "Blocked":
+						{
+							return TriggerState.Blocked;
+						}
+					case "Error":
+						{
+							return TriggerState.Error;
+						}
+					default:
+						{
+							return TriggerState.Normal;
+						}
+				}
+			}
+		}
 
-        public Dictionary<string, AttributeValue> ToDynamo()
-        {
-            Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
+		public Dictionary<string, AttributeValue> ToDynamo()
+		{
+			Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
 
 			record.Add("State", AttributeValueHelper.StringOrNull (State));
 			record.Add("SchedulerInstanceId", AttributeValueHelper.StringOrNull (SchedulerInstanceId));
 
-            record.Add("Name", AttributeValueHelper.StringOrNull(Trigger.Name));
-            record.Add("Group", AttributeValueHelper.StringOrNull(Trigger.Group));
-            record.Add("JobName", AttributeValueHelper.StringOrNull(Trigger.JobName));
-            record.Add("JobGroup", AttributeValueHelper.StringOrNull(Trigger.JobGroup));
-            record.Add("Description", AttributeValueHelper.StringOrNull(Trigger.Description));
-            record.Add("CalendarName", AttributeValueHelper.StringOrNull(Trigger.CalendarName));
+			record.Add("Name", AttributeValueHelper.StringOrNull(Trigger.Name));
+			record.Add("Group", AttributeValueHelper.StringOrNull(Trigger.Group));
+			record.Add("JobName", AttributeValueHelper.StringOrNull(Trigger.JobName));
+			record.Add("JobGroup", AttributeValueHelper.StringOrNull(Trigger.JobGroup));
+			record.Add("Description", AttributeValueHelper.StringOrNull(Trigger.Description));
+			record.Add("CalendarName", AttributeValueHelper.StringOrNull(Trigger.CalendarName));
 
 			record.Add("JobDataMap",jobDataMapConverter.ToEntry(Trigger.JobDataMap));
-            record.Add("MisfireInstruction", new AttributeValue() { N = Trigger.MisfireInstruction.ToString() });
-            record.Add("FireInstanceId", AttributeValueHelper.StringOrNull(Trigger.FireInstanceId));
-            record.Add("StartTimeUtc", AttributeValueHelper.StringOrNull(Trigger.StartTimeUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
+			record.Add("MisfireInstruction", new AttributeValue() { N = Trigger.MisfireInstruction.ToString() });
+			record.Add("FireInstanceId", AttributeValueHelper.StringOrNull(Trigger.FireInstanceId));
+			record.Add("StartTimeUtc", AttributeValueHelper.StringOrNull(Trigger.StartTimeUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
 		
-            if (Trigger.EndTimeUtc.HasValue)
-            {
-                record.Add("EndTimeUtc", AttributeValueHelper.StringOrNull(Trigger.EndTimeUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
-            }
+			if (Trigger.EndTimeUtc.HasValue)
+			{
+				record.Add("EndTimeUtc", AttributeValueHelper.StringOrNull(Trigger.EndTimeUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffffzzz")));
+			}
 
 			if (Trigger.GetNextFireTimeUtc().HasValue)
 			{
@@ -240,64 +243,64 @@ namespace Quartz.DynamoDB.DataModel
 				Debug.WriteLine("Storing Trigger NextFireTimeUTC {0}", Trigger.GetNextFireTimeUtc().Value);
 			}
 
-            record.Add("Priority", new AttributeValue() { N = Trigger.Priority.ToString() });
+			record.Add("Priority", new AttributeValue() { N = Trigger.Priority.ToString() });
 
-            if (Trigger is CalendarIntervalTriggerImpl)
-            {
-                CalendarIntervalTriggerImpl t = (CalendarIntervalTriggerImpl)Trigger;
-                record.Add("PreserveHourOfDayAcrossDaylightSavings", new AttributeValue { BOOL = t.PreserveHourOfDayAcrossDaylightSavings });
-                record.Add("RepeatInterval", new AttributeValue() { N = t.RepeatInterval.ToString() });
-                record.Add("RepeatIntervalUnit", new AttributeValue() { N = ((int)t.RepeatIntervalUnit).ToString() });
-                record.Add("TimesTriggered", new AttributeValue() { N = t.TimesTriggered.ToString() });
-                record.Add("TimeZone", new AttributeValue() { S = t.TimeZone.ToSerializedString() });
-                record.Add("Type", new AttributeValue() { S = "CalendarIntervalTriggerImpl" });
-            }
+			if (Trigger is CalendarIntervalTriggerImpl)
+			{
+				CalendarIntervalTriggerImpl t = (CalendarIntervalTriggerImpl)Trigger;
+				record.Add("PreserveHourOfDayAcrossDaylightSavings", new AttributeValue { BOOL = t.PreserveHourOfDayAcrossDaylightSavings });
+				record.Add("RepeatInterval", new AttributeValue() { N = t.RepeatInterval.ToString() });
+				record.Add("RepeatIntervalUnit", new AttributeValue() { N = ((int)t.RepeatIntervalUnit).ToString() });
+				record.Add("TimesTriggered", new AttributeValue() { N = t.TimesTriggered.ToString() });
+				record.Add("TimeZone", new AttributeValue() { S = t.TimeZone.ToSerializedString() });
+				record.Add("Type", new AttributeValue() { S = "CalendarIntervalTriggerImpl" });
+			}
 
-            else if (Trigger is CronTriggerImpl)
-            {
-                CronTriggerImpl t = (CronTriggerImpl)Trigger;
-                record.Add("CronExpressionString", new AttributeValue() { S = t.CronExpressionString });
-                record.Add("TimeZone", new AttributeValue() { S = t.TimeZone.ToSerializedString() });
-                record.Add("Type", new AttributeValue() { S = "CronTriggerImpl" });
-            }
+			else if (Trigger is CronTriggerImpl)
+			{
+				CronTriggerImpl t = (CronTriggerImpl)Trigger;
+				record.Add("CronExpressionString", new AttributeValue() { S = t.CronExpressionString });
+				record.Add("TimeZone", new AttributeValue() { S = t.TimeZone.ToSerializedString() });
+				record.Add("Type", new AttributeValue() { S = "CronTriggerImpl" });
+			}
 
-            else if (Trigger is DailyTimeIntervalTriggerImpl)
-            {
-                DailyTimeIntervalTriggerImpl t = (DailyTimeIntervalTriggerImpl)Trigger;
+			else if (Trigger is DailyTimeIntervalTriggerImpl)
+			{
+				DailyTimeIntervalTriggerImpl t = (DailyTimeIntervalTriggerImpl)Trigger;
 				if (Trigger.GetPreviousFireTimeUtc().HasValue)
 				{
 					record.Add("PreviousFireTimeUtcEpoch", new AttributeValue() { N = dateTimeOffsetConverter.ToEntry(Trigger.GetPreviousFireTimeUtc().Value).ToString()});
 				}                
 				record.Add("DaysOfWeek", new AttributeValue() { L = t.DaysOfWeek.Select(dow => new AttributeValue(dow.ToString())).ToList() });
-                record.Add("EndTimeOfDay_Hour", new AttributeValue() { N = t.EndTimeOfDay.Hour.ToString() });
-                record.Add("EndTimeOfDay_Minute", new AttributeValue() { N = t.EndTimeOfDay.Minute.ToString() });
-                record.Add("EndTimeOfDay_Second", new AttributeValue() { N = t.EndTimeOfDay.Second.ToString() });
-                record.Add("RepeatCount", new AttributeValue() { N = t.RepeatCount.ToString() });
-                record.Add("RepeatInterval", new AttributeValue() { N = t.RepeatInterval.ToString() });
-                record.Add("RepeatIntervalUnit", new AttributeValue() { N = ((int)t.RepeatIntervalUnit).ToString() });
-                record.Add("StartTimeOfDay_Hour", new AttributeValue() { N = t.StartTimeOfDay.Hour.ToString() });
-                record.Add("StartTimeOfDay_Minute", new AttributeValue() { N = t.StartTimeOfDay.Minute.ToString() });
-                record.Add("StartTimeOfDay_Second", new AttributeValue() { N = t.StartTimeOfDay.Second.ToString() });
-                record.Add("TimesTriggered", new AttributeValue() { N = t.TimesTriggered.ToString() });
-                record.Add("TimeZone", new AttributeValue() { S = t.TimeZone.ToSerializedString() });
+				record.Add("EndTimeOfDay_Hour", new AttributeValue() { N = t.EndTimeOfDay.Hour.ToString() });
+				record.Add("EndTimeOfDay_Minute", new AttributeValue() { N = t.EndTimeOfDay.Minute.ToString() });
+				record.Add("EndTimeOfDay_Second", new AttributeValue() { N = t.EndTimeOfDay.Second.ToString() });
+				record.Add("RepeatCount", new AttributeValue() { N = t.RepeatCount.ToString() });
+				record.Add("RepeatInterval", new AttributeValue() { N = t.RepeatInterval.ToString() });
+				record.Add("RepeatIntervalUnit", new AttributeValue() { N = ((int)t.RepeatIntervalUnit).ToString() });
+				record.Add("StartTimeOfDay_Hour", new AttributeValue() { N = t.StartTimeOfDay.Hour.ToString() });
+				record.Add("StartTimeOfDay_Minute", new AttributeValue() { N = t.StartTimeOfDay.Minute.ToString() });
+				record.Add("StartTimeOfDay_Second", new AttributeValue() { N = t.StartTimeOfDay.Second.ToString() });
+				record.Add("TimesTriggered", new AttributeValue() { N = t.TimesTriggered.ToString() });
+				record.Add("TimeZone", new AttributeValue() { S = t.TimeZone.ToSerializedString() });
 
-                record.Add("Type", new AttributeValue() { S = "DailyTimeIntervalTriggerImpl" });
-            }
+				record.Add("Type", new AttributeValue() { S = "DailyTimeIntervalTriggerImpl" });
+			}
 
-            else if (Trigger is SimpleTriggerImpl)
-            {
-                SimpleTriggerImpl t = (SimpleTriggerImpl)Trigger;
-                record.Add("RepeatCount", new AttributeValue() { N = t.RepeatCount.ToString() });
-                record.Add("RepeatInterval", new AttributeValue() { N = t.RepeatInterval.Ticks.ToString() });
-                record.Add("TimesTriggered", new AttributeValue() { N = t.TimesTriggered.ToString() });
+			else if (Trigger is SimpleTriggerImpl)
+			{
+				SimpleTriggerImpl t = (SimpleTriggerImpl)Trigger;
+				record.Add("RepeatCount", new AttributeValue() { N = t.RepeatCount.ToString() });
+				record.Add("RepeatInterval", new AttributeValue() { N = t.RepeatInterval.Ticks.ToString() });
+				record.Add("TimesTriggered", new AttributeValue() { N = t.TimesTriggered.ToString() });
 				if (Trigger.GetPreviousFireTimeUtc().HasValue)
 				{
 					record.Add("PreviousFireTimeUtcEpoch", new AttributeValue() { N = dateTimeOffsetConverter.ToEntry(Trigger.GetPreviousFireTimeUtc().Value).ToString()});
 				} 
 				record.Add("Type", new AttributeValue() { S = "SimpleTriggerImpl" });
-            }
+			}
 
-            return record;
-        }
-    }
+			return record;
+		}
+	}
 }

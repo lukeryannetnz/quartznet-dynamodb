@@ -2,7 +2,7 @@
 #       build configuration       #
 #---------------------------------#
 before_build:
-  - nuget restore
+  - nuget restore src\QuartzNET-DynamoDB.sln 
 platform:
   - Any CPU
 configuration: Release

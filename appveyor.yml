@@ -2,7 +2,6 @@
 #       build configuration       #
 #---------------------------------#
 platform:
-  - x86
   - Any CPU
 configuration: Release
 build:

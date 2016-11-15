@@ -1,6 +1,8 @@
 #---------------------------------#
 #       build configuration       #
 #---------------------------------#
+before_build:
+  - nuget restore
 platform:
   - Any CPU
 configuration: Release

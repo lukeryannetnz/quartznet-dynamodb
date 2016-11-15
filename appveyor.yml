@@ -13,9 +13,15 @@ build:
 #---------------------------------#
 #       test configuration        #
 #---------------------------------#
+before_test:
+  - ps: (new-object net.webclient).DownloadFile('http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.zip', 'dynamodb_local.zip')
+  - ps: Expand-Archive dynamodb_local.zip -OutputPath dynamodb_local
+  - ps: java -Djava.library.path= dynamodb_local/DynamoDBLocal_lib -jar dynamodb_local/DynamoDBLocal.jar -inMemory 
+
 test:
   assemblies: 
     - QuartzNET-DynamoDB.Tests.dll
   categories:
     only:
       - Unit
+      - Integration

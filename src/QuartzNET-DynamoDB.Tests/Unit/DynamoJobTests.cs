@@ -1,5 +1,4 @@
-﻿using System;
-using Quartz.DynamoDB.DataModel;
+﻿using Quartz.DynamoDB.DataModel;
 using Xunit;
 
 namespace Quartz.DynamoDB.Tests

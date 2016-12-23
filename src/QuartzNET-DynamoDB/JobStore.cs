@@ -1269,7 +1269,8 @@ namespace Quartz.DynamoDB
                             _triggerRepository.Store(jobTrigger);
                         }
 
-                        //todo: block the job
+                        storedJob.State = DynamoJobState.Blocked;
+                        _jobRepository.Store(storedJob);
                     }
 
                     results.Add(new TriggerFiredResult(bndle));

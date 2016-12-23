@@ -263,7 +263,8 @@ namespace Quartz.DynamoDB
                     throw new ObjectAlreadyExistsException(newTrigger);
                 }
 
-                if (RetrieveJob(newTrigger.JobKey) == null)
+                var job = _jobRepository.Load(newTrigger.JobKey.ToDictionary());
+                if (job == null || job.Job == null)
                 {
                     throw new JobPersistenceException("The job (" + newTrigger.JobKey +
                     ") referenced by the trigger does not exist.");
@@ -305,21 +306,18 @@ namespace Quartz.DynamoDB
                     _jobGroupRepository.Store(jobGroup);
                 }
 
-                //todo: support blocked,PausedAndBlocked
-
-                //            if (this.PausedTriggerGroups.FindOneByIdAs<BsonDocument>(newTrigger.Key.Group) != null
-                //                || this.PausedJobGroups.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.Group) != null)
-                //            {
-                //                state = "Paused";
-                //                if (this.BlockedJobs.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.ToBsonDocument()) != null)
-                //                {
-                //                    state = "PausedAndBlocked";
-                //                }
-                //            }
-                //            else if (this.BlockedJobs.FindOneByIdAs<BsonDocument>(newTrigger.JobKey.ToBsonDocument()) != null)
-                //            {
-                //                state = "Blocked";
-                //            }
+                if (triggerGroup.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused
+                   || jobGroup.State == DynamoJobGroup.DynamoJobGroupState.Paused)
+                {
+                    if (job.State == DynamoJobState.Blocked)
+                    {
+                        trigger.State = "PausedAndBlocked";
+                    }
+                }
+                else if (job.State == DynamoJobState.Blocked)
+                {
+                    trigger.State = "Blocked";
+                }
 
                 _triggerRepository.Store(trigger);
             }
@@ -1319,10 +1317,11 @@ namespace Quartz.DynamoDB
                 _signaler.SignalSchedulingChange(null);
             }
 
-            //todo: Support blocked jobs
-            // even if it was deleted, there may be cleanup to do
-            //			this.BlockedJobs.Remove(
-            //				Query.EQ("_id", jobDetail.Key.ToBsonDocument()));
+            if (storedJob.State == DynamoJobState.Blocked)
+            {
+                storedJob.State = DynamoJobState.Active;
+                _jobRepository.Store(storedJob);
+            }
 
             // check for trigger deleted during execution...
             if (triggerInstCode == SchedulerInstruction.DeleteTrigger)

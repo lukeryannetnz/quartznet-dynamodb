@@ -22,6 +22,7 @@ namespace Quartz.DynamoDB.DataModel
         public DynamoJob(IJobDetail job)
         {
             this.Job = job;
+            this.State = DynamoJobState.Active;
         }
 
         public DynamoJob(Dictionary<string, AttributeValue> record)

@@ -3,6 +3,7 @@ using Amazon.DynamoDBv2.Model;
 using Quartz.Impl;
 using Quartz.Simpl;
 using Quartz.DynamoDB.DataModel.Storage;
+using System;
 
 namespace Quartz.DynamoDB.DataModel
 {
@@ -39,6 +40,7 @@ namespace Quartz.DynamoDB.DataModel
 			job.RequestsRecovery = record["RequestsRecovery"].BOOL;
 
 			Job = job;
+            State = (DynamoJobState)Enum.Parse(typeof(DynamoJobState), record["State"].S);
 		}
 
 		public string DynamoTableName  
@@ -59,6 +61,12 @@ namespace Quartz.DynamoDB.DataModel
 
         public IJobDetail Job { get; set; }
 
+        public DynamoJobState State
+        {
+            get;
+            set;
+        }
+
         public Dictionary<string, AttributeValue> ToDynamo()
         {
             Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
@@ -72,6 +80,7 @@ namespace Quartz.DynamoDB.DataModel
             record.Add("PersistJobDataAfterExecution", new AttributeValue { BOOL = Job.PersistJobDataAfterExecution });
             record.Add("ConcurrentExecutionDisallowed", new AttributeValue { BOOL = Job.ConcurrentExecutionDisallowed });
             record.Add("RequestsRecovery", new AttributeValue { BOOL = Job.RequestsRecovery });
+            record.Add("State", AttributeValueHelper.StringOrNull(State.ToString()));
 
             return record;
         }
@@ -80,5 +89,18 @@ namespace Quartz.DynamoDB.DataModel
         {
             return jobType.FullName + ", " + jobType.Assembly.GetName().Name;
         }
+    }
+
+    public enum DynamoJobState
+    {
+        /// <summary>
+        /// Indicates that the Job is Active.
+        /// </summary>
+        Active = 0,
+
+        /// <summary>
+        /// Indicates that the Job is Blocked.
+        /// </summary>
+        Blocked = 1,
     }
 }

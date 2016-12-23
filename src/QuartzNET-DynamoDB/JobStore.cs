@@ -843,15 +843,15 @@ namespace Quartz.DynamoDB
                 return;
             }
 
-            //todo: support blocked jobs
-            //if (this.BlockedJobs.FindOneByIdAs<BsonDocument>(trigger.JobKey.ToBsonDocument()) != null)
-            //{
-            //    triggerState["State"] = "Blocked";
-            //}
-            //else
-            //{
-            record.State = "Waiting";
-            //}
+            var job = _jobRepository.Load(record.Trigger.JobKey.ToDictionary());
+            if (job != null && job.State == DynamoJobState.Blocked)
+            {
+                record.State = "Blocked";
+            }
+            else
+            {
+                record.State = "Waiting";
+            }
 
             this.ApplyMisfireIfNecessary(record);
 

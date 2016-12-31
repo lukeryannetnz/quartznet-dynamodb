@@ -4,7 +4,7 @@ using Amazon.DynamoDBv2.Model;
 using Quartz.DynamoDB.DataModel.Storage;
 
 namespace Quartz.DynamoDB.DataModel
-
+{
     /// <summary>
     /// A wrapper class for a Quartz Trigger Group instance that can be serialized and stored in Amazon DynamoDB.
     /// </summary>

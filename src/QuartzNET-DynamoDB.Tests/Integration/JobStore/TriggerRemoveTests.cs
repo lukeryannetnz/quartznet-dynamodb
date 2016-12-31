@@ -34,7 +34,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             // Create a trigger, dont store it.
             IOperableTrigger inMemoryTr = TestTriggerFactory.CreateTestTrigger("whatever");
 
-            var result = _sut.RemoveTriggers(new[] { inMemoryTr.Key});
+            var result = _sut.RemoveTriggers(new[] { inMemoryTr.Key });
 
             Assert.False(result);
         }

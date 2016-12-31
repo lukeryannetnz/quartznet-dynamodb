@@ -8,52 +8,52 @@ using Quartz.Simpl;
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
     public class SchedulerIntegrationTests : IDisposable
-	{
+    {
         private readonly DynamoDB.JobStore _sut;
         private readonly DynamoClientFactory _testFactory;
 
-		public SchedulerIntegrationTests ()
-		{
-            _testFactory = new DynamoClientFactory();		
+        public SchedulerIntegrationTests()
+        {
+            _testFactory = new DynamoClientFactory();
             _sut = _testFactory.CreateTestJobStore();
         }
-			
-		[Fact]
-		[Trait("Category", "Integration")]
-		/// <summary>
-		/// Ensures that only one scheduler record is created by the jobstore.
-		/// Tests common JobStore methods that interact with the scheduler.
-		/// </summary>
-		public void SingleSchedulerCreated()
-		{
-			var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
-			var loadHelper = new SimpleTypeLoadHelper();
 
-			_sut.Initialize(loadHelper, signaler);
-			var client = DynamoDbClientFactory.Create();
-			var schedulerRepository = new Repository<DynamoScheduler> (client);
+        [Fact]
+        [Trait("Category", "Integration")]
+        /// <summary>
+        /// Ensures that only one scheduler record is created by the jobstore.
+        /// Tests common JobStore methods that interact with the scheduler.
+        /// </summary>
+        public void SingleSchedulerCreated()
+        {
+            var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
+            var loadHelper = new SimpleTypeLoadHelper();
 
-			int intialSchedulerCount = schedulerRepository.Scan (null, null, null).Count();
+            _sut.Initialize(loadHelper, signaler);
+            var client = DynamoDbClientFactory.Create();
+            var schedulerRepository = new Repository<DynamoScheduler>(client);
 
-			_sut.SchedulerStarted ();
+            int intialSchedulerCount = schedulerRepository.Scan(null, null, null).Count();
 
-			int schedulerStartedCount = schedulerRepository.Scan (null, null, null).Count();
+            _sut.SchedulerStarted();
 
-			Assert.Equal (intialSchedulerCount + 1, schedulerStartedCount);
+            int schedulerStartedCount = schedulerRepository.Scan(null, null, null).Count();
 
-			_sut.SchedulerPaused ();
+            Assert.Equal(intialSchedulerCount + 1, schedulerStartedCount);
 
-			int schedulerPausedCount = schedulerRepository.Scan (null, null, null).Count();
+            _sut.SchedulerPaused();
 
-			Assert.Equal (intialSchedulerCount + 1, schedulerPausedCount);
+            int schedulerPausedCount = schedulerRepository.Scan(null, null, null).Count();
 
-			_sut.AcquireNextTriggers (new DateTimeOffset(DateTime.Now), 1, TimeSpan.FromMinutes(5));
+            Assert.Equal(intialSchedulerCount + 1, schedulerPausedCount);
 
-			int triggersAcquiredCount = schedulerRepository.Scan (null, null, null).Count();
+            _sut.AcquireNextTriggers(new DateTimeOffset(DateTime.Now), 1, TimeSpan.FromMinutes(5));
 
-			Assert.Equal (intialSchedulerCount + 1, triggersAcquiredCount);
+            int triggersAcquiredCount = schedulerRepository.Scan(null, null, null).Count();
 
-		}
+            Assert.Equal(intialSchedulerCount + 1, triggersAcquiredCount);
+
+        }
 
         #region IDisposable implementation
 
@@ -85,6 +85,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
         }
 
         #endregion
-	}
+    }
 }
 

@@ -8,36 +8,36 @@ using Xunit;
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
     public class GetTriggerTests : IDisposable
-	{
+    {
         private readonly DynamoDB.JobStore _sut;
         private readonly DynamoClientFactory _testFactory;
 
-		public GetTriggerTests ()
-		{
-			_testFactory = new DynamoClientFactory();
+        public GetTriggerTests()
+        {
+            _testFactory = new DynamoClientFactory();
             _sut = _testFactory.CreateTestJobStore();
-            var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler ();
-			var loadHelper = new SimpleTypeLoadHelper ();
+            var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
+            var loadHelper = new SimpleTypeLoadHelper();
 
-			_sut.Initialize (loadHelper, signaler);
-		}
+            _sut.Initialize(loadHelper, signaler);
+        }
 
-		//[Fact]
-		[Trait ("Category", "Integration")]
-		public void GetNumberOfTriggersIncrementsWhenTriggerAdded ()
-		{
-			int triggerCount = _sut.GetNumberOfTriggers();
+        //[Fact]
+        [Trait("Category", "Integration")]
+        public void GetNumberOfTriggersIncrementsWhenTriggerAdded()
+        {
+            int triggerCount = _sut.GetNumberOfTriggers();
 
-			var job = TestJobFactory.CreateTestJob ();
-			var trigger = TestTriggerFactory.CreateTestTrigger (job.Name, job.Group);
-			_sut.StoreJobAndTrigger (job, trigger);
+            var job = TestJobFactory.CreateTestJob();
+            var trigger = TestTriggerFactory.CreateTestTrigger(job.Name, job.Group);
+            _sut.StoreJobAndTrigger(job, trigger);
 
-			// Dynamo describe table is eventually consistent so give it a little time. Flaky I know, but hey - what are you going to do?
-			Thread.Sleep(5000);
+            // Dynamo describe table is eventually consistent so give it a little time. Flaky I know, but hey - what are you going to do?
+            Thread.Sleep(5000);
 
-			int newTriggerCount = _sut.GetNumberOfTriggers ();
-			Assert.Equal (triggerCount + 1, newTriggerCount);
-		}
+            int newTriggerCount = _sut.GetNumberOfTriggers();
+            Assert.Equal(triggerCount + 1, newTriggerCount);
+        }
 
         #region IDisposable implementation
 
@@ -69,6 +69,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
         }
 
         #endregion
-	}
+    }
 }
 

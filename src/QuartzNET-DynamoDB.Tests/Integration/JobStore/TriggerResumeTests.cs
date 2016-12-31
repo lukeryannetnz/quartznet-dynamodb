@@ -18,7 +18,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
         public TriggerResumeTests()
         {
-            _testFactory = new DynamoClientFactory(); 
+            _testFactory = new DynamoClientFactory();
             _sut = _testFactory.CreateTestJobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
@@ -82,7 +82,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             Assert.Equal("Paused", triggerState1.ToString());
             var triggerState2 = _sut.GetTriggerState(tr2.Key);
             Assert.Equal("Paused", triggerState2.ToString());
-            
+
             _sut.ResumeAll();
 
             // Ensure all triggers have been resumed

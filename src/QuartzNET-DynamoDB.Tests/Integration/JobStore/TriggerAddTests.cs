@@ -1,7 +1,5 @@
 using System;
-using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Simpl;
-using Quartz.Spi;
 using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore

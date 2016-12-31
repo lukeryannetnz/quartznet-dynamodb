@@ -28,7 +28,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
         /// <summary>
         /// Tests that after a calendar is added, the number of calendars increments.
         /// </summary>
-        //[Fact]
+        [Fact]
         [Trait("Category", "Integration")]
         public void GetNumberOfCalendarsIncrementsWhenCalendarAdded()
         {

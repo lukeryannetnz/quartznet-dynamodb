@@ -16,7 +16,7 @@ namespace Quartz.DynamoDB.Tests.Integration.Repository
         private Repository<DynamoScheduler> _sut;
         private DynamoClientFactory _testFactory;
 
-        //[Fact]
+        [Fact]
         [Trait("Category", "Integration")]
         public void PersistTwoSchedulersSameId_OneRecord()
         {

@@ -22,7 +22,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             _sut.Initialize(loadHelper, signaler);
         }
 
-        //[Fact]
+        [Fact]
         [Trait("Category", "Integration")]
         public void GetNumberOfTriggersIncrementsWhenTriggerAdded()
         {

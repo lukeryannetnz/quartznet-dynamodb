@@ -8,48 +8,48 @@ using Amazon.DynamoDBv2.Model;
 
 namespace Quartz.DynamoDB.Tests.Integration.Repository
 {
-	/// <summary>
-	/// Contains tests for the repository class.
-	/// </summary>
+    /// <summary>
+    /// Contains tests for the repository class.
+    /// </summary>
     public class RepositoryTests : IDisposable
-	{
+    {
         private Repository<DynamoScheduler> _sut;
         private DynamoClientFactory _testFactory;
 
-		//[Fact]
-		[Trait("Category", "Integration")]
-		public void PersistTwoSchedulersSameId_OneRecord()
-		{
+        //[Fact]
+        [Trait("Category", "Integration")]
+        public void PersistTwoSchedulersSameId_OneRecord()
+        {
             _testFactory = new DynamoClientFactory();
             var client = _testFactory.BootStrapDynamo();
-			_sut = new Repository<DynamoScheduler> (client);
+            _sut = new Repository<DynamoScheduler>(client);
 
-			int initialSchedulerCount = _sut.Scan (null, null, null).Count();
+            int initialSchedulerCount = _sut.Scan(null, null, null).Count();
 
-			var scheduler = new DynamoScheduler
-			{
-				InstanceId = "testInstance" + DateTime.UtcNow.Ticks.ToString(),
-				ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
-				State = "Running"
-			};
+            var scheduler = new DynamoScheduler
+            {
+                InstanceId = "testInstance" + DateTime.UtcNow.Ticks.ToString(),
+                ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
+                State = "Running"
+            };
 
-			_sut.Store(scheduler);
+            _sut.Store(scheduler);
 
-			var expressionAttributeValues = new Dictionary<string,AttributeValue> 
-			{
-				{":instance", new AttributeValue { S = scheduler.InstanceId }}
-			};
+            var expressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                {":instance", new AttributeValue { S = scheduler.InstanceId }}
+            };
 
-			var scheduler2 = _sut.Scan (expressionAttributeValues, null, "InstanceId = :instance").Single();
+            var scheduler2 = _sut.Scan(expressionAttributeValues, null, "InstanceId = :instance").Single();
 
-			scheduler2.ExpiresUtc = (SystemTime.Now () + new TimeSpan (0, 20, 0)).UtcDateTime;
+            scheduler2.ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 20, 0)).UtcDateTime;
 
-			_sut.Store(scheduler2);
+            _sut.Store(scheduler2);
 
-			int finalCount = _sut.Scan (null, null, null).Count();
+            int finalCount = _sut.Scan(null, null, null).Count();
 
-			Assert.Equal (initialSchedulerCount + 1, finalCount);
-		}
+            Assert.Equal(initialSchedulerCount + 1, finalCount);
+        }
 
         #region IDisposable implementation
 
@@ -81,6 +81,6 @@ namespace Quartz.DynamoDB.Tests.Integration.Repository
         }
 
         #endregion
-	}
+    }
 }
 

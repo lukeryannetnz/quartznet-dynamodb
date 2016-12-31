@@ -96,7 +96,7 @@ namespace Quartz.DynamoDB.Tests.Integration
         [Trait("Category", "Integration")]
         public void TestAcquireNextTriggerBatch()
         {
-			DateTimeOffset d = DateBuilder.EvenMinuteDateAfterNow().ToUniversalTime();
+            DateTimeOffset d = DateBuilder.EvenMinuteDateAfterNow().ToUniversalTime();
 
             IOperableTrigger early = new SimpleTriggerImpl("early", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, d, d.AddMilliseconds(5), 2, TimeSpan.FromSeconds(2));
             IOperableTrigger trigger1 = new SimpleTriggerImpl("trigger1", "triggerGroup1", fJobDetail.Name, fJobDetail.Group, d.AddMilliseconds(200000), d.AddMilliseconds(200005), 2, TimeSpan.FromSeconds(2));
@@ -112,11 +112,11 @@ namespace Quartz.DynamoDB.Tests.Integration
             trigger4.ComputeFirstFireTimeUtc(null);
             trigger10.ComputeFirstFireTimeUtc(null);
             fJobStore.StoreTrigger(early, true);
-			fJobStore.StoreTrigger(trigger1, true);
-			fJobStore.StoreTrigger(trigger2, true);
-			fJobStore.StoreTrigger(trigger3, true);
-			fJobStore.StoreTrigger(trigger4, true);
-			fJobStore.StoreTrigger(trigger10, true);
+            fJobStore.StoreTrigger(trigger1, true);
+            fJobStore.StoreTrigger(trigger2, true);
+            fJobStore.StoreTrigger(trigger3, true);
+            fJobStore.StoreTrigger(trigger4, true);
+            fJobStore.StoreTrigger(trigger10, true);
 
             DateTimeOffset firstFireTime = trigger1.GetNextFireTimeUtc().Value;
 
@@ -131,7 +131,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.ReleaseAcquiredTrigger(trigger2);
             fJobStore.ReleaseAcquiredTrigger(trigger3);
 
-			acquiredTriggers = this.fJobStore.AcquireNextTriggers(firstFireTime.AddSeconds(10), 5, TimeSpan.FromSeconds(510));
+            acquiredTriggers = this.fJobStore.AcquireNextTriggers(firstFireTime.AddSeconds(10), 5, TimeSpan.FromSeconds(510));
             Assert.Equal(5, acquiredTriggers.Count);
             Assert.Equal(early.Key, acquiredTriggers[0].Key);
             Assert.Equal(trigger1.Key, acquiredTriggers[1].Key);
@@ -157,12 +157,12 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.ReleaseAcquiredTrigger(trigger3);
             fJobStore.ReleaseAcquiredTrigger(trigger4);
 
-			acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(1), 5, TimeSpan.FromSeconds(210));
+            acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(1), 5, TimeSpan.FromSeconds(210));
             Assert.Equal(2, acquiredTriggers.Count);
             fJobStore.ReleaseAcquiredTrigger(early);
             fJobStore.ReleaseAcquiredTrigger(trigger1);
 
-			acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(250), 5, TimeSpan.FromSeconds(510));
+            acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(250), 5, TimeSpan.FromSeconds(510));
             Assert.Equal(5, acquiredTriggers.Count);
             fJobStore.ReleaseAcquiredTrigger(early);
             fJobStore.ReleaseAcquiredTrigger(trigger1);
@@ -170,7 +170,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             fJobStore.ReleaseAcquiredTrigger(trigger3);
             fJobStore.ReleaseAcquiredTrigger(trigger4);
 
-			acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(150), 5, TimeSpan.FromSeconds(410));
+            acquiredTriggers = fJobStore.AcquireNextTriggers(firstFireTime.AddMilliseconds(150), 5, TimeSpan.FromSeconds(410));
             Assert.Equal(4, acquiredTriggers.Count);
             fJobStore.ReleaseAcquiredTrigger(early);
             fJobStore.ReleaseAcquiredTrigger(trigger1);
@@ -214,7 +214,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             trigger.ComputeFirstFireTimeUtc(null);
             ICalendar cal = new MonthlyCalendar();
             fJobStore.StoreTrigger(trigger, false);
-			fJobStore.StoreCalendar("cal", cal, true, true);
+            fJobStore.StoreCalendar("cal", cal, true, true);
 
             fJobStore.RemoveCalendar("cal");
         }

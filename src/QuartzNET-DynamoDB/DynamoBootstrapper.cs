@@ -45,7 +45,7 @@ namespace Quartz.DynamoDB
             }
         }
 
-        public bool ShouldCreate(IAmazonDynamoDB client, string tableName)
+        private bool ShouldCreate(IAmazonDynamoDB client, string tableName)
         {
             if (!TableExists(client, tableName))
             {

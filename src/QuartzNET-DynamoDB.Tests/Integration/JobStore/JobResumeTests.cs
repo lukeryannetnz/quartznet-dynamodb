@@ -15,7 +15,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
         public JobResumeTests()
         {
-            _sut = TestJobStoreFactory.CreateTestJobStore();
+            _sut = DynamoClientFactory.CreateTestJobStore();
             var signaler = new RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -118,7 +118,12 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             {
                 if (disposing)
                 {
-                    _sut.ClearAllSchedulingData();
+                    DynamoClientFactory.CleanUpDynamo();
+
+                    if (_sut != null)
+                    {
+                        _sut.Dispose();
+                    }
                 }
 
                 _disposedValue = true;

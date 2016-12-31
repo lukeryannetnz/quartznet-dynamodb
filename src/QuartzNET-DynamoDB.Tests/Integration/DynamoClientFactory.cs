@@ -3,7 +3,7 @@ using Amazon.DynamoDBv2;
 
 namespace Quartz.DynamoDB.Tests
 {
-    public class TestJobStoreFactory
+    public class DynamoClientFactory
     {
         private static JobStore _store;
         private static string InstanceName;

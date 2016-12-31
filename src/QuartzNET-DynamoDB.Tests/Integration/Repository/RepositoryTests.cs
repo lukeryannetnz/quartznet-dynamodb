@@ -11,18 +11,18 @@ namespace Quartz.DynamoDB.Tests.Integration.Repository
 	/// <summary>
 	/// Contains tests for the repository class.
 	/// </summary>
-	public class RepositoryTests
+    public class RepositoryTests : IDisposable
 	{
-		[Fact]
+        private Repository<DynamoScheduler> _sut;
+
+		//[Fact]
 		[Trait("Category", "Integration")]
 		public void PersistTwoSchedulersSameId_OneRecord()
 		{
-			var client = DynamoDbClientFactory.Create();
-			new DynamoBootstrapper().BootStrap(client);
+            var client = DynamoClientFactory.BootStrapDynamo();
+			_sut = new Repository<DynamoScheduler> (client);
 
-			var sut = new Repository<DynamoScheduler> (client);
-
-			int initialSchedulerCount = sut.Scan (null, null, null).Count();
+			int initialSchedulerCount = _sut.Scan (null, null, null).Count();
 
 			var scheduler = new DynamoScheduler
 			{
@@ -31,23 +31,54 @@ namespace Quartz.DynamoDB.Tests.Integration.Repository
 				State = "Running"
 			};
 
-			sut.Store(scheduler);
+			_sut.Store(scheduler);
 
 			var expressionAttributeValues = new Dictionary<string,AttributeValue> 
 			{
 				{":instance", new AttributeValue { S = scheduler.InstanceId }}
 			};
 
-			var scheduler2 = sut.Scan (expressionAttributeValues, null, "InstanceId = :instance").Single();
+			var scheduler2 = _sut.Scan (expressionAttributeValues, null, "InstanceId = :instance").Single();
 
 			scheduler2.ExpiresUtc = (SystemTime.Now () + new TimeSpan (0, 20, 0)).UtcDateTime;
 
-			sut.Store(scheduler2);
+			_sut.Store(scheduler2);
 
-			int finalCount = sut.Scan (null, null, null).Count();
+			int finalCount = _sut.Scan (null, null, null).Count();
 
 			Assert.Equal (initialSchedulerCount + 1, finalCount);
 		}
+
+        #region IDisposable implementation
+
+        bool _disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    DynamoClientFactory.CleanUpDynamo();
+
+                    if (_sut != null)
+                    {
+                        _sut.Dispose();
+                    }
+                }
+
+                _disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
+
+        #endregion
 	}
 }
 

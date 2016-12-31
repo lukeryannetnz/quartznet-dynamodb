@@ -49,7 +49,7 @@ namespace Quartz.DynamoDB.Tests.Integration
 
         public RamJobStoreTests()
         {
-            fJobStore = TestJobStoreFactory.CreateTestJobStore();
+            fJobStore = DynamoClientFactory.CreateTestJobStore();
             fSignaler = new SampleSignaler();
             ITypeLoadHelper loadHelper = new SimpleTypeLoadHelper();
             fJobStore.Initialize(loadHelper, fSignaler);

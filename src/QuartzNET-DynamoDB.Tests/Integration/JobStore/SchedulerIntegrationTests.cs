@@ -13,7 +13,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
 		public SchedulerIntegrationTests ()
 		{
-            _sut = TestJobStoreFactory.CreateTestJobStore();
+            _sut = DynamoClientFactory.CreateTestJobStore();
 		}
 			
 		[Fact]
@@ -63,7 +63,12 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             {
                 if (disposing)
                 {
-                    _sut.ClearAllSchedulingData();
+                    DynamoClientFactory.CleanUpDynamo();
+
+                    if (_sut != null)
+                    {
+                        _sut.Dispose();
+                    }
                 }
 
                 _disposedValue = true;

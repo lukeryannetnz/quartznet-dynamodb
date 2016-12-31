@@ -92,7 +92,7 @@ namespace Quartz.DynamoDB
                     return;
                 }
 
-                Console.WriteLine(string.Format("Watiing for Table {0} to delete.", tableName));
+                Console.WriteLine(string.Format("Waiting for Table {0} to delete.", tableName));
 
                 Thread.Sleep(500);
             }
@@ -129,7 +129,7 @@ namespace Quartz.DynamoDB
                 {   
                 }
 
-                Console.WriteLine(string.Format("Watiing for Table {0} to become active.", tableName));
+                Console.WriteLine(string.Format("Waiting for Table {0} to become active.", tableName));
 
                 Thread.Sleep(500);
             }

@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using System.Collections.Generic;
+using System.Configuration;
 
 namespace Quartz.DynamoDB
 {
@@ -30,6 +31,21 @@ namespace Quartz.DynamoDB
                 }
 
                 return string.Format("{0}.", InstanceName);
+            }
+        }
+
+        public static IEnumerable<string> AllTableNames
+        {
+            get
+            {
+                return new[]
+                {
+                    JobDetailTableName, 
+                    JobGroupTableName, 
+                    TriggerTableName, 
+                    TriggerGroupTableName, 
+                    CalendarTableName, 
+                    SchedulerTableName };
             }
         }
     }

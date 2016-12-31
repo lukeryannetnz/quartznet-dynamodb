@@ -13,7 +13,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
 		public SchedulerIntegrationTests ()
 		{
-            _sut = new Quartz.DynamoDB.JobStore();
+            _sut = TestJobStoreFactory.CreateTestJobStore();
 
 		}
 			

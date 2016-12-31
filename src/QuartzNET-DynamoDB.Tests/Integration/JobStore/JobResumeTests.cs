@@ -15,7 +15,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
         public JobResumeTests()
         {
-            _sut = new DynamoDB.JobStore();
+            _sut = TestJobStoreFactory.CreateTestJobStore();
             var signaler = new RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 

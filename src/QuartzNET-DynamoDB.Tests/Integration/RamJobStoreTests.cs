@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 
 /* 
  * All content copyright Terracotta, Inc., unless otherwise indicated. All rights reserved. 
@@ -49,7 +49,7 @@ namespace Quartz.DynamoDB.Tests.Integration
 
         public RamJobStoreTests()
         {
-            fJobStore = new Quartz.DynamoDB.JobStore();
+            fJobStore = TestJobStoreFactory.CreateTestJobStore();
             fSignaler = new SampleSignaler();
             ITypeLoadHelper loadHelper = new SimpleTypeLoadHelper();
             fJobStore.Initialize(loadHelper, fSignaler);

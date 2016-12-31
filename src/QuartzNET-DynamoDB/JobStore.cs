@@ -138,7 +138,7 @@ namespace Quartz.DynamoDB
                 return false;
             }
 
-            return group.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused;
+            return group.State == DynamoTriggerGroupState.Paused;
         }
 
         public void StoreJob(IJobDetail newJob, bool replaceExisting)
@@ -272,7 +272,7 @@ namespace Quartz.DynamoDB
 
                 var triggerGroup = this._triggerGroupRepository.Load(newTrigger.Key.ToGroupDictionary());
 
-                if (triggerGroup != null && triggerGroup.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused)
+                if (triggerGroup != null && triggerGroup.State == DynamoTriggerGroupState.Paused)
                 {
                     trigger.State = DynamoTriggerState.Paused;
                 }
@@ -282,7 +282,7 @@ namespace Quartz.DynamoDB
                     triggerGroup = new DynamoTriggerGroup()
                     {
                         Name = newTrigger.Key.Group,
-                        State = DynamoTriggerGroup.DynamoTriggerGroupState.Active
+                        State = DynamoTriggerGroupState.Active
                     };
 
                     _triggerGroupRepository.Store(triggerGroup);
@@ -306,7 +306,7 @@ namespace Quartz.DynamoDB
                     _jobGroupRepository.Store(jobGroup);
                 }
 
-                if (triggerGroup.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused
+                if (triggerGroup.State == DynamoTriggerGroupState.Paused
                    || jobGroup.State == DynamoJobGroupState.Paused)
                 {
                     if (job.State == DynamoJobState.Blocked)
@@ -713,7 +713,7 @@ namespace Quartz.DynamoDB
                     Name = groupName
                 };
             }
-            triggerGroup.State = DynamoTriggerGroup.DynamoTriggerGroupState.Paused;
+            triggerGroup.State = DynamoTriggerGroupState.Paused;
             this._triggerGroupRepository.Store(triggerGroup);
         }
 
@@ -727,7 +727,7 @@ namespace Quartz.DynamoDB
                     Name = groupName
                 };
             }
-            triggerGroup.State = DynamoTriggerGroup.DynamoTriggerGroupState.Active;
+            triggerGroup.State = DynamoTriggerGroupState.Active;
             _triggerGroupRepository.Store(triggerGroup);
         }
 
@@ -880,7 +880,7 @@ namespace Quartz.DynamoDB
                 };
 
             var expressionAttributeValues = new Dictionary<string, AttributeValue> {
-                { ":PausedState", new AttributeValue { S = DynamoTriggerGroup.DynamoTriggerGroupState.Paused.ToString() } }
+                { ":PausedState", new AttributeValue { S = DynamoTriggerGroupState.Paused.ToString() } }
                 };
 
             var filterExpression = "#S = :PausedState";

@@ -27,16 +27,24 @@ namespace Quartz.DynamoDB.DataModel.Storage
 			var request = new GetItemRequest ()
 			{ 
 				TableName = entity.DynamoTableName, 
-				Key = key
+				Key = key,
+                ConsistentRead = true
 			};
 
-			var response = _client.GetItem (request);
+            try
+            {
+                var response = _client.GetItem(request);
 
-			if (response.IsItemSet) 
-			{
-				entity.InitialiseFromDynamoRecord (response.Item);
-				return entity;
-			} 
+                if (response.IsItemSet)
+                {
+                    entity.InitialiseFromDynamoRecord(response.Item);
+                    return entity;
+                }
+            }
+            catch (ResourceNotFoundException e)
+            {
+                Console.WriteLine(e);
+            }
 
 			return default(T);
 		}
@@ -98,6 +106,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
 			var request = new ScanRequest
 			{
 				TableName = entity.DynamoTableName,
+                ConsistentRead = true
 			};
 
 			if (expressionAttributeValues != null) 
@@ -115,18 +124,25 @@ namespace Quartz.DynamoDB.DataModel.Storage
 				request.FilterExpression = filterExpression;
 			}
 
-			var response = _client.Scan(request);
-			var result = response.Items;
+            List<T> matchedRecords = new List<T>();
 
-			List<T> matchedRecords = new List<T>();
+            try
+            {
+                var response = _client.Scan(request);
+                var result = response.Items;
 
-			foreach (Dictionary<string, AttributeValue> item in response.Items)
-			{
-				T value = new T ();
-				value.InitialiseFromDynamoRecord (item);
+                foreach (Dictionary<string, AttributeValue> item in response.Items)
+                {
+                    T value = new T();
+                    value.InitialiseFromDynamoRecord(item);
 
-				matchedRecords.Add (value);
+                    matchedRecords.Add(value);
+                }
 			}
+            catch (ResourceNotFoundException e)
+            {
+                Console.WriteLine(e);
+            }
 
 			return matchedRecords;
 		}

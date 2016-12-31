@@ -220,14 +220,14 @@ namespace Quartz.DynamoDB.Tests.Unit
 		public void TriggerStateSerialised()
 		{
 			var sut = new DynamoTrigger (new TestTrigger());
-			sut.State = "CustomState";
+            sut.State = new DynamoTriggerState(-78);
 
 			var serialised = sut.ToDynamo ();
 
 			var deserialised = new DynamoTrigger ();
 			deserialised.InitialiseFromDynamoRecord (serialised);
 
-			Assert.Equal (sut.State, deserialised.State);
+            Assert.Equal (sut.State.InternalValue, deserialised.State.InternalValue);
 		}
 
         [Serializable]

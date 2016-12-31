@@ -106,7 +106,7 @@ namespace Quartz.DynamoDB
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
-            createRequest.ProvisionedThroughput = new ProvisionedThroughput(1, 1);
+            createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
             CreateTableResponse createResponse;
@@ -143,7 +143,7 @@ namespace Quartz.DynamoDB
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
-            createRequest.ProvisionedThroughput = new ProvisionedThroughput(1, 1);
+            createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
             CreateTableResponse createResponse;
@@ -180,7 +180,7 @@ namespace Quartz.DynamoDB
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
-            createRequest.ProvisionedThroughput = new ProvisionedThroughput(1, 1);
+            createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
             CreateTableResponse createResponse;
@@ -217,7 +217,7 @@ namespace Quartz.DynamoDB
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
-            createRequest.ProvisionedThroughput = new ProvisionedThroughput(1, 1);
+            createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
             CreateTableResponse createResponse;
@@ -264,7 +264,7 @@ namespace Quartz.DynamoDB
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
-            createRequest.ProvisionedThroughput = new ProvisionedThroughput(1, 1);
+            createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
             CreateTableResponse createResponse;
@@ -301,7 +301,7 @@ namespace Quartz.DynamoDB
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
-            createRequest.ProvisionedThroughput = new ProvisionedThroughput(1, 1);
+            createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
             CreateTableResponse createResponse;

@@ -6,7 +6,7 @@ using Amazon.DynamoDBv2.Model;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
-    public class Repository<T> : IRepository<T> where T : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType, new()
+    public class Repository<T> : IRepository<T>, IDisposable where T : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType, new()
 	{
 		private AmazonDynamoDBClient _client;
 
@@ -41,9 +41,8 @@ namespace Quartz.DynamoDB.DataModel.Storage
                     return entity;
                 }
             }
-            catch (ResourceNotFoundException e)
+            catch (ResourceNotFoundException)
             {
-                Console.WriteLine(e);
             }
 
 			return default(T);
@@ -139,9 +138,8 @@ namespace Quartz.DynamoDB.DataModel.Storage
                     matchedRecords.Add(value);
                 }
 			}
-            catch (ResourceNotFoundException e)
+            catch (ResourceNotFoundException)
             {
-                Console.WriteLine(e);
             }
 
 			return matchedRecords;
@@ -165,6 +163,35 @@ namespace Quartz.DynamoDB.DataModel.Storage
 
 			return _client.DescribeTable(entity.DynamoTableName);
 		}
+
+        #region IDisposable implementation
+
+        bool _disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    if (_client != null)
+                    {
+                        _client.Dispose();
+                    }
+                }
+
+                _disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
+
+        #endregion
 	}
 }
 

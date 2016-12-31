@@ -200,7 +200,7 @@ namespace Quartz.DynamoDB
                     StoreJob(triggersAndJob.Key, true);
                     foreach (var trigger in triggersAndJob.Value)
                     {
-                        StoreTrigger((IOperableTrigger) trigger, true);
+                        StoreTrigger((IOperableTrigger)trigger, true);
                     }
                 }
             }
@@ -452,9 +452,11 @@ namespace Quartz.DynamoDB
             {
                 // unschedule jobs (delete triggers)
                 _triggerRepository.DeleteTable();
+                _triggerGroupRepository.DeleteTable();
 
                 // delete jobs
                 _jobRepository.DeleteTable();
+                _jobGroupRepository.DeleteTable();
 
                 // delete calendars
                 _calendarRepository.DeleteTable();
@@ -1514,7 +1516,40 @@ namespace Quartz.DynamoDB
             {
                 if (disposing)
                 {
-                    _context.Dispose();
+                    if (_context != null)
+                    {
+                        _context.Dispose();
+                    }
+
+                    if (_jobRepository != null)
+                    {
+                        _jobRepository.Dispose();
+                    }
+
+                    if (_jobGroupRepository != null)
+                    {
+                        _jobGroupRepository.Dispose();
+                    }
+
+                    if (_triggerRepository != null)
+                    {
+                        _triggerRepository.Dispose();
+                    }
+
+                    if (_triggerGroupRepository != null)
+                    {
+                        _triggerGroupRepository.Dispose();
+                    }
+
+                    if (_calendarRepository != null)
+                    {
+                        _calendarRepository.Dispose();
+                    }
+
+                    if (_schedulerRepository != null)
+                    {
+                        _schedulerRepository.Dispose();
+                    }
                 }
 
                 _disposedValue = true;
@@ -1529,5 +1564,6 @@ namespace Quartz.DynamoDB
         }
 
         #endregion
+
     }
 }

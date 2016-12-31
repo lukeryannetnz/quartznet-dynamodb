@@ -126,7 +126,7 @@ namespace Quartz.DynamoDB
                 return false;
             }
 
-            return group.State == DynamoJobGroup.DynamoJobGroupState.Paused;
+            return group.State == DynamoJobGroupState.Paused;
         }
 
         public bool IsTriggerGroupPaused(string groupName)
@@ -159,7 +159,7 @@ namespace Quartz.DynamoDB
                     jobGroup = new DynamoJobGroup()
                     {
                         Name = newJob.Key.Group,
-                        State = DynamoJobGroup.DynamoJobGroupState.Active
+                        State = DynamoJobGroupState.Active
                     };
 
                     _jobGroupRepository.Store(jobGroup);
@@ -290,7 +290,7 @@ namespace Quartz.DynamoDB
 
                 var jobGroup = this._jobGroupRepository.Load(newTrigger.JobKey.ToGroupDictionary());
 
-                if (jobGroup != null && jobGroup.State == DynamoJobGroup.DynamoJobGroupState.Paused)
+                if (jobGroup != null && jobGroup.State == DynamoJobGroupState.Paused)
                 {
                     trigger.State = DynamoTriggerState.Paused;
                 }
@@ -300,14 +300,14 @@ namespace Quartz.DynamoDB
                     jobGroup = new DynamoJobGroup()
                     {
                         Name = newTrigger.JobKey.Group,
-                        State = DynamoJobGroup.DynamoJobGroupState.Active
+                        State = DynamoJobGroupState.Active
                     };
 
                     _jobGroupRepository.Store(jobGroup);
                 }
 
                 if (triggerGroup.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused
-                   || jobGroup.State == DynamoJobGroup.DynamoJobGroupState.Paused)
+                   || jobGroup.State == DynamoJobGroupState.Paused)
                 {
                     if (job.State == DynamoJobState.Blocked)
                     {
@@ -788,7 +788,7 @@ namespace Quartz.DynamoDB
                     Name = groupName
                 };
             }
-            jobGroup.State = DynamoJobGroup.DynamoJobGroupState.Paused;
+            jobGroup.State = DynamoJobGroupState.Paused;
             this._jobGroupRepository.Store(jobGroup);
         }
         private void ResumeJobGroup(string groupName)
@@ -801,7 +801,7 @@ namespace Quartz.DynamoDB
                     Name = groupName
                 };
             }
-            jobGroup.State = DynamoJobGroup.DynamoJobGroupState.Active;
+            jobGroup.State = DynamoJobGroupState.Active;
             _jobGroupRepository.Store(jobGroup);
         }
 

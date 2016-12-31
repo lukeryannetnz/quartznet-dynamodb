@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 
@@ -12,38 +14,147 @@ namespace Quartz.DynamoDB
     {
         public void BootStrap(IAmazonDynamoDB client)
         {
-            if (!TableExists(client, DynamoConfiguration.JobDetailTableName))
+            if (ShouldCreate(client, DynamoConfiguration.JobDetailTableName))
             {
                 CreateJobDetailTable(client);
             }
 
-            if (!TableExists(client, DynamoConfiguration.JobGroupTableName))
+            if (ShouldCreate(client, DynamoConfiguration.JobGroupTableName))
             {
                 CreateJobGroupTable(client);
             }
 
-            if (!TableExists(client, DynamoConfiguration.TriggerTableName))
+            if (ShouldCreate(client, DynamoConfiguration.TriggerTableName))
             {
                 CreateTriggerTable(client);
             }
 
-            if (!TableExists(client, DynamoConfiguration.TriggerGroupTableName))
+            if (ShouldCreate(client, DynamoConfiguration.TriggerGroupTableName))
             {
                 CreateTriggerGroupTable(client);
             }
 
-            if (!TableExists(client, DynamoConfiguration.SchedulerTableName))
+            if (ShouldCreate(client, DynamoConfiguration.SchedulerTableName))
             {
                 CreateSchedulerTable(client);
             }
 
-            if (!TableExists(client, DynamoConfiguration.CalendarTableName))
+            if (ShouldCreate(client, DynamoConfiguration.CalendarTableName))
             {
                 CreateCalendarTable(client);
             }
         }
 
-        private bool TableExists(IAmazonDynamoDB client, string tableName)
+        public bool ShouldCreate(IAmazonDynamoDB client, string tableName)
+        {
+            if (!TableExists(client, tableName))
+            {
+                Console.WriteLine(string.Format("Table {0} doesn't exist.", tableName));
+                return true;
+            }
+
+            try
+            {
+                var table = client.DescribeTable(tableName);
+
+                Console.WriteLine(string.Format("Table {0} status {1}", tableName, table.Table.TableStatus));
+
+                if (table.Table.TableStatus == TableStatus.CREATING 
+                    || table.Table.TableStatus == TableStatus.UPDATING)
+                {
+                    EnsureTableActive(client, tableName);
+                    return false;
+                }
+                if (table.Table.TableStatus == TableStatus.DELETING)
+                {
+                    EnsureTableDeleted(client, tableName);
+                    return true;
+                }
+                if (table.Table.TableStatus == TableStatus.ACTIVE)
+                {
+                    return false;
+                }
+            }
+            catch (ResourceNotFoundException)
+            {
+                return true;
+            }
+
+            throw new System.Exception(string.Format("Not sure if we should create table: {0}. Unknown table status, panic!", tableName));
+        }
+
+        private static void EnsureTableDeleted(IAmazonDynamoDB client, string tableName)
+        {
+            for (int i = 0; i < 120; i++)
+            {
+               if (TableDeleted(client, tableName))
+                {
+                    return;
+                }
+
+                Console.WriteLine(string.Format("Watiing for Table {0} to delete.", tableName));
+
+                Thread.Sleep(500);
+            }
+
+            throw new System.Exception(string.Format("Table {0} not created within a reasonable time. Panic!", tableName));
+        }
+
+        private static bool TableDeleted(IAmazonDynamoDB client, string tableName)
+        {
+            try
+            {
+                client.DescribeTable(tableName);
+            }
+            catch (ResourceNotFoundException)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static void EnsureTableActive(IAmazonDynamoDB client, string tableName)
+        {
+            for (int i = 0; i < 120; i++)
+            {
+                try
+                {
+                    if (TableActive(client, tableName))
+                    {
+                        return;
+                    }
+                }
+                catch (ResourceNotFoundException)
+                {   
+                }
+
+                Console.WriteLine(string.Format("Watiing for Table {0} to become active.", tableName));
+
+                Thread.Sleep(500);
+            }
+
+            throw new System.Exception(string.Format("Table {0} not created within a reasonable time. Panic!", tableName));
+        }
+
+        private static bool TableActive(IAmazonDynamoDB client, string tableName)
+        {
+            try
+            {
+                var table = client.DescribeTable(tableName);
+                if (table.Table.TableStatus == TableStatus.ACTIVE)
+                {
+                    return true;
+                }
+            }
+            catch (ResourceNotFoundException)
+            {
+            }
+
+            return false;
+        }
+
+        private static bool TableExists(IAmazonDynamoDB client, string tableName)
         {
             string lastEvaluatedTableName = null;
 
@@ -104,17 +215,16 @@ namespace Quartz.DynamoDB
                 }
             };
 
+            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
             createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
-            CreateTableResponse createResponse;
-            createResponse = client.CreateTable(createRequest);
+            client.CreateTable(createRequest);
 
-            // Report the status of the new table...
-            Debug.WriteLine("\n\n Created the \"Job\" table successfully!\n    Status of the new table: '{0}'",
-                createResponse.TableDescription.TableStatus);
+            EnsureTableActive(client, createRequest.TableName);
         }
 
         private void CreateJobGroupTable(IAmazonDynamoDB client)
@@ -141,17 +251,16 @@ namespace Quartz.DynamoDB
                 }
             };
 
+            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
             createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
-            CreateTableResponse createResponse;
-            createResponse = client.CreateTable(createRequest);
+            client.CreateTable(createRequest);
 
-            // Report the status of the new table...
-            Debug.WriteLine("\n\n Created the \"Job Group\" table successfully!\n    Status of the new table: '{0}'",
-                createResponse.TableDescription.TableStatus);
+            EnsureTableActive(client, createRequest.TableName);
         }
 
         private void CreateCalendarTable(IAmazonDynamoDB client)
@@ -178,17 +287,16 @@ namespace Quartz.DynamoDB
                 }
             };
 
+            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
             createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
-            CreateTableResponse createResponse;
-            createResponse = client.CreateTable(createRequest);
+            client.CreateTable(createRequest);
 
-            // Report the status of the new table...
-            Debug.WriteLine("\n\n Created the \"Calendar\" table successfully!\n    Status of the new table: '{0}'",
-                createResponse.TableDescription.TableStatus);
+            EnsureTableActive(client, createRequest.TableName);
         }
 
         private void CreateTriggerGroupTable(IAmazonDynamoDB client)
@@ -215,17 +323,16 @@ namespace Quartz.DynamoDB
                 }
             };
 
+            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
             createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
-            CreateTableResponse createResponse;
-            createResponse = client.CreateTable(createRequest);
+            client.CreateTable(createRequest);
 
-            // Report the status of the new table...
-            Debug.WriteLine("\n\n Created the \"Trigger Group\" table successfully!\n    Status of the new table: '{0}'",
-                createResponse.TableDescription.TableStatus);
+            EnsureTableActive(client, createRequest.TableName);
         }
 
         private void CreateTriggerTable(IAmazonDynamoDB client)
@@ -262,17 +369,16 @@ namespace Quartz.DynamoDB
                 }
             };
 
+            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
             createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
-            CreateTableResponse createResponse;
-            createResponse = client.CreateTable(createRequest);
+            client.CreateTable(createRequest);
 
-            // Report the status of the new table...
-            Debug.WriteLine("\n\n Created the \"Trigger\" table successfully!\n    Status of the new table: '{0}'",
-                createResponse.TableDescription.TableStatus);
+            EnsureTableActive(client, createRequest.TableName);
         }
 
         private void CreateSchedulerTable(IAmazonDynamoDB client)
@@ -299,18 +405,16 @@ namespace Quartz.DynamoDB
                 }
             };
 
+            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
             createRequest.ProvisionedThroughput = new ProvisionedThroughput(10, 1);
 
             // Using the DynamoDB client, make a synchronous CreateTable request
-            CreateTableResponse createResponse;
-            createResponse = client.CreateTable(createRequest);
+            client.CreateTable(createRequest);
 
-            // Report the status of the new table...
-            Debug.WriteLine("\n\n Created the \"Scheduler\" table successfully!\n    Status of the new table: '{0}'",
-                createResponse.TableDescription.TableStatus);
+            EnsureTableActive(client, createRequest.TableName);
         }
-
     }
 }

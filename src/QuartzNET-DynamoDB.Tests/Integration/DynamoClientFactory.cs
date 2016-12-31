@@ -6,12 +6,11 @@ namespace Quartz.DynamoDB.Tests
     public class DynamoClientFactory
     {
         private static JobStore _store;
-        private static string InstanceName;
+        private static string InstanceName = Guid.NewGuid().ToString();
 
         public static DynamoDB.JobStore CreateTestJobStore()
         {
             _store = new JobStore();
-            InstanceName = Guid.NewGuid().ToString();
             _store.InstanceName = InstanceName;
 
             return _store;

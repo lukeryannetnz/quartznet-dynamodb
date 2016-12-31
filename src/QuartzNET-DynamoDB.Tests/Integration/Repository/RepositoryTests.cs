@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xunit;
 using Quartz.DynamoDB.DataModel.Storage;
 using Quartz.DynamoDB.DataModel;
@@ -14,12 +14,14 @@ namespace Quartz.DynamoDB.Tests.Integration.Repository
     public class RepositoryTests : IDisposable
 	{
         private Repository<DynamoScheduler> _sut;
+        private DynamoClientFactory _testFactory;
 
 		//[Fact]
 		[Trait("Category", "Integration")]
 		public void PersistTwoSchedulersSameId_OneRecord()
 		{
-            var client = DynamoClientFactory.BootStrapDynamo();
+            _testFactory = new DynamoClientFactory();
+            var client = _testFactory.BootStrapDynamo();
 			_sut = new Repository<DynamoScheduler> (client);
 
 			int initialSchedulerCount = _sut.Scan (null, null, null).Count();
@@ -59,7 +61,7 @@ namespace Quartz.DynamoDB.Tests.Integration.Repository
             {
                 if (disposing)
                 {
-                    DynamoClientFactory.CleanUpDynamo();
+                    _testFactory.CleanUpDynamo();
 
                     if (_sut != null)
                     {

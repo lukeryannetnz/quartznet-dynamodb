@@ -5,31 +5,30 @@ namespace Quartz.DynamoDB.Tests
 {
     public class DynamoClientFactory
     {
-        private static JobStore _store;
-        private static string InstanceName = Guid.NewGuid().ToString();
+        private readonly string _instanceName = Guid.NewGuid().ToString();
 
-        public static DynamoDB.JobStore CreateTestJobStore()
+        public DynamoDB.JobStore CreateTestJobStore()
         {
-            _store = new JobStore();
-            _store.InstanceName = InstanceName;
+            var var = new JobStore();
+            var.InstanceName = _instanceName;
 
-            return _store;
+            return var;
         }
 
-        public static AmazonDynamoDBClient BootStrapDynamo()
+        public AmazonDynamoDBClient BootStrapDynamo()
         {
             var client = DynamoDbClientFactory.Create();
-            DynamoConfiguration.InstanceName = InstanceName;
+            DynamoConfiguration.InstanceName = _instanceName;
             new DynamoBootstrapper().BootStrap(client);
 
             return client;
         }
 
-        public static void CleanUpDynamo()
+        public void CleanUpDynamo()
         {
             using (var client = DynamoDbClientFactory.Create())
             {
-                DynamoConfiguration.InstanceName = InstanceName;
+                DynamoConfiguration.InstanceName = _instanceName;
 
                 foreach (var table in DynamoConfiguration.AllTableNames)
                 {

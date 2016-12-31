@@ -10,11 +10,13 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     public class SchedulerIntegrationTests : IDisposable
 	{
         private readonly DynamoDB.JobStore _sut;
+        private readonly DynamoClientFactory _testFactory;
 
 		public SchedulerIntegrationTests ()
 		{
-            _sut = DynamoClientFactory.CreateTestJobStore();
-		}
+            _testFactory = new DynamoClientFactory();		
+            _sut = _testFactory.CreateTestJobStore();
+        }
 			
 		[Fact]
 		[Trait("Category", "Integration")]
@@ -63,7 +65,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             {
                 if (disposing)
                 {
-                    DynamoClientFactory.CleanUpDynamo();
+                    _testFactory.CleanUpDynamo();
 
                     if (_sut != null)
                     {

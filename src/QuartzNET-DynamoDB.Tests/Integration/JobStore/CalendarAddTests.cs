@@ -12,10 +12,12 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     public class CalendarAddTests : IDisposable
     {
         private readonly DynamoDB.JobStore _sut;
+        private readonly DynamoClientFactory _testFactory;
 
         public CalendarAddTests()
         {
-            _sut = DynamoClientFactory.CreateTestJobStore();
+            _testFactory = new DynamoClientFactory();
+            _sut = _testFactory.CreateTestJobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -47,7 +49,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             {
                 if (disposing)
                 {
-                    DynamoClientFactory.CleanUpDynamo();
+                    _testFactory.CleanUpDynamo();
 
                     if (_sut != null)
                     {

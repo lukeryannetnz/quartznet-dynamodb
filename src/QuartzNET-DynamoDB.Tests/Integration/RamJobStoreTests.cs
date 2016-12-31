@@ -46,10 +46,12 @@ namespace Quartz.DynamoDB.Tests.Integration
         private readonly JobDetailImpl fJobDetail;
         private readonly SampleSignaler fSignaler;
         private readonly string testIdentifier = DateTime.UtcNow.Ticks.ToString();
+        private readonly DynamoClientFactory _testFactory;
 
         public RamJobStoreTests()
         {
-            fJobStore = DynamoClientFactory.CreateTestJobStore();
+            _testFactory = new DynamoClientFactory();
+            fJobStore = _testFactory.CreateTestJobStore();
             fSignaler = new SampleSignaler();
             ITypeLoadHelper loadHelper = new SimpleTypeLoadHelper();
             fJobStore.Initialize(loadHelper, fSignaler);
@@ -486,7 +488,7 @@ namespace Quartz.DynamoDB.Tests.Integration
             {
                 if (disposing)
                 {
-                    fJobStore.ClearAllSchedulingData();
+                    _testFactory.CleanUpDynamo();
                 }
 
                 _disposedValue = true;

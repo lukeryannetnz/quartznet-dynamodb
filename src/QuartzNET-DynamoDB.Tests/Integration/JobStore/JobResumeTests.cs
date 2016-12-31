@@ -108,9 +108,30 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             Assert.Equal(false, paused);
         }
 
+        #region IDisposable implementation
+
+        bool _disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    _sut.ClearAllSchedulingData();
+                }
+
+                _disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
-            _sut.Dispose();
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
         }
+
+        #endregion
     }
 }

@@ -11,11 +11,8 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to Resuming Triggers and Trigger Groups.
     /// </summary>
-    public class TriggerResumeTests : IDisposable
+    public class TriggerResumeTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-        private readonly DynamoClientFactory _testFactory;
-
         public TriggerResumeTests()
         {
             _testFactory = new DynamoClientFactory();
@@ -92,37 +89,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             triggerState2 = _sut.GetTriggerState(tr2.Key);
             Assert.Equal("Normal", triggerState2.ToString());
         }
-
-        #region IDisposable implementation
-
-        bool _disposedValue = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    _testFactory.CleanUpDynamo();
-
-                    if (_sut != null)
-                    {
-                        _sut.Dispose();
-                    }
-                }
-
-                _disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-        }
-
-        #endregion
     }
 }
 

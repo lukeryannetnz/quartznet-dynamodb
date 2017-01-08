@@ -1,15 +1,11 @@
 using System;
 using Quartz.Simpl;
-using Quartz.Spi;
 using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
-    public class TriggerGroupGetTests : IDisposable
+    public class TriggerGroupGetTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-        private readonly DynamoClientFactory _testFactory;
-
         public TriggerGroupGetTests()
         {
             _testFactory = new DynamoClientFactory();
@@ -35,37 +31,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             Assert.True(result.Contains(triggerGroup));
         }
-
-        #region IDisposable implementation
-
-        bool _disposedValue = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    _testFactory.CleanUpDynamo();
-
-                    if (_sut != null)
-                    {
-                        _sut.Dispose();
-                    }
-                }
-
-                _disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-        }
-
-        #endregion
     }
 }
 

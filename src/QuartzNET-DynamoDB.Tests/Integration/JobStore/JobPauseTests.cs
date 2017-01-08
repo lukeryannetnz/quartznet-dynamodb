@@ -11,11 +11,8 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the Pausing of Jobs and Job Groups.
     /// </summary>
-    public class JobPauseTests : IDisposable
+    public class JobPauseTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-        private readonly DynamoClientFactory _testFactory;
-
         public JobPauseTests()
         {
             _testFactory = new DynamoClientFactory();
@@ -88,37 +85,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             paused = _sut.IsJobGroupPaused(jobGroup);
             Assert.Equal(true, paused);
         }
-
-        #region IDisposable implementation
-
-        bool _disposedValue = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    _testFactory.CleanUpDynamo();
-
-                    if (_sut != null)
-                    {
-                        _sut.Dispose();
-                    }
-                }
-
-                _disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-        }
-
-        #endregion
     }
 }
 

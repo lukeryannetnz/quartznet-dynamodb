@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Impl;
 using Quartz.Job;
 using Quartz.Simpl;
-using Quartz.Spi;
 using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
@@ -12,11 +8,8 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the Addition of Jobs and Job Groups.
     /// </summary>
-    public class JobAddTests : IDisposable
+    public class JobAddTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-        private readonly DynamoClientFactory _testFactory;
-
         public JobAddTests()
         {
             _testFactory = new DynamoClientFactory();
@@ -92,37 +85,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             Assert.Throws<ObjectAlreadyExistsException>(() => _sut.StoreJob(detail, false));
         }
-
-        #region IDisposable implementation
-
-        bool _disposedValue = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    _testFactory.CleanUpDynamo();
-
-                    if (_sut != null)
-                    {
-                        _sut.Dispose();
-                    }
-                }
-
-                _disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-        }
-
-        #endregion
     }
 }
 

@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using Quartz.Impl.Calendar;
 using Quartz.Simpl;
-using Quartz.Spi;
 using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
@@ -10,14 +9,11 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the loading of calendars.
     /// </summary>
-    public class CalendarGetTests : IDisposable
+    public class CalendarGetTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-        private readonly DynamoClientFactory _testFactory;
-
         public CalendarGetTests()
         {
-            _testFactory = new DynamoClientFactory();            
+            _testFactory = new DynamoClientFactory();
             _sut = _testFactory.CreateTestJobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
@@ -79,37 +75,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             Assert.True(result.Contains(calName));
         }
-
-        #region IDisposable implementation
-
-        bool _disposedValue = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    _testFactory.CleanUpDynamo();
-
-                    if (_sut != null)
-                    {
-                        _sut.Dispose();
-                    }
-                }
-
-                _disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-        }
-
-        #endregion
     }
 }
 

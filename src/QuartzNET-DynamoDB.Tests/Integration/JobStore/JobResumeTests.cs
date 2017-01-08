@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using Quartz.Simpl;
-using Quartz.Spi;
 using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
@@ -9,11 +8,8 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the Resumption of Jobs and Job Groups.
     /// </summary>
-    public class JobResumeTests : IDisposable
+    public class JobResumeTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-        private readonly DynamoClientFactory _testFactory;
-
         public JobResumeTests()
         {
             _testFactory = new DynamoClientFactory();
@@ -109,36 +105,5 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             paused = _sut.IsJobGroupPaused(jobGroup);
             Assert.Equal(false, paused);
         }
-
-        #region IDisposable implementation
-
-        bool _disposedValue = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    _testFactory.CleanUpDynamo();
-
-                    if (_sut != null)
-                    {
-                        _sut.Dispose();
-                    }
-                }
-
-                _disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-        }
-
-        #endregion
     }
 }

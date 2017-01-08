@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Quartz.DynamoDB.Tests.Integration;
 using Quartz.Impl;
 using Quartz.Job;
 using Quartz.Simpl;
@@ -9,11 +8,8 @@ using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
-    public class TriggerRemoveTests : IDisposable
+    public class TriggerRemoveTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-        private readonly DynamoClientFactory _testFactory;
-
         public TriggerRemoveTests()
         {
             _testFactory = new DynamoClientFactory();
@@ -83,37 +79,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             var result = _sut.RemoveTriggers(new List<TriggerKey>() { tr.Key, inMemoryTr.Key });
             Assert.False(result);
         }
-
-        #region IDisposable implementation
-
-        bool _disposedValue = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    _testFactory.CleanUpDynamo();
-
-                    if (_sut != null)
-                    {
-                        _sut.Dispose();
-                    }
-                }
-
-                _disposedValue = true;
-            }
-        }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-        }
-
-        #endregion
     }
 }
 

@@ -9,7 +9,7 @@ namespace Quartz.DynamoDB.Tests.Integration
 
         public DynamoDB.JobStore CreateTestJobStore()
         {
-            var var = new JobStore();
+            var var = new DynamoDB.JobStore();
             var.InstanceName = _instanceName;
 
             return var;

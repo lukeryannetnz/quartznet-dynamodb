@@ -1,7 +1,7 @@
 ﻿using System;
 using Amazon.DynamoDBv2;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Integration
 {
     public class DynamoClientFactory
     {

@@ -21,6 +21,22 @@ namespace Quartz.DynamoDB
 
         public static string ServiceUrl => ConfigurationManager.AppSettings["DynamoServiceURL"] ?? string.Empty;
 
+        public static int BootstrapRetryDelayMilliseconds
+        {
+            get
+            {
+                var configValue = ConfigurationManager.AppSettings["BootstrapRetryDelayMilliseconds"];
+
+                int value;
+                if (!string.IsNullOrWhiteSpace(configValue) && int.TryParse(configValue, out value))
+                {
+                    return value;
+                }
+
+                return 500;
+            }
+        }
+
         private static string TableNamePrefix
         {
             get

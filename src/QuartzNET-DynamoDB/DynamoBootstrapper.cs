@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
@@ -59,7 +58,7 @@ namespace Quartz.DynamoDB
 
                 Console.WriteLine(string.Format("Table {0} status {1}", tableName, table.Table.TableStatus));
 
-                if (table.Table.TableStatus == TableStatus.CREATING 
+                if (table.Table.TableStatus == TableStatus.CREATING
                     || table.Table.TableStatus == TableStatus.UPDATING)
                 {
                     EnsureTableActive(client, tableName);
@@ -87,14 +86,14 @@ namespace Quartz.DynamoDB
         {
             for (int i = 0; i < 120; i++)
             {
-               if (TableDeleted(client, tableName))
+                if (TableDeleted(client, tableName))
                 {
                     return;
                 }
 
                 Console.WriteLine(string.Format("Waiting for Table {0} to delete.", tableName));
 
-                Thread.Sleep(500);
+                Thread.Sleep(DynamoConfiguration.BootstrapRetryDelayMilliseconds);
             }
 
             throw new System.Exception(string.Format("Table {0} not created within a reasonable time. Panic!", tableName));
@@ -126,12 +125,12 @@ namespace Quartz.DynamoDB
                     }
                 }
                 catch (ResourceNotFoundException)
-                {   
+                {
                 }
 
                 Console.WriteLine(string.Format("Waiting for Table {0} to become active.", tableName));
 
-                Thread.Sleep(500);
+                Thread.Sleep(DynamoConfiguration.BootstrapRetryDelayMilliseconds);
             }
 
             throw new System.Exception(string.Format("Table {0} not created within a reasonable time. Panic!", tableName));

@@ -12,7 +12,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         {
             var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             config.AppSettings.Settings.Remove("BootstrapRetryDelayMilliseconds");
-            config.Save(ConfigurationSaveMode.Modified);
+            config.Save(ConfigurationSaveMode.Full);
 
             Assert.Equal(500, DynamoConfiguration.BootstrapRetryDelayMilliseconds);
         }

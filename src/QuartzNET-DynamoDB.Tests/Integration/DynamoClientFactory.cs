@@ -3,6 +3,9 @@ using Amazon.DynamoDBv2;
 
 namespace Quartz.DynamoDB.Tests.Integration
 {
+    /// <summary>
+    /// Test helper that manages unique dynamo table-prefixes and cleaning up tables after test runs.
+    /// </summary>
     public class DynamoClientFactory
     {
         private readonly string _instanceName = Guid.NewGuid().ToString();

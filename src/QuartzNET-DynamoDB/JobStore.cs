@@ -126,7 +126,7 @@ namespace Quartz.DynamoDB
                 return false;
             }
 
-            return group.State == DynamoJobGroup.DynamoJobGroupState.Paused;
+            return group.State == DynamoJobGroupState.Paused;
         }
 
         public bool IsTriggerGroupPaused(string groupName)
@@ -138,7 +138,7 @@ namespace Quartz.DynamoDB
                 return false;
             }
 
-            return group.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused;
+            return group.State == DynamoTriggerGroupState.Paused;
         }
 
         public void StoreJob(IJobDetail newJob, bool replaceExisting)
@@ -159,7 +159,7 @@ namespace Quartz.DynamoDB
                     jobGroup = new DynamoJobGroup()
                     {
                         Name = newJob.Key.Group,
-                        State = DynamoJobGroup.DynamoJobGroupState.Active
+                        State = DynamoJobGroupState.Active
                     };
 
                     _jobGroupRepository.Store(jobGroup);
@@ -272,9 +272,9 @@ namespace Quartz.DynamoDB
 
                 var triggerGroup = this._triggerGroupRepository.Load(newTrigger.Key.ToGroupDictionary());
 
-                if (triggerGroup != null && triggerGroup.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused)
+                if (triggerGroup != null && triggerGroup.State == DynamoTriggerGroupState.Paused)
                 {
-                    trigger.State = "Paused";
+                    trigger.State = DynamoTriggerState.Paused;
                 }
 
                 if (triggerGroup == null)
@@ -282,7 +282,7 @@ namespace Quartz.DynamoDB
                     triggerGroup = new DynamoTriggerGroup()
                     {
                         Name = newTrigger.Key.Group,
-                        State = DynamoTriggerGroup.DynamoTriggerGroupState.Active
+                        State = DynamoTriggerGroupState.Active
                     };
 
                     _triggerGroupRepository.Store(triggerGroup);
@@ -290,9 +290,9 @@ namespace Quartz.DynamoDB
 
                 var jobGroup = this._jobGroupRepository.Load(newTrigger.JobKey.ToGroupDictionary());
 
-                if (jobGroup != null && jobGroup.State == DynamoJobGroup.DynamoJobGroupState.Paused)
+                if (jobGroup != null && jobGroup.State == DynamoJobGroupState.Paused)
                 {
-                    trigger.State = "Paused";
+                    trigger.State = DynamoTriggerState.Paused;
                 }
 
                 if (jobGroup == null)
@@ -300,23 +300,23 @@ namespace Quartz.DynamoDB
                     jobGroup = new DynamoJobGroup()
                     {
                         Name = newTrigger.JobKey.Group,
-                        State = DynamoJobGroup.DynamoJobGroupState.Active
+                        State = DynamoJobGroupState.Active
                     };
 
                     _jobGroupRepository.Store(jobGroup);
                 }
 
-                if (triggerGroup.State == DynamoTriggerGroup.DynamoTriggerGroupState.Paused
-                   || jobGroup.State == DynamoJobGroup.DynamoJobGroupState.Paused)
+                if (triggerGroup.State == DynamoTriggerGroupState.Paused
+                   || jobGroup.State == DynamoJobGroupState.Paused)
                 {
                     if (job.State == DynamoJobState.Blocked)
                     {
-                        trigger.State = "PausedAndBlocked";
+                        trigger.State = DynamoTriggerState.PausedAndBlocked;
                     }
                 }
                 else if (job.State == DynamoJobState.Blocked)
                 {
-                    trigger.State = "Blocked";
+                    trigger.State = DynamoTriggerState.Blocked;
                 }
 
                 _triggerRepository.Store(trigger);
@@ -645,28 +645,8 @@ namespace Quartz.DynamoDB
                 {
                     return TriggerState.None;
                 }
-                if (record.State == "Complete")
-                {
-                    return TriggerState.Complete;
-                }
-                if (record.State == "Paused")
-                {
-                    return TriggerState.Paused;
-                }
-                if (record.State == "PausedAndBlocked")
-                {
-                    return TriggerState.Paused;
-                }
-                if (record.State == "Blocked")
-                {
-                    return TriggerState.Blocked;
-                }
-                if (record.State == "Error")
-                {
-                    return TriggerState.Error;
-                }
 
-                return TriggerState.Normal;
+                return record.State.TriggerState;
             }
         }
 
@@ -676,11 +656,11 @@ namespace Quartz.DynamoDB
 
             if (record.TriggerState == TriggerState.Blocked)
             {
-                record.State = "PausedAndBlocked";
+                record.State = DynamoTriggerState.PausedAndBlocked;
             }
             else
             {
-                record.State = "Paused";
+                record.State = DynamoTriggerState.Paused;
             }
 
             _triggerRepository.Store(record);
@@ -733,7 +713,7 @@ namespace Quartz.DynamoDB
                     Name = groupName
                 };
             }
-            triggerGroup.State = DynamoTriggerGroup.DynamoTriggerGroupState.Paused;
+            triggerGroup.State = DynamoTriggerGroupState.Paused;
             this._triggerGroupRepository.Store(triggerGroup);
         }
 
@@ -747,7 +727,7 @@ namespace Quartz.DynamoDB
                     Name = groupName
                 };
             }
-            triggerGroup.State = DynamoTriggerGroup.DynamoTriggerGroupState.Active;
+            triggerGroup.State = DynamoTriggerGroupState.Active;
             _triggerGroupRepository.Store(triggerGroup);
         }
 
@@ -808,7 +788,7 @@ namespace Quartz.DynamoDB
                     Name = groupName
                 };
             }
-            jobGroup.State = DynamoJobGroup.DynamoJobGroupState.Paused;
+            jobGroup.State = DynamoJobGroupState.Paused;
             this._jobGroupRepository.Store(jobGroup);
         }
         private void ResumeJobGroup(string groupName)
@@ -821,7 +801,7 @@ namespace Quartz.DynamoDB
                     Name = groupName
                 };
             }
-            jobGroup.State = DynamoJobGroup.DynamoJobGroupState.Active;
+            jobGroup.State = DynamoJobGroupState.Active;
             _jobGroupRepository.Store(jobGroup);
         }
 
@@ -835,8 +815,8 @@ namespace Quartz.DynamoDB
             }
 
             // if the trigger is not paused resuming it does not make sense...
-            if (record.State != "Paused" &&
-                record.State != "PausedAndBlocked")
+            if (record.State != DynamoTriggerState.Paused &&
+                record.State != DynamoTriggerState.PausedAndBlocked)
             {
                 return;
             }
@@ -844,11 +824,11 @@ namespace Quartz.DynamoDB
             var job = _jobRepository.Load(record.Trigger.JobKey.ToDictionary());
             if (job != null && job.State == DynamoJobState.Blocked)
             {
-                record.State = "Blocked";
+                record.State = DynamoTriggerState.Blocked;
             }
             else
             {
-                record.State = "Waiting";
+                record.State = DynamoTriggerState.Waiting;
             }
 
             this.ApplyMisfireIfNecessary(record);
@@ -900,7 +880,7 @@ namespace Quartz.DynamoDB
                 };
 
             var expressionAttributeValues = new Dictionary<string, AttributeValue> {
-                { ":PausedState", new AttributeValue { S = DynamoTriggerGroup.DynamoTriggerGroupState.Paused.ToString() } }
+                { ":PausedState", new AttributeValue { S = DynamoTriggerGroupState.Paused.ToString() } }
                 };
 
             var filterExpression = "#S = :PausedState";
@@ -1023,7 +1003,7 @@ namespace Quartz.DynamoDB
                 };
 
                 var candidateExpressionAttributeValues = new Dictionary<string, AttributeValue> {
-                    { ":WaitingState", new AttributeValue { S = "Waiting" } },
+                    { ":WaitingState", new AttributeValue { N = DynamoTriggerState.Waiting.InternalValue.ToString() } },
                     { ":MaxNextFireTime", new AttributeValue { N = maxNextFireTime } }
                 };
 
@@ -1096,12 +1076,12 @@ namespace Quartz.DynamoDB
                     Dictionary<string, AttributeValue> acquireTriggerExpressionAttributeValues = new Dictionary<string, AttributeValue>() {
                         { ":name", new AttributeValue () { S = trigger.Trigger.Name } },
                         { ":group", new AttributeValue () { S = trigger.Trigger.Group } },
-                        { ":state", new AttributeValue () { S = "Waiting" } }
+                        { ":state", new AttributeValue () { N = DynamoTriggerState.Waiting.InternalValue.ToString() } }
                     };
 
                     trigger.Trigger.FireInstanceId = this.GetFiredTriggerRecordId();
                     trigger.SchedulerInstanceId = InstanceId;
-                    trigger.State = "Acquired";
+                    trigger.State = DynamoTriggerState.Acquired;
 
                     Debug.WriteLine("Acquiring the trigger.");
 
@@ -1169,7 +1149,7 @@ namespace Quartz.DynamoDB
 
             if (!trigger.Trigger.GetNextFireTimeUtc().HasValue)
             {
-                trigger.State = "Complete";
+                trigger.State = DynamoTriggerState.Complete;
                 this.StoreTrigger(trigger.Trigger, true);
 
                 _signaler.NotifySchedulerListenersFinalized(trigger.Trigger);
@@ -1187,7 +1167,7 @@ namespace Quartz.DynamoDB
             var t = _triggerRepository.Load(trigger.Key.ToDictionary());
 
             t.SchedulerInstanceId = string.Empty;
-            t.State = "Waiting";
+            t.State = DynamoTriggerState.Waiting;
 
             _triggerRepository.Store(t);
         }
@@ -1207,7 +1187,7 @@ namespace Quartz.DynamoDB
                         continue;
                     }
                     // was the trigger completed, paused, blocked, etc. since being acquired?
-                    if (storedTrigger.State != "Acquired")
+                    if (storedTrigger.State != DynamoTriggerState.Acquired)
                     {
                         continue;
                     }
@@ -1229,7 +1209,7 @@ namespace Quartz.DynamoDB
                     trigger.Triggered(cal);
                     Debug.WriteLine("Triggered Trigger! Previous Fire Time: {0}. Next Fire Time: {1}.", trigger.GetPreviousFireTimeUtc(), trigger.GetNextFireTimeUtc());
                     storedTrigger.Trigger = (SimpleTriggerImpl)trigger;
-                    storedTrigger.State = "Executing";
+                    storedTrigger.State = DynamoTriggerState.Executing;
 
                     _triggerRepository.Store(storedTrigger);
 
@@ -1254,14 +1234,14 @@ namespace Quartz.DynamoDB
 
                         foreach (var jobTrigger in triggersForJob)
                         {
-                            if (jobTrigger.State == "Waiting")
+                            if (jobTrigger.State == DynamoTriggerState.Waiting)
                             {
-                                jobTrigger.State = "Blocked";
+                                jobTrigger.State = DynamoTriggerState.Blocked;
                             }
 
-                            if (jobTrigger.State == "Paused")
+                            if (jobTrigger.State == DynamoTriggerState.Paused)
                             {
-                                jobTrigger.State = "PausedAndBlocked";
+                                jobTrigger.State = DynamoTriggerState.PausedAndBlocked;
                             }
 
                             _triggerRepository.Store(jobTrigger);
@@ -1301,14 +1281,14 @@ namespace Quartz.DynamoDB
 
                 foreach (var jobTrigger in triggersForJob)
                 {
-                    if (jobTrigger.State == "Blocked")
+                    if (jobTrigger.State == DynamoTriggerState.Blocked)
                     {
-                        jobTrigger.State = "Waiting";
+                        jobTrigger.State = DynamoTriggerState.Waiting;
                     }
 
-                    if (jobTrigger.State == "PausedAndBlocked")
+                    if (jobTrigger.State == DynamoTriggerState.PausedAndBlocked)
                     {
-                        jobTrigger.State = "Waiting";
+                        jobTrigger.State = DynamoTriggerState.Waiting;
                     }
 
                     _triggerRepository.Store(jobTrigger);
@@ -1351,7 +1331,7 @@ namespace Quartz.DynamoDB
             else if (triggerInstCode == SchedulerInstruction.SetTriggerComplete)
             {
                 var record = _triggerRepository.Load(trigger.Key.ToDictionary());
-                record.State = "Complete";
+                record.State = DynamoTriggerState.Complete;
                 _triggerRepository.Store(record);
 
                 _signaler.SignalSchedulingChange(null);
@@ -1361,7 +1341,7 @@ namespace Quartz.DynamoDB
                 Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "Trigger {0} set to ERROR state.", trigger.Key));
 
                 var record = _triggerRepository.Load(trigger.Key.ToDictionary());
-                record.State = "Error";
+                record.State = DynamoTriggerState.Error;
                 _triggerRepository.Store(record);
 
                 _signaler.SignalSchedulingChange(null);
@@ -1376,7 +1356,7 @@ namespace Quartz.DynamoDB
                 foreach (var trig in jobTriggers)
                 {
                     var record = _triggerRepository.Load(trig.Key.ToDictionary());
-                    record.State = "Error";
+                    record.State = DynamoTriggerState.Error;
                     _triggerRepository.Store(record);
                 }
 
@@ -1390,7 +1370,7 @@ namespace Quartz.DynamoDB
                 foreach (var trig in jobTriggers)
                 {
                     var record = _triggerRepository.Load(trig.Key.ToDictionary());
-                    record.State = "Complete";
+                    record.State = DynamoTriggerState.Complete;
                     _triggerRepository.Store(record);
                 }
 
@@ -1500,7 +1480,7 @@ namespace Quartz.DynamoDB
                 if (!string.IsNullOrEmpty(trigger.SchedulerInstanceId) && !activeSchedulers.Select(s => s.InstanceId).Contains(trigger.SchedulerInstanceId))
                 {
                     trigger.SchedulerInstanceId = string.Empty;
-                    trigger.State = "Waiting";
+                    trigger.State = DynamoTriggerState.Waiting;
                     _triggerRepository.Store(trigger);
                 }
             }

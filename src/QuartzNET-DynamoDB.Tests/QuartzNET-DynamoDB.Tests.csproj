@@ -119,6 +119,7 @@
     <Compile Include="Integration\JobStore\TriggerGroupGetTests.cs" />
     <Compile Include="Integration\JobStore\JobResumeTests.cs" />
     <Compile Include="Unit\DynamoJobTests.cs" />
+    <Compile Include="Unit\DynamoTriggerStateTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="job_scheduling_data_2_0.xsd">

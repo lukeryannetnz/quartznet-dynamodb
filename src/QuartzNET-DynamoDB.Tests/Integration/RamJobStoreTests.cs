@@ -16,12 +16,12 @@
  * under the License.
  * 
  */
-using System.Linq;
 
 #endregion
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Quartz.Impl;
 using Quartz.Impl.Calendar;
 using Quartz.Impl.Matchers;

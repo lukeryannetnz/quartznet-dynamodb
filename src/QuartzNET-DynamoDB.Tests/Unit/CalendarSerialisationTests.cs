@@ -189,7 +189,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         public void WeeklyDaysNoExcluded()
         {
             WeeklyCalendar cal = new WeeklyCalendar();
-           
+
             var sut = new DynamoCalendar("test", cal);
             var serialised = sut.ToDynamo();
             var deserialised = new DynamoCalendar(serialised);

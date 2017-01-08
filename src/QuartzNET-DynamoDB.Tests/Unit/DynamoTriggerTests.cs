@@ -12,8 +12,8 @@ namespace Quartz.DynamoDB.Tests.Unit
         /// <summary>
         /// Tests that a new DynamoTrigger object has its state set correctly.
         /// </summary>
-        [Fact] 
-		[Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
         public void InitialisedState()
         {
             var sut = new DynamoTrigger();
@@ -24,8 +24,8 @@ namespace Quartz.DynamoDB.Tests.Unit
         /// <summary>
         /// Tests that when state is string.Empty, TriggerState is None.
         /// </summary>
-        [Fact] 
-		[Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
         public void TriggerStateNone()
         {
             var sut = new DynamoTrigger();
@@ -37,8 +37,8 @@ namespace Quartz.DynamoDB.Tests.Unit
         /// <summary>
         /// Tests that when state is Complete, TriggerState is Complete.
         /// </summary>
-        [Fact] 
-		[Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
         public void TriggerStateComplete()
         {
             var sut = new DynamoTrigger();
@@ -50,9 +50,9 @@ namespace Quartz.DynamoDB.Tests.Unit
         /// <summary>
         /// Tests that when state is Paused, TriggerState is Paused.
         /// </summary>
-        [Fact] 
-		[Trait("Category", "Unit")]
-		public void TriggerStatePaused()
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void TriggerStatePaused()
         {
             var sut = new DynamoTrigger();
             sut.State = "Paused";
@@ -65,9 +65,9 @@ namespace Quartz.DynamoDB.Tests.Unit
         /// This is because PausedAndBlocked is an internal state that we do not want to expose
         /// to externally.
         /// </summary>
-        [Fact] 
-		[Trait("Category", "Unit")]
-		public void TriggerStatePausedAndBlocked()
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void TriggerStatePausedAndBlocked()
         {
             var sut = new DynamoTrigger();
             sut.State = "PausedAndBlocked";
@@ -78,9 +78,9 @@ namespace Quartz.DynamoDB.Tests.Unit
         /// <summary>
         /// Tests that when state is Blocked, TriggerState is Blocked.
         /// </summary>
-        [Fact] 
-		[Trait("Category", "Unit")]
-		public void TriggerStateBlocked()
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void TriggerStateBlocked()
         {
             var sut = new DynamoTrigger();
             sut.State = "Blocked";
@@ -91,8 +91,8 @@ namespace Quartz.DynamoDB.Tests.Unit
         /// <summary>
         /// Tests that when state is Error, TriggerState is Error.
         /// </summary>
-        [Fact] 
-		[Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
         public void TriggerStateError()
         {
             var sut = new DynamoTrigger();
@@ -104,8 +104,8 @@ namespace Quartz.DynamoDB.Tests.Unit
         /// <summary>
         /// Tests that when state is anything else, TriggerState is Normal.
         /// </summary>
-        [Fact] 
-		[Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
         public void TriggerStateNormal()
         {
             var sut = new DynamoTrigger();
@@ -113,5 +113,5 @@ namespace Quartz.DynamoDB.Tests.Unit
 
             Assert.Equal(TriggerState.Normal, sut.TriggerState);
         }
-	}
+    }
 }

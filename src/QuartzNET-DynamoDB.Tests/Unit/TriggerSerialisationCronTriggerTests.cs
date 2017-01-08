@@ -35,7 +35,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         }
 
         private static CronTriggerImpl CreateCronTrigger()
-        {          
+        {
             var jobKey = new JobKey("test");
             var trigger = (CronTriggerImpl)TriggerBuilder.Create()
                 .ForJob(jobKey)

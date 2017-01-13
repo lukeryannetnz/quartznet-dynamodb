@@ -1,78 +1,59 @@
 using System;
 using System.Collections.Generic;
 using Amazon.DynamoDBv2.Model;
-using Quartz.Spi;
-using Quartz.Impl.Triggers;
-using System.Linq;
-using Quartz.DynamoDB;
 using Quartz.DynamoDB.DataModel.Storage;
 
 namespace Quartz.DynamoDB.DataModel
 {
-	/// <summary>
-	/// A wrapper class for a Quartz Trigger Group instance that can be serialized and stored in Amazon DynamoDB.
-	/// </summary>
-	public class DynamoTriggerGroup : IInitialisableFromDynamoRecord,IConvertibleToDynamoRecord, IDynamoTableType
-	{
-		public enum DynamoTriggerGroupState
-		{
-			/// <summary>
-			/// Indicates that the Trigger Group is Active.
-			/// </summary>
-			Active = 0,
+    /// <summary>
+    /// A wrapper class for a Quartz Trigger Group instance that can be serialized and stored in Amazon DynamoDB.
+    /// </summary>
+    public class DynamoTriggerGroup : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType
+    {
+        public string Name
+        {
+            get;
+            set;
+        }
 
-			/// <summary>
-			/// Indicates that the Trigger Group is Paused.
-			/// This means that all triggers in this Group should also be Paused, including
-			/// any new triggers that are added to it.
-			/// </summary>
-			Paused = 1,
-		}
+        public DynamoTriggerGroupState State
+        {
+            get;
+            set;
+        }
 
-		public string Name
-		{
-			get;
-			set;
-		}
+        public string DynamoTableName
+        {
+            get
+            {
+                return DynamoConfiguration.TriggerGroupTableName;
+            }
+        }
 
-		public DynamoTriggerGroupState State
-		{
-			get;
-			set;
-		}
+        public Dictionary<string, AttributeValue> Key
+        {
+            get
+            {
+                return new Dictionary<string, AttributeValue> {
+                    { "Name", new AttributeValue (){ S = Name } }
+                };
+            }
+        }
 
-		public string DynamoTableName
-		{
-			get
-			{
-				return DynamoConfiguration.TriggerGroupTableName;
-			}
-		}
+        public Dictionary<string, AttributeValue> ToDynamo()
+        {
+            Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
 
-		public Dictionary<string, AttributeValue> Key
-		{
-			get
-			{
-				return new Dictionary<string, AttributeValue> { 
-					{ "Name", new AttributeValue (){ S = Name } }
-				};
-			}
-		}
+            record.Add("Name", AttributeValueHelper.StringOrNull(Name));
+            record.Add("State", AttributeValueHelper.StringOrNull(State.ToString()));
 
-		public Dictionary<string, AttributeValue> ToDynamo()
-		{
-			Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
+            return record;
+        }
 
-			record.Add("Name", AttributeValueHelper.StringOrNull (Name));
-			record.Add("State", AttributeValueHelper.StringOrNull (State.ToString()));
-
-			return record;
-		}
-
-		public void InitialiseFromDynamoRecord(Dictionary<string, AttributeValue> record)
-		{
-			Name = record["Name"].S;
-			State = (DynamoTriggerGroupState)Enum.Parse(typeof(DynamoTriggerGroupState), record ["State"].S);
-		}
-	}
+        public void InitialiseFromDynamoRecord(Dictionary<string, AttributeValue> record)
+        {
+            Name = record["Name"].S;
+            State = (DynamoTriggerGroupState)Enum.Parse(typeof(DynamoTriggerGroupState), record["State"].S);
+        }
+    }
 }

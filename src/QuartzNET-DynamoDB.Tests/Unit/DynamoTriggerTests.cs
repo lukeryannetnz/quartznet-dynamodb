@@ -42,7 +42,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         public void TriggerStateComplete()
         {
             var sut = new DynamoTrigger();
-            sut.State = "Complete";
+            sut.State = DynamoTriggerState.Complete;
 
             Assert.Equal(TriggerState.Complete, sut.TriggerState);
         }
@@ -55,7 +55,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         public void TriggerStatePaused()
         {
             var sut = new DynamoTrigger();
-            sut.State = "Paused";
+            sut.State = DynamoTriggerState.Paused;
 
             Assert.Equal(TriggerState.Paused, sut.TriggerState);
         }
@@ -70,7 +70,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         public void TriggerStatePausedAndBlocked()
         {
             var sut = new DynamoTrigger();
-            sut.State = "PausedAndBlocked";
+            sut.State = DynamoTriggerState.PausedAndBlocked;
 
             Assert.Equal(TriggerState.Paused, sut.TriggerState);
         }
@@ -83,7 +83,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         public void TriggerStateBlocked()
         {
             var sut = new DynamoTrigger();
-            sut.State = "Blocked";
+            sut.State = DynamoTriggerState.Blocked;
 
             Assert.Equal(TriggerState.Blocked, sut.TriggerState);
         }
@@ -96,9 +96,22 @@ namespace Quartz.DynamoDB.Tests.Unit
         public void TriggerStateError()
         {
             var sut = new DynamoTrigger();
-            sut.State = "Error";
+            sut.State = DynamoTriggerState.Error;
 
             Assert.Equal(TriggerState.Error, sut.TriggerState);
+        }
+
+        /// <summary>
+        /// Tests that when state is waiting, TriggerState is Normal.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void TriggerStateWaiting()
+        {
+            var sut = new DynamoTrigger();
+            sut.State = DynamoTriggerState.Waiting;
+
+            Assert.Equal(TriggerState.Normal, sut.TriggerState);
         }
 
         /// <summary>
@@ -109,7 +122,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         public void TriggerStateNormal()
         {
             var sut = new DynamoTrigger();
-            sut.State = new Random().Next(0, 999999).ToString();
+            sut.State = new DynamoTriggerState(new Random().Next(0, 999999));
 
             Assert.Equal(TriggerState.Normal, sut.TriggerState);
         }

@@ -3,6 +3,7 @@ using Amazon.DynamoDBv2.Model;
 using Quartz.Impl;
 using Quartz.Simpl;
 using Quartz.DynamoDB.DataModel.Storage;
+using System;
 
 namespace Quartz.DynamoDB.DataModel
 {
@@ -12,66 +13,75 @@ namespace Quartz.DynamoDB.DataModel
 	public class DynamoJob : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType
     {
         private readonly SimpleTypeLoadHelper _typeHelper = new SimpleTypeLoadHelper();
-		private readonly JobDataMapConverter jobDataMapConverter = new JobDataMapConverter();
+        private readonly JobDataMapConverter jobDataMapConverter = new JobDataMapConverter();
 
-		public DynamoJob()
-		{
-		}
+        public DynamoJob()
+        {
+        }
 
         public DynamoJob(IJobDetail job)
         {
             this.Job = job;
+            this.State = DynamoJobState.Active;
         }
 
-		public DynamoJob(Dictionary<string, AttributeValue> record)
-		{
-			InitialiseFromDynamoRecord (record);
-		}
+        public DynamoJob(Dictionary<string, AttributeValue> record)
+        {
+            InitialiseFromDynamoRecord(record);
+        }
 
-		public void InitialiseFromDynamoRecord(Dictionary<string, AttributeValue> record)
-		{
-			JobDetailImpl job = new JobDetailImpl();
-			job.Key = new JobKey(record["Name"].S, record["Group"].S);
-			job.Description = record["Description"].NULL ? string.Empty : record["Description"].S;
-			job.JobType = _typeHelper.LoadType(record["JobType"].S);
-			job.JobDataMap = (JobDataMap)jobDataMapConverter.FromEntry(record["JobDataMap"]);
-			job.Durable = record["Durable"].BOOL;
-			job.RequestsRecovery = record["RequestsRecovery"].BOOL;
+        public void InitialiseFromDynamoRecord(Dictionary<string, AttributeValue> record)
+        {
+            JobDetailImpl job = new JobDetailImpl();
+            job.Key = new JobKey(record["Name"].S, record["Group"].S);
+            job.Description = record["Description"].NULL ? string.Empty : record["Description"].S;
+            job.JobType = _typeHelper.LoadType(record["JobType"].S);
+            job.JobDataMap = (JobDataMap)jobDataMapConverter.FromEntry(record["JobDataMap"]);
+            job.Durable = record["Durable"].BOOL;
+            job.RequestsRecovery = record["RequestsRecovery"].BOOL;
 
-			Job = job;
-		}
+            Job = job;
+            State = (DynamoJobState)Enum.Parse(typeof(DynamoJobState), record["State"].S);
+        }
 
-		public string DynamoTableName  
-		{
-			get 
-			{
-				return DynamoConfiguration.JobDetailTableName;
-			}
-		}
+        public string DynamoTableName
+        {
+            get
+            {
+                return DynamoConfiguration.JobDetailTableName;
+            }
+        }
 
-		public Dictionary<string, AttributeValue> Key 
-		{ 
-			get 
-			{
-				return Job.Key.ToDictionary ();
-			}
-		}
+        public Dictionary<string, AttributeValue> Key
+        {
+            get
+            {
+                return Job.Key.ToDictionary();
+            }
+        }
 
         public IJobDetail Job { get; set; }
+
+        public DynamoJobState State
+        {
+            get;
+            set;
+        }
 
         public Dictionary<string, AttributeValue> ToDynamo()
         {
             Dictionary<string, AttributeValue> record = new Dictionary<string, AttributeValue>();
-            
+
             record.Add("Name", new AttributeValue { S = Job.Key.Name });
             record.Add("Group", new AttributeValue { S = Job.Key.Group });
             record.Add("Description", string.IsNullOrWhiteSpace(Job.Description) ? new AttributeValue { NULL = true } : new AttributeValue { S = Job.Description });
             record.Add("JobType", new AttributeValue { S = GetStorableJobTypeName(Job.JobType) });
-			record.Add("JobDataMap",jobDataMapConverter.ToEntry(Job.JobDataMap));
+            record.Add("JobDataMap", jobDataMapConverter.ToEntry(Job.JobDataMap));
             record.Add("Durable", new AttributeValue { BOOL = Job.Durable });
             record.Add("PersistJobDataAfterExecution", new AttributeValue { BOOL = Job.PersistJobDataAfterExecution });
             record.Add("ConcurrentExecutionDisallowed", new AttributeValue { BOOL = Job.ConcurrentExecutionDisallowed });
             record.Add("RequestsRecovery", new AttributeValue { BOOL = Job.RequestsRecovery });
+            record.Add("State", AttributeValueHelper.StringOrNull(State.ToString()));
 
             return record;
         }
@@ -81,4 +91,6 @@ namespace Quartz.DynamoDB.DataModel
             return jobType.FullName + ", " + jobType.Assembly.GetName().Name;
         }
     }
+
+    
 }

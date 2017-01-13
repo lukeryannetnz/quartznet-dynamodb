@@ -112,6 +112,11 @@ namespace Quartz.DynamoDB.DataModel
         /// <returns><c>true</c> if <c>left</c> and <c>right</c> are equal; otherwise, <c>false</c>.</returns>
         public static bool operator ==(DynamoTriggerState left, DynamoTriggerState right)
         {
+			if (object.ReferenceEquals(left, null) && object.ReferenceEquals(right, null))
+			{
+				return true;
+			}
+
             if (object.ReferenceEquals(left, null) || object.ReferenceEquals(right, null))
             {
                 return false;

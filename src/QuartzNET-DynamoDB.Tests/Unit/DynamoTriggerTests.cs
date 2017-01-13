@@ -18,7 +18,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         {
             var sut = new DynamoTrigger();
 
-            Assert.Equal("Waiting", sut.State);
+			Assert.Equal(DynamoTriggerState.Waiting, sut.State);
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         public void TriggerStateNone()
         {
             var sut = new DynamoTrigger();
-            sut.State = string.Empty;
+            sut.State = null;
 
             Assert.Equal(TriggerState.None, sut.TriggerState);
         }

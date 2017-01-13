@@ -68,6 +68,28 @@ namespace Quartz.DynamoDB.Tests
             Assert.True(sut != null);
         }
 
+		/// <summary>
+		/// Tests that when checking a null refenence of type DynamoTriggerState with null, true is returned. 
+		/// I did not expect this to invoke the overridden operator in the DynamoTriggerState class but it does!
+		/// </summary>
+		[Fact]
+		[Trait("Category", "Unit")]
+		public void TestReferenceBothNull()
+		{
+			DynamoTriggerState thing = null;
+
+			Assert.True(thing == null);
+		}
+
+		[Fact]
+		[Trait("Category", "Unit")]
+		public void TestReferenceNullRightHandSideNotNull()
+		{
+			DynamoTriggerState thing = null;
+
+			Assert.False(thing == new DynamoTriggerState(1));
+		}
+
         [Fact]
         [Trait("Category", "Unit")]
         public void ComparisonFalseIfInternalValueDifferent()

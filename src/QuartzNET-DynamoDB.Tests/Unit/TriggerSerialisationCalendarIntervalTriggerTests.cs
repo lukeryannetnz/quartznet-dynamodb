@@ -10,24 +10,26 @@ namespace Quartz.DynamoDB.Tests.Unit
     /// </summary>
     public class TriggerSerialisationCalendarIntervalTriggerTests
     {
-        [Fact] [Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
 
         public void RepeatIntervalUnitSerialisesCorrectly()
         {
-            
+
             var trigger = CreateTrigger();
 
-			var serialized = new DynamoTrigger(trigger).ToDynamo();
-			CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)new DynamoTrigger(serialized).Trigger;
+            var serialized = new DynamoTrigger(trigger).ToDynamo();
+            CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
             Assert.Equal(trigger.RepeatIntervalUnit, result.RepeatIntervalUnit);
         }
 
-        [Fact] [Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
 
         public void RepeatIntervalSerialisesCorrectly()
         {
-            
+
             var trigger = CreateTrigger();
 
             var serialized = new DynamoTrigger(trigger).ToDynamo();
@@ -36,11 +38,12 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.RepeatInterval, result.RepeatInterval);
         }
 
-        [Fact] [Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
 
         public void TimesTriggeredSerialisesCorrectly()
         {
-            
+
             var trigger = CreateTrigger();
             trigger.TimesTriggered = 13;
             var serialized = new DynamoTrigger(trigger).ToDynamo();
@@ -49,24 +52,26 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.TimesTriggered, result.TimesTriggered);
         }
 
-        [Fact] [Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
 
         public void TimeZoneSerialisesCorrectly()
         {
-            
+
             var trigger = CreateTrigger();
             trigger.TimeZone = TimeZoneInfo.Utc;
             var serialized = new DynamoTrigger(trigger).ToDynamo();
             CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)new DynamoTrigger(serialized).Trigger;
 
-			Assert.Equal(trigger.TimeZone.DisplayName, result.TimeZone.DisplayName);
+            Assert.Equal(trigger.TimeZone.DisplayName, result.TimeZone.DisplayName);
         }
 
-        [Fact] [Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
 
         public void MisfireInstructionSerialisesCorrectly()
         {
-            
+
             var trigger = CreateTrigger();
             var serialized = new DynamoTrigger(trigger).ToDynamo();
             CalendarIntervalTriggerImpl result = (CalendarIntervalTriggerImpl)new DynamoTrigger(serialized).Trigger;
@@ -74,11 +79,12 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.MisfireInstruction, result.MisfireInstruction);
         }
 
-        [Fact] [Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
 
         public void PreserveHourOfDayAcrossDaylightSavingsSerialisesCorrectly()
         {
-            
+
             var trigger = CreateTrigger();
             trigger.PreserveHourOfDayAcrossDaylightSavings = true;
             var serialized = new DynamoTrigger(trigger).ToDynamo();
@@ -87,11 +93,12 @@ namespace Quartz.DynamoDB.Tests.Unit
             Assert.Equal(trigger.PreserveHourOfDayAcrossDaylightSavings, result.PreserveHourOfDayAcrossDaylightSavings);
         }
 
-        [Fact] [Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
 
         public void SkipDayIfHourDoesNotExistSerialisesCorrectly()
         {
-            
+
             var trigger = CreateTrigger();
             trigger.SkipDayIfHourDoesNotExist = true;
             var serialized = new DynamoTrigger(trigger).ToDynamo();
@@ -102,7 +109,7 @@ namespace Quartz.DynamoDB.Tests.Unit
 
         public CalendarIntervalTriggerImpl CreateTrigger()
         {
-            CalendarIntervalTriggerImpl trigger = (CalendarIntervalTriggerImpl) TriggerBuilder.Create()
+            CalendarIntervalTriggerImpl trigger = (CalendarIntervalTriggerImpl)TriggerBuilder.Create()
                 .WithIdentity("myTrigger", "myTriggerGroup")
                 .ForJob("job")
                 .WithCalendarIntervalSchedule(x => x

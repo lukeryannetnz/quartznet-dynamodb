@@ -1,17 +1,15 @@
 using System;
 using Quartz.Simpl;
-using Quartz.Spi;
 using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
-    public class TriggerGroupGetTests : IDisposable
+    public class TriggerGroupGetTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-
         public TriggerGroupGetTests()
         {
-            _sut = new Quartz.DynamoDB.JobStore();
+            _testFactory = new DynamoClientFactory();
+            _sut = _testFactory.CreateTestJobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -32,11 +30,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             var result = _sut.GetPausedTriggerGroups();
 
             Assert.True(result.Contains(triggerGroup));
-        }
-
-        public void Dispose()
-        {
-            _sut.Dispose();
         }
     }
 }

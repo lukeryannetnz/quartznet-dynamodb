@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Quartz.DynamoDB.DataModel;
 using Xunit;
 using Quartz.DynamoDB.DataModel.Storage;
 
@@ -9,8 +8,8 @@ namespace Quartz.DynamoDB.Tests.Unit
 {
     public class JobDataMapConverterTests
     {
-        [Fact] 
-		[Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
         public void StringsConvertSuccessfully()
         {
             JobDataMap input = new JobDataMap();
@@ -29,8 +28,8 @@ namespace Quartz.DynamoDB.Tests.Unit
             }
         }
 
-        [Fact] 
-		[Trait("Category", "Unit")]
+        [Fact]
+        [Trait("Category", "Unit")]
         public void ComplexObjectConvertsSuccessfully()
         {
             JobDataMap input = new JobDataMap();
@@ -66,17 +65,17 @@ namespace Quartz.DynamoDB.Tests.Unit
             }
         }
 
-		[Fact] 
-		[Trait("Category", "Unit")]
-		public void EmptyDataMapSerialisesSuccessfully()
-		{
-			JobDataMap input = new JobDataMap();
+        [Fact]
+        [Trait("Category", "Unit")]
+        public void EmptyDataMapSerialisesSuccessfully()
+        {
+            JobDataMap input = new JobDataMap();
 
-			var sut = new JobDataMapConverter();
-			var d = sut.ToEntry(input);
+            var sut = new JobDataMapConverter();
+            var d = sut.ToEntry(input);
 
-			Assert.True(d.NULL);
-		}
+            Assert.True(d.NULL);
+        }
     }
 
     public class ComplexType

@@ -9,13 +9,12 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the addition of calendars.
     /// </summary>
-    public class CalendarAddTests : IDisposable
+    public class CalendarAddTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-
         public CalendarAddTests()
         {
-            _sut = new Quartz.DynamoDB.JobStore();
+            _testFactory = new DynamoClientFactory();
+            _sut = _testFactory.CreateTestJobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -37,10 +36,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             Assert.Equal(cal.GetType(), storedCalendar.GetType());
         }
 
-        public void Dispose()
-        {
-            _sut.Dispose();
-        }
     }
 }
 

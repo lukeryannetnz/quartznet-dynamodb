@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xunit;
 using Quartz.DynamoDB.DataModel.Storage;
 using Quartz.DynamoDB.DataModel;
@@ -8,46 +8,79 @@ using Amazon.DynamoDBv2.Model;
 
 namespace Quartz.DynamoDB.Tests.Integration.Repository
 {
-	/// <summary>
-	/// Contains tests for the repository class.
-	/// </summary>
-	public class RepositoryTests
-	{
-		[Fact]
-		[Trait("Category", "Integration")]
-		public void PersistTwoSchedulersSameId_OneRecord()
-		{
-			var client = DynamoDbClientFactory.Create();
-			new DynamoBootstrapper().BootStrap(client);
+    /// <summary>
+    /// Contains tests for the repository class.
+    /// </summary>
+    public class RepositoryTests : IDisposable
+    {
+        private Repository<DynamoScheduler> _sut;
+        private DynamoClientFactory _testFactory;
 
-			var sut = new Repository<DynamoScheduler> (client);
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void PersistTwoSchedulersSameId_OneRecord()
+        {
+            _testFactory = new DynamoClientFactory();
+            var client = _testFactory.BootStrapDynamo();
+            _sut = new Repository<DynamoScheduler>(client);
 
-			int initialSchedulerCount = sut.Scan (null, null, null).Count();
+            int initialSchedulerCount = _sut.Scan(null, null, null).Count();
 
-			var scheduler = new DynamoScheduler
-			{
-				InstanceId = "testInstance" + DateTime.UtcNow.Ticks.ToString(),
-				ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
-				State = "Running"
-			};
+            var scheduler = new DynamoScheduler
+            {
+                InstanceId = "testInstance" + DateTime.UtcNow.Ticks.ToString(),
+                ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
+                State = "Running"
+            };
 
-			sut.Store(scheduler);
+            _sut.Store(scheduler);
 
-			var expressionAttributeValues = new Dictionary<string,AttributeValue> 
-			{
-				{":instance", new AttributeValue { S = scheduler.InstanceId }}
-			};
+            var expressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                {":instance", new AttributeValue { S = scheduler.InstanceId }}
+            };
 
-			var scheduler2 = sut.Scan (expressionAttributeValues, null, "InstanceId = :instance").Single();
+            var scheduler2 = _sut.Scan(expressionAttributeValues, null, "InstanceId = :instance").Single();
 
-			scheduler2.ExpiresUtc = (SystemTime.Now () + new TimeSpan (0, 20, 0)).UtcDateTime;
+            scheduler2.ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 20, 0)).UtcDateTime;
 
-			sut.Store(scheduler2);
+            _sut.Store(scheduler2);
 
-			int finalCount = sut.Scan (null, null, null).Count();
+            int finalCount = _sut.Scan(null, null, null).Count();
 
-			Assert.Equal (initialSchedulerCount + 1, finalCount);
-		}
-	}
+            Assert.Equal(initialSchedulerCount + 1, finalCount);
+        }
+
+        #region IDisposable implementation
+
+        bool _disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    _testFactory.CleanUpDynamo();
+
+                    if (_sut != null)
+                    {
+                        _sut.Dispose();
+                    }
+                }
+
+                _disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
+
+        #endregion
+    }
 }
 

@@ -80,6 +80,7 @@
     <Reference Include="AWSSDK.DynamoDBv2">
       <HintPath>..\packages\AWSSDK.DynamoDBv2.3.1.4.1\lib\net45\AWSSDK.DynamoDBv2.dll</HintPath>
     </Reference>
+    <Reference Include="System.Configuration" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\VersionInfo.cs">
@@ -118,6 +119,9 @@
     <Compile Include="Integration\JobStore\TriggerAddTests.cs" />
     <Compile Include="Integration\JobStore\TriggerGroupGetTests.cs" />
     <Compile Include="Integration\JobStore\JobResumeTests.cs" />
+    <Compile Include="Integration\DynamoClientFactory.cs" />
+    <Compile Include="Unit\DynamoConfigurationTests.cs" />
+    <Compile Include="Integration\JobStore\JobStoreIntegrationTest.cs" />
     <Compile Include="Unit\DynamoJobTests.cs" />
     <Compile Include="Unit\DynamoTriggerStateTests.cs" />
   </ItemGroup>

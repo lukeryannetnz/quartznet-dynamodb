@@ -9,13 +9,12 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the addition of Jobs and Triggers.
     /// </summary>
-    public class JobsAndTriggersAddTests : IDisposable
+    public class JobsAndTriggersAddTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-
         public JobsAndTriggersAddTests()
         {
-            _sut = new Quartz.DynamoDB.JobStore();
+            _testFactory = new DynamoClientFactory();
+            _sut = _testFactory.CreateTestJobStore();
             var signaler = new RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -90,11 +89,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             var storedJob = _sut.RetrieveJob(job.Key);
             Assert.Equal(initialJobDescription, storedJob.Description);
-        }
-
-        public void Dispose()
-        {
-            _sut.Dispose();
         }
     }
 }

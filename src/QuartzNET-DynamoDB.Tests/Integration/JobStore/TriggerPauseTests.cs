@@ -4,24 +4,20 @@ using Quartz.Simpl;
 using Quartz.Spi;
 using System.Linq;
 using Quartz.Impl.Triggers;
-using Quartz.DynamoDB.DataModel.Storage;
-using Quartz.DynamoDB.DataModel;
 using Quartz.Impl;
 using Quartz.Job;
-using Quartz.DynamoDB.Tests.Integration;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
 {
     /// <summary>
     /// Contains tests related to the Pausing of Triggers and Trigger Groups.
     /// </summary>
-    public class TriggerPauseTests : IDisposable
+    public class TriggerPauseTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-
         public TriggerPauseTests()
         {
-            _sut = new Quartz.DynamoDB.JobStore();
+            _testFactory = new DynamoClientFactory();
+            _sut = _testFactory.CreateTestJobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -181,11 +177,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             paused = _sut.IsTriggerGroupPaused(triggerGroup);
             Assert.Equal(true, paused);
-        }
-
-        public void Dispose()
-        {
-            _sut.Dispose();
         }
     }
 }

@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using Quartz.Impl.Calendar;
 using Quartz.Simpl;
-using Quartz.Spi;
 using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
@@ -10,13 +9,12 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the loading of calendars.
     /// </summary>
-    public class CalendarGetTests : IDisposable
+    public class CalendarGetTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-
         public CalendarGetTests()
         {
-            _sut = new Quartz.DynamoDB.JobStore();
+            _testFactory = new DynamoClientFactory();
+            _sut = _testFactory.CreateTestJobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -37,7 +35,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             _sut.StoreCalendar(calName, cal, false, true);
 
             // Dynamo describe table is eventually consistent so give it a little time. Flaky I know, but hey - what are you going to do?
-            Thread.Sleep(50);
+            Thread.Sleep(5000);
 
             var newCount = _sut.GetNumberOfCalendars();
 
@@ -76,11 +74,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             var result = _sut.GetCalendarNames();
 
             Assert.True(result.Contains(calName));
-        }
-
-        public void Dispose()
-        {
-            _sut.Dispose();
         }
     }
 }

@@ -11,13 +11,12 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the Pausing of Jobs and Job Groups.
     /// </summary>
-    public class JobPauseTests : IDisposable
+    public class JobPauseTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-
         public JobPauseTests()
         {
-            _sut = new Quartz.DynamoDB.JobStore();
+            _testFactory = new DynamoClientFactory();
+            _sut = _testFactory.CreateTestJobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -85,11 +84,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             paused = _sut.IsJobGroupPaused(jobGroup);
             Assert.Equal(true, paused);
-        }
-
-        public void Dispose()
-        {
-            _sut.Dispose();
         }
     }
 }

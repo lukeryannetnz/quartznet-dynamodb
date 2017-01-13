@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using System.Collections.Generic;
+using System.Configuration;
 
 namespace Quartz.DynamoDB
 {
@@ -20,6 +21,22 @@ namespace Quartz.DynamoDB
 
         public static string ServiceUrl => ConfigurationManager.AppSettings["DynamoServiceURL"] ?? string.Empty;
 
+        public static int BootstrapRetryDelayMilliseconds
+        {
+            get
+            {
+                var configValue = ConfigurationManager.AppSettings["BootstrapRetryDelayMilliseconds"];
+
+                int value;
+                if (!string.IsNullOrWhiteSpace(configValue) && int.TryParse(configValue, out value))
+                {
+                    return value;
+                }
+
+                return 500;
+            }
+        }
+
         private static string TableNamePrefix
         {
             get
@@ -30,6 +47,21 @@ namespace Quartz.DynamoDB
                 }
 
                 return string.Format("{0}.", InstanceName);
+            }
+        }
+
+        public static IEnumerable<string> AllTableNames
+        {
+            get
+            {
+                return new[]
+                {
+                    JobDetailTableName, 
+                    JobGroupTableName, 
+                    TriggerTableName, 
+                    TriggerGroupTableName, 
+                    CalendarTableName, 
+                    SchedulerTableName };
             }
         }
     }

@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using Quartz.Simpl;
-using Quartz.Spi;
 using Xunit;
 
 namespace Quartz.DynamoDB.Tests.Integration.JobStore
@@ -9,13 +8,12 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to the Resumption of Jobs and Job Groups.
     /// </summary>
-    public class JobResumeTests : IDisposable
+    public class JobResumeTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-
         public JobResumeTests()
         {
-            _sut = new DynamoDB.JobStore();
+            _testFactory = new DynamoClientFactory();
+            _sut = _testFactory.CreateTestJobStore();
             var signaler = new RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -106,11 +104,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             // Check the job group is resumed
             paused = _sut.IsJobGroupPaused(jobGroup);
             Assert.Equal(false, paused);
-        }
-
-        public void Dispose()
-        {
-            _sut.Dispose();
         }
     }
 }

@@ -11,13 +11,12 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
     /// <summary>
     /// Contains tests related to Resuming Triggers and Trigger Groups.
     /// </summary>
-    public class TriggerResumeTests : IDisposable
+    public class TriggerResumeTests : JobStoreIntegrationTest
     {
-        private readonly DynamoDB.JobStore _sut;
-
         public TriggerResumeTests()
         {
-            _sut = new Quartz.DynamoDB.JobStore();
+            _testFactory = new DynamoClientFactory();
+            _sut = _testFactory.CreateTestJobStore();
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();
 
@@ -80,7 +79,7 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             Assert.Equal("Paused", triggerState1.ToString());
             var triggerState2 = _sut.GetTriggerState(tr2.Key);
             Assert.Equal("Paused", triggerState2.ToString());
-            
+
             _sut.ResumeAll();
 
             // Ensure all triggers have been resumed
@@ -89,11 +88,6 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
 
             triggerState2 = _sut.GetTriggerState(tr2.Key);
             Assert.Equal("Normal", triggerState2.ToString());
-        }
-
-        public void Dispose()
-        {
-            _sut.Dispose();
         }
     }
 }

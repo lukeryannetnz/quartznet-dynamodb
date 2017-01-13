@@ -92,11 +92,6 @@ namespace Quartz.DynamoDB.DataModel
 		/// <see cref="T:Quartz.DynamoDB.DataModel.DynamoTriggerState"/>; otherwise, <c>false</c>.</returns>
 		public override bool Equals(object obj)
 		{
-			if (object.ReferenceEquals(left, null) && object.ReferenceEquals(right, null))
-			{
-				return true;
-			}
-
 			DynamoTriggerState input = obj as DynamoTriggerState;
 
 			if (object.ReferenceEquals(input, null))
@@ -117,6 +112,11 @@ namespace Quartz.DynamoDB.DataModel
 		/// <returns><c>true</c> if <c>left</c> and <c>right</c> are equal; otherwise, <c>false</c>.</returns>
 		public static bool operator ==(DynamoTriggerState left, DynamoTriggerState right)
 		{
+			if (object.ReferenceEquals(left, null) && object.ReferenceEquals(right, null))
+			{
+				return true;
+			}
+
 			if (object.ReferenceEquals(left, null) || object.ReferenceEquals(right, null))
 			{
 				return false;

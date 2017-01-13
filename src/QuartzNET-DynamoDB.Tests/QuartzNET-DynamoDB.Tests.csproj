@@ -119,12 +119,9 @@
     <Compile Include="Integration\JobStore\TriggerAddTests.cs" />
     <Compile Include="Integration\JobStore\TriggerGroupGetTests.cs" />
     <Compile Include="Integration\JobStore\JobResumeTests.cs" />
-<<<<<<< HEAD
     <Compile Include="Integration\DynamoClientFactory.cs" />
     <Compile Include="Unit\DynamoConfigurationTests.cs" />
     <Compile Include="Integration\JobStore\JobStoreIntegrationTest.cs" />
-=======
->>>>>>> master
     <Compile Include="Unit\DynamoJobTests.cs" />
     <Compile Include="Unit\DynamoTriggerStateTests.cs" />
   </ItemGroup>

@@ -21,7 +21,7 @@ namespace Quartz.DynamoDB
     /// </summary>
     public class JobStore : IJobStore, IDisposable
     {
-        private static readonly object lockObject = new object();
+        private static readonly object LockObject = new object();
         private DynamoDBContext _context;
         private IRepository<DynamoJob> _jobRepository;
         private IRepository<DynamoJobGroup> _jobGroupRepository;
@@ -61,7 +61,7 @@ namespace Quartz.DynamoDB
             _triggerGroupRepository = new Repository<DynamoTriggerGroup>(client);
             _calendarRepository = new Repository<DynamoCalendar>(client);
 
-            lock (lockObject)
+            lock (LockObject)
             {
                 new DynamoBootstrapper().BootStrap(client);
 
@@ -78,7 +78,7 @@ namespace Quartz.DynamoDB
 
         public void SchedulerStarted()
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 CreateOrUpdateCurrentSchedulerInstance();
             }
@@ -110,7 +110,7 @@ namespace Quartz.DynamoDB
 
         public void StoreJobAndTrigger(IJobDetail newJob, IOperableTrigger newTrigger)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 StoreJob(newJob, false);
                 StoreTrigger(newTrigger, false);
@@ -143,7 +143,7 @@ namespace Quartz.DynamoDB
 
         public void StoreJob(IJobDetail newJob, bool replaceExisting)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 DynamoJob job = new DynamoJob(newJob);
 
@@ -172,7 +172,7 @@ namespace Quartz.DynamoDB
         public void StoreJobsAndTriggers(IDictionary<IJobDetail, Collection.ISet<ITrigger>> triggersAndJobs,
                                          bool replace)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 // fail fast if there are collisions.
                 // ensuring there will be no collisions upfront eliminates the need
@@ -208,7 +208,7 @@ namespace Quartz.DynamoDB
 
         public bool RemoveJob(JobKey jobKey)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 // keep separated to clean up any staled trigger
                 IList<IOperableTrigger> triggersForJob = this.GetTriggersForJob(jobKey);
@@ -231,7 +231,7 @@ namespace Quartz.DynamoDB
         {
             bool allFound = true;
 
-            lock (lockObject)
+            lock (LockObject)
             {
                 foreach (JobKey key in jobKeys)
                 {
@@ -244,7 +244,7 @@ namespace Quartz.DynamoDB
 
         public IJobDetail RetrieveJob(JobKey jobKey)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 var job = _jobRepository.Load(jobKey.ToDictionary());
 
@@ -254,7 +254,7 @@ namespace Quartz.DynamoDB
 
         public void StoreTrigger(IOperableTrigger newTrigger, bool replaceExisting)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 DynamoTrigger trigger = new DynamoTrigger(newTrigger);
 
@@ -327,7 +327,7 @@ namespace Quartz.DynamoDB
         {
             bool found;
 
-            lock (lockObject)
+            lock (LockObject)
             {
                 var trigger = this.RetrieveTrigger(triggerKey);
                 found = trigger != null;
@@ -361,7 +361,7 @@ namespace Quartz.DynamoDB
         {
             bool allFound = true;
 
-            lock (lockObject)
+            lock (LockObject)
             {
                 foreach (TriggerKey key in triggerKeys)
                 {
@@ -374,7 +374,7 @@ namespace Quartz.DynamoDB
 
         public bool ReplaceTrigger(TriggerKey triggerKey, IOperableTrigger newTrigger)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 var record = _triggerRepository.Load(triggerKey.ToDictionary());
 
@@ -406,7 +406,7 @@ namespace Quartz.DynamoDB
 
         public IOperableTrigger RetrieveTrigger(TriggerKey triggerKey)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 var trigger = _triggerRepository.Load(triggerKey.ToDictionary());
 
@@ -416,7 +416,7 @@ namespace Quartz.DynamoDB
 
         public bool CalendarExists(string calName)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 var key = new DynamoCalendar(calName).Key;
 
@@ -426,7 +426,7 @@ namespace Quartz.DynamoDB
 
         public bool CheckExists(JobKey jobKey)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 return _jobRepository.Load(jobKey.ToDictionary()) != null;
             }
@@ -434,7 +434,7 @@ namespace Quartz.DynamoDB
 
         public bool CheckExists(TriggerKey triggerKey)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 return _triggerRepository.Load(triggerKey.ToDictionary()) != null;
             }
@@ -446,7 +446,7 @@ namespace Quartz.DynamoDB
         /// </summary>
         public void ClearAllSchedulingData()
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 // unschedule jobs (delete triggers)
                 _triggerRepository.DeleteTable();
@@ -475,7 +475,7 @@ namespace Quartz.DynamoDB
         /// re-computed with the new <see cref="ICalendar" />.</param>
         public void StoreCalendar(string name, ICalendar calendar, bool replaceExisting, bool updateTriggers)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 var dynamoCal = new DynamoCalendar(name, calendar);
 
@@ -639,7 +639,7 @@ namespace Quartz.DynamoDB
 
         public TriggerState GetTriggerState(TriggerKey triggerKey)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 var record = _triggerRepository.Load(triggerKey.ToDictionary());
 
@@ -894,7 +894,7 @@ namespace Quartz.DynamoDB
 
         public void ResumeJob(JobKey jobKey)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 IList<IOperableTrigger> triggersForJob = GetTriggersForJob(jobKey);
                 foreach (IOperableTrigger trigger in triggersForJob)
@@ -941,7 +941,7 @@ namespace Quartz.DynamoDB
 
         public void PauseAll()
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 var triggerGroupNames = GetTriggerGroupNames();
 
@@ -954,7 +954,7 @@ namespace Quartz.DynamoDB
 
         public void ResumeAll()
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 var triggerGroupNames = GetTriggerGroupNames();
 
@@ -984,12 +984,11 @@ namespace Quartz.DynamoDB
 
         public IList<IOperableTrigger> AcquireNextTriggers(DateTimeOffset noLaterThan, int maxCount, TimeSpan timeWindow)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 Debug.WriteLine("Acquiring triggers. No later than: {0}, timewindow: {1}", noLaterThan, timeWindow);
 
                 // multiple instance management. Create a running scheduler for this instance.
-                // TODO: investigate: does this create duplicate active schedulers for the same instanceid?
                 CreateOrUpdateCurrentSchedulerInstance();
 
                 DeleteExpiredSchedulers();
@@ -1177,7 +1176,7 @@ namespace Quartz.DynamoDB
 
         public IList<TriggerFiredResult> TriggersFired(IList<IOperableTrigger> triggers)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 List<TriggerFiredResult> results = new List<TriggerFiredResult>();
 

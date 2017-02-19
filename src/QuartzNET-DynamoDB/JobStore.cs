@@ -1385,7 +1385,6 @@ namespace Quartz.DynamoDB
             }
 
             _triggerRepository.Store(dynamoTriggers);
-
         }
 
         /// <summary> 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
@@ -46,6 +47,45 @@ namespace Quartz.DynamoDB.DataModel.Storage
             }
 
             return default(T);
+        }
+
+        public void Store(IEnumerable<T> entities)
+        {
+            if (entities == null)
+            {
+                throw new ArgumentNullException(nameof(entities));
+            }
+
+            if (!entities.Any())
+            {
+                throw new ArgumentOutOfRangeException(nameof(entities));
+            }
+
+            if (entities.Count() > 25)
+            {
+                throw new ArgumentOutOfRangeException(nameof(entities), "This operation doesn't support more than 25 items");
+            }
+
+            BatchWriteItemRequest batchRequest = new BatchWriteItemRequest
+            {
+                RequestItems = new Dictionary<string, List<WriteRequest>>()
+            };
+
+            foreach (var entity in entities)
+            {
+                if (!batchRequest.RequestItems.ContainsKey(entity.DynamoTableName))
+                {
+                    batchRequest.RequestItems.Add(entity.DynamoTableName, new List<WriteRequest>());
+                }
+                batchRequest.RequestItems[entity.DynamoTableName].Add(new WriteRequest(new PutRequest(entity.ToDynamo())));
+            }
+
+            var response = _client.BatchWriteItem(batchRequest);
+
+            if (response.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new JobPersistenceException($"Non 200 response code received from dynamo {response.ToString()}");
+            }
         }
 
         public void Store(T entity)

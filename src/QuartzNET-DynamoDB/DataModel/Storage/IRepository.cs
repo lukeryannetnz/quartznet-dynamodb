@@ -21,17 +21,26 @@ namespace Quartz.DynamoDB.DataModel.Storage
 		/// <param name="entity">Entity.</param>
 		void Store (T entity);
 
-		/// <summary>
-		/// Store the specified entity, in the table T is associated with. 
-		/// Only store the specific entity is the condition specified in conditionExpression is met..
-		/// See dynamo docs for more details on conditions http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html
+        /// <summary>
+		/// Store the specified entities in the table T is associated with.
 		/// </summary>
-		/// <param name="entity">Entity.</param>
-		/// <param name="expressionAttributeValues">Expression attribute values. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ExpressionPlaceholders.html"/></param>
-		/// <param name="conditionExpression">Condition expression. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ConditionExpression"/></param>
-		/// <param name="expressionAttributeNames">Expression attribute names. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ExpressionAttributeNames"/></param>
-		/// <returns>>ALL_OLD the values that were replaced. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ReturnValues"/> </returns>
-		Dictionary<string,AttributeValue> Store(T entity, Dictionary<string,AttributeValue> expressionAttributeValues, Dictionary<string, string> expressionAttributeNames, string conditionExpression);
+		/// <param name="entities">The entities to store.</param>
+		/// <exception cref="ArgumentNullException">Thrown if entities is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown if there are no items in the entities collection OR if there are more than 25 items in the entities collection.</exception>
+		/// <exception cref="JobPersistenceException">Thrown if a non 200 HTTP code is received from DynamoDB.</exception>
+		void Store(IEnumerable<T> entities);
+
+        /// <summary>
+        /// Store the specified entity, in the table T is associated with. 
+        /// Only store the specific entity is the condition specified in conditionExpression is met..
+        /// See dynamo docs for more details on conditions http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html
+        /// </summary>
+        /// <param name="entity">Entity.</param>
+        /// <param name="expressionAttributeValues">Expression attribute values. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ExpressionPlaceholders.html"/></param>
+        /// <param name="conditionExpression">Condition expression. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ConditionExpression"/></param>
+        /// <param name="expressionAttributeNames">Expression attribute names. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ExpressionAttributeNames"/></param>
+        /// <returns>>ALL_OLD the values that were replaced. <see cref="http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html#DDB-PutItem-request-ReturnValues"/> </returns>
+        Dictionary<string,AttributeValue> Store(T entity, Dictionary<string,AttributeValue> expressionAttributeValues, Dictionary<string, string> expressionAttributeNames, string conditionExpression);
 
 		/// <summary>
 		/// Delete the entity with the specified key.

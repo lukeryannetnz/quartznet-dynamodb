@@ -51,6 +51,37 @@ namespace Quartz.DynamoDB.Tests.Integration.Repository
             Assert.Equal(initialSchedulerCount + 1, finalCount);
         }
 
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void StoreMultipleEntities()
+        {
+            _testFactory = new DynamoClientFactory();
+            var client = _testFactory.BootStrapDynamo();
+            _sut = new Repository<DynamoScheduler>(client);
+
+            int initialSchedulerCount = _sut.Scan(null, null, null).Count();
+
+            var scheduler1 = new DynamoScheduler
+            {
+                InstanceId = "testInstance" + DateTime.UtcNow.Ticks.ToString(),
+                ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
+                State = "Running"
+            };
+
+            var scheduler2 = new DynamoScheduler
+            {
+                InstanceId = "testInstance2" + DateTime.UtcNow.Ticks.ToString(),
+                ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
+                State = "Running"
+            };
+
+            _sut.Store(new List<DynamoScheduler> {scheduler1, scheduler2});
+
+            int finalCount = _sut.Scan(null, null, null).Count();
+
+            Assert.Equal(initialSchedulerCount + 2, finalCount);
+        }
+
         #region IDisposable implementation
 
         bool _disposedValue = false;

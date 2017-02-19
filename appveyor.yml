@@ -1,3 +1,7 @@
+#---------------------------------------#
+#       environment configuration       #
+#---------------------------------------#
+
 #These are required by the AWS SDK even though they aren't used with dynamo db local.
 environment:
   AWS_ACCESS_KEY_ID: AKID
@@ -9,9 +13,13 @@ init:
 - ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
 - ps: $env:nugetVersion = "$env:packageVersion-beta-$env:appveyor_build_number"
 
-#---------------------------------#
-#       build configuration       #
-#---------------------------------#
+assembly_info:
+  patch: true
+  file: '**\VersionInfo.*'
+  assembly_version: '$(buildVersion)'
+  assembly_file_version: '$(buildVersion)'
+  assembly_informational_version: '$(nugetVersion)'
+
 pull_requests:
   do_not_increment_build_number: true
 branches:
@@ -20,6 +28,9 @@ branches:
 nuget:
   disable_publish_on_pr: true
 
+#---------------------------------#
+#       build configuration       #
+#---------------------------------#
 before_build:
   - nuget restore src\QuartzNET-DynamoDB.sln 
 platform:

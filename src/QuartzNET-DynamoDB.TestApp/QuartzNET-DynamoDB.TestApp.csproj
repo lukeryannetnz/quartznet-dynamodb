@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -28,15 +28,16 @@
     <Externalconsole>true</Externalconsole>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Quartz, Version=2.5.0.0, Culture=neutral, PublicKeyToken=f6b8c98a402cc8a4, processorArchitecture=MSIL">
+      <HintPath>..\packages\Quartz.2.5.0\lib\net40\Quartz.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="Common.Logging.Core">
       <HintPath>..\packages\Common.Logging.Core.3.3.1\lib\net40\Common.Logging.Core.dll</HintPath>
     </Reference>
     <Reference Include="Common.Logging">
       <HintPath>..\packages\Common.Logging.3.3.1\lib\net40\Common.Logging.dll</HintPath>
-    </Reference>
-    <Reference Include="Quartz">
-      <HintPath>..\packages\Quartz.2.3.3\lib\net40\Quartz.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -46,8 +47,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <None Include="job_scheduling_data_2_0.xsd">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
-    <None Include="job_scheduling_data_2_0.xsd" />
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>

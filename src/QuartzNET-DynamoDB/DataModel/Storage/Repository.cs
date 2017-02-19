@@ -64,7 +64,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
             List<T> batch = new List<T>();
             for (int i = 1; i <= entities.Count(); i++)
             {
-                batch.Add(entities[i]);
+                batch.Add(entities[i - 1]);
                 if (i == entities.Count())
                 {
                     // If we've reached the end of the collection, send off the save request

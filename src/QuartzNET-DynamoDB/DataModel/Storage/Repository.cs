@@ -70,7 +70,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
                     // If we've reached the end of the collection, send off the save request
                     SendBatchWriteRequest(batch);
                 }
-                else if (i % 25 == 0)
+                else if (i > 0 && (i + 1) % 25 == 0)
                 {
                     // If we've reached a factor of 25, send off the save request.
                     SendBatchWriteRequest(batch);

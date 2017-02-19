@@ -23,9 +23,11 @@ platform:
 configuration: Release
 build:
   parallel: true                  
-  project: src\QuartzNET-DynamoDB.sln    
-after_build:
-  - nuget pack src\QuartzNET-DynamoDB\QuartzNET-DynamoDB.nuspec
+  project: src\QuartzNET-DynamoDB.sln   
+  publish_nuget: true 
+  publish_nuget_symbols: true     # generate and publish NuGet symbol packages
+  include_nuget_references: true  # add -IncludeReferencedProjects option while packaging NuGet artifacts
+
 #---------------------------------#
 #       test configuration        #
 #---------------------------------#
@@ -43,8 +45,7 @@ test:
     - QuartzNET-DynamoDB.Tests.dll
 
 artifacts:
-- path: src\QuartzNET-DynamoDB\*.nupkg
-  name: NuGet
+  - path: '**\*.nupkg'
 
 deploy:
   provider: NuGet

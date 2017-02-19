@@ -13,14 +13,6 @@
 
       This library provides a fully functioning Amazon DynamoDB JobStore for Quartz.NET using the AWS SDK Dynamo client.
     </description>
-    <dependencies>
-      <dependency id="AWSSDK.Core" version="3.1.6.0" />
-      <dependency id="AWSSDK.DynamoDBv2" version="3.1.4.1" />
-      <dependency id="Common.Logging" version="3.3.1" />
-      <dependency id="Common.Logging.Core" version="3.3.1" />
-      <dependency id="Newtonsoft.Json" version="8.0.3" />
-      <dependency id="Quartz" version="2.3.3" />
-    </dependencies>
   </metadata>
   <files>
     <file src="bin\Release\QuartzNET-DynamoDB.dll" target="lib\net45" />

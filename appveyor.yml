@@ -1,8 +1,32 @@
+#---------------------------------------#
+#       environment configuration       #
+#---------------------------------------#
+
 #These are required by the AWS SDK even though they aren't used with dynamo db local.
 environment:
   AWS_ACCESS_KEY_ID: AKID
   AWS_SECRET_ACCESS_KEY: SECRET
   AWS_REGION: us-east-1
+  packageVersion: 0.1.0
+
+init:
+- ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
+- ps: $env:nugetVersion = "$env:packageVersion-beta-$env:appveyor_build_number"
+
+assembly_info:
+  patch: true
+  file: '**\VersionInfo.*'
+  assembly_version: '$(buildVersion)'
+  assembly_file_version: '$(buildVersion)'
+  assembly_informational_version: '$(nugetVersion)'
+
+pull_requests:
+  do_not_increment_build_number: true
+branches:
+  only:
+  - master
+nuget:
+  disable_publish_on_pr: true
 
 #---------------------------------#
 #       build configuration       #
@@ -14,7 +38,10 @@ platform:
 configuration: Release
 build:
   parallel: true                  
-  project: src\QuartzNET-DynamoDB.sln    
+  project: src\QuartzNET-DynamoDB.sln   
+
+after_build:
+- ps: nuget pack src\QuartzNET-DynamoDB\QuartzNET-DynamoDB.nuspec -IncludeReferencedProjects -version "$env:nugetVersion"
 
 #---------------------------------#
 #       test configuration        #
@@ -31,3 +58,15 @@ before_test:
 test:
   assemblies: 
     - QuartzNET-DynamoDB.Tests.dll
+
+artifacts:
+  - path: '**\QuartzNET*.nupkg'
+
+deploy:
+  provider: NuGet
+  api_key:
+    secure: 2qbyIGUhwVPC5BpyWgLtgLNvc6DsblwAIuxTTEI0qXX3BF28+I35qoBILwB8Fe79
+  skip_symbols: false
+  on:
+    branch: master
+    appveyor_repo_tag: true

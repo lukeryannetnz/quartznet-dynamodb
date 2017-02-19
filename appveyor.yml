@@ -49,7 +49,7 @@ test:
     - QuartzNET-DynamoDB.Tests.dll
 
 artifacts:
-  - path: '**\*.nupkg'
+  - path: '**\QuartzNET*.nupkg'
 
 deploy:
   provider: NuGet

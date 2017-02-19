@@ -967,14 +967,15 @@ namespace Quartz.DynamoDB
 
         /// <summary>
         /// A counter for fired trigger records.
-        /// TODO: put something here that explains what this does.
+        /// A unique value that initialises as the UTC ticks when the application initialises.
+        /// This is incremented by the GetFiredTriggerRecordId method.
         /// </summary>
         private static long _ftrCtr = SystemTime.UtcNow().Ticks;
 
         /// <summary>
-        /// Gets the fired trigger record id.
+        /// Gets a unique fired trigger record id.
         /// </summary>
-        /// <returns>The fired trigger record id.</returns>
+        /// <returns>The unique fired trigger record id.</returns>
         protected virtual string GetFiredTriggerRecordId()
         {
             long value = Interlocked.Increment(ref _ftrCtr);

@@ -51,6 +51,9 @@ namespace Quartz.DynamoDB.Tests.Integration.Repository
             Assert.Equal(initialSchedulerCount + 1, finalCount);
         }
 
+        /// <summary>
+        /// Tests the repository Store method that wraps the Dynamo BatchWriteItem API.
+        /// </summary>
         [Fact]
         [Trait("Category", "Integration")]
         public void StoreMultipleEntities()

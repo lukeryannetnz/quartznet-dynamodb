@@ -49,7 +49,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
             return default(T);
         }
 
-        public void Store(IEnumerable<T> entities)
+        public void Store(IList<T> entities)
         {
             if (entities == null)
             {
@@ -61,17 +61,33 @@ namespace Quartz.DynamoDB.DataModel.Storage
                 throw new ArgumentOutOfRangeException(nameof(entities));
             }
 
-            if (entities.Count() > 25)
+            List<T> batch = new List<T>();
+            for (int i = 0; i < entities.Count(); i++)
             {
-                throw new ArgumentOutOfRangeException(nameof(entities), "This operation doesn't support more than 25 items");
+                batch.Add(entities[i]);
+                if (i + 1 == entities.Count())
+                {
+                    // If we've reached the end of the collection, send off the save request
+                    SendBatchWriteRequest(batch);
+                }
+                else if (i % 25 == 0)
+                {
+                    // If we've reached a factor of 25, send off the save request.
+                    SendBatchWriteRequest(batch);
+                    // Then clear the collection and keep going.
+                    batch.Clear();
+                }
             }
+        }
 
+        private void SendBatchWriteRequest(IEnumerable<T> items)
+        {
             BatchWriteItemRequest batchRequest = new BatchWriteItemRequest
             {
                 RequestItems = new Dictionary<string, List<WriteRequest>>()
             };
 
-            foreach (var entity in entities)
+            foreach (var entity in items)
             {
                 if (!batchRequest.RequestItems.ContainsKey(entity.DynamoTableName))
                 {

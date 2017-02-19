@@ -1370,7 +1370,6 @@ namespace Quartz.DynamoDB
 
         /// <summary>
         /// Takes a collection of quartz trigger objects and sets their dynamo state.
-        /// Uses the batch 
         /// </summary>
         /// <param name="triggers">The triggers to update</param>
         /// <param name="state">The state to set.</param>
@@ -1383,20 +1382,10 @@ namespace Quartz.DynamoDB
                 var record = _triggerRepository.Load(triggers[i].Key.ToDictionary());
                 record.State = state;
                 dynamoTriggers.Add(record);
-
-                if (i + 1 == triggers.Count)
-                {
-                    // If we've reached the end of the collection, send off the save request
-                    _triggerRepository.Store(dynamoTriggers);
-                }
-                else if (i % 25 == 0)
-                {
-                    // If we've reached a factor of 25, send off the save request.
-                    _triggerRepository.Store(dynamoTriggers);
-                    // Then clear the collection and keep going.
-                    dynamoTriggers.Clear();
-                }
             }
+
+            _triggerRepository.Store(dynamoTriggers);
+
         }
 
         /// <summary> 

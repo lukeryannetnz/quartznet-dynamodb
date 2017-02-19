@@ -26,9 +26,9 @@ namespace Quartz.DynamoDB.DataModel.Storage
 		/// </summary>
 		/// <param name="entities">The entities to store.</param>
 		/// <exception cref="ArgumentNullException">Thrown if entities is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Thrown if there are no items in the entities collection OR if there are more than 25 items in the entities collection.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown if there are no items in the entities collection.</exception>
 		/// <exception cref="JobPersistenceException">Thrown if a non 200 HTTP code is received from DynamoDB.</exception>
-		void Store(IEnumerable<T> entities);
+		void Store(IList<T> entities);
 
         /// <summary>
         /// Store the specified entity, in the table T is associated with. 

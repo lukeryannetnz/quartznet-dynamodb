@@ -62,15 +62,15 @@ namespace Quartz.DynamoDB.DataModel.Storage
             }
 
             List<T> batch = new List<T>();
-            for (int i = 0; i < entities.Count(); i++)
+            for (int i = 1; i <= entities.Count(); i++)
             {
                 batch.Add(entities[i]);
-                if (i + 1 == entities.Count())
+                if (i == entities.Count())
                 {
                     // If we've reached the end of the collection, send off the save request
                     SendBatchWriteRequest(batch);
                 }
-                else if (i > 0 && (i + 1) % 25 == 0)
+                else if (i % 25 == 0)
                 {
                     // If we've reached a factor of 25, send off the save request.
                     SendBatchWriteRequest(batch);

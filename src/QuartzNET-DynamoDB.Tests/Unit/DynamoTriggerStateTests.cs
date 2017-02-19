@@ -1,8 +1,7 @@
-﻿using System;
-using Quartz.DynamoDB.DataModel;
+﻿using Quartz.DynamoDB.DataModel;
 using Xunit;
 
-namespace Quartz.DynamoDB.Tests
+namespace Quartz.DynamoDB.Tests.Unit
 {
 	/// <summary>
 	/// Contains tests for the DynamoTriggerState class.

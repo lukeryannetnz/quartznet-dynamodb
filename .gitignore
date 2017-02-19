@@ -239,3 +239,6 @@ _Pvt_Extensions
 *.idea
 *.nuget
 *.iml
+
+# Local dynamo files
+dynamodb_local/

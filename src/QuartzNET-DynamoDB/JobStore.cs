@@ -1354,13 +1354,7 @@ namespace Quartz.DynamoDB
 
                 IList<Spi.IOperableTrigger> jobTriggers = this.GetTriggersForJob(jobDetail.Key);
 
-                //todo: can this be done in one transaction lower down?
-                foreach (var trig in jobTriggers)
-                {
-                    var record = _triggerRepository.Load(trig.Key.ToDictionary());
-                    record.State = DynamoTriggerState.Error;
-                    _triggerRepository.Store(record);
-                }
+                SetStateOfTriggers(jobTriggers, DynamoTriggerState.Error);
 
                 _signaler.SignalSchedulingChange(null);
             }
@@ -1368,15 +1362,40 @@ namespace Quartz.DynamoDB
             {
                 IList<Spi.IOperableTrigger> jobTriggers = this.GetTriggersForJob(jobDetail.Key);
 
-                //todo: can this be done in one transaction lower down?
-                foreach (var trig in jobTriggers)
-                {
-                    var record = _triggerRepository.Load(trig.Key.ToDictionary());
-                    record.State = DynamoTriggerState.Complete;
-                    _triggerRepository.Store(record);
-                }
+                SetStateOfTriggers(jobTriggers, DynamoTriggerState.Complete);
 
                 _signaler.SignalSchedulingChange(null);
+            }
+        }
+
+        /// <summary>
+        /// Takes a collection of quartz trigger objects and sets their dynamo state.
+        /// Uses the batch 
+        /// </summary>
+        /// <param name="triggers">The triggers to update</param>
+        /// <param name="state">The state to set.</param>
+        private void SetStateOfTriggers(IList<Spi.IOperableTrigger> triggers, DynamoTriggerState state)
+        {
+            List<DynamoTrigger> dynamoTriggers = new List<DynamoTrigger>();
+
+            for (int i = 0; i < triggers.Count; i++)
+            {
+                var record = _triggerRepository.Load(triggers[i].Key.ToDictionary());
+                record.State = state;
+                dynamoTriggers.Add(record);
+
+                if (i + 1 == triggers.Count)
+                {
+                    // If we've reached the end of the collection, send off the save request
+                    _triggerRepository.Store(dynamoTriggers);
+                }
+                else if (i % 25 == 0)
+                {
+                    // If we've reached a factor of 25, send off the save request.
+                    _triggerRepository.Store(dynamoTriggers);
+                    // Then clear the collection and keep going.
+                    dynamoTriggers.Clear();
+                }
             }
         }
 

@@ -15,13 +15,13 @@ namespace Quartz.DynamoDB.Tests.Integration.JobStore
             _sut = _testFactory.CreateTestJobStore();
         }
 
-        [Fact]
-        [Trait("Category", "Integration")]
         /// <summary>
         /// Ensures that only one scheduler record is created by the jobstore.
         /// Tests common JobStore methods that interact with the scheduler.
         /// </summary>
-        public void SingleSchedulerCreated()
+        [Fact]
+        [Trait("Category", "Integration")]
+         public void SingleSchedulerCreated()
         {
             var signaler = new Quartz.DynamoDB.Tests.Integration.RamJobStoreTests.SampleSignaler();
             var loadHelper = new SimpleTypeLoadHelper();

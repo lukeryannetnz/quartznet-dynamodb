@@ -51,6 +51,76 @@ namespace Quartz.DynamoDB.Tests.Integration.Repository
             Assert.Equal(initialSchedulerCount + 1, finalCount);
         }
 
+        /// <summary>
+        /// Tests the repository Store method that wraps the Dynamo BatchWriteItem API.
+        /// 25 is the maximum number of items for one batch.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void StoreTwentyFiveEntities()
+        {
+            _testFactory = new DynamoClientFactory();
+            var client = _testFactory.BootStrapDynamo();
+            _sut = new Repository<DynamoScheduler>(client);
+
+            int initialSchedulerCount = _sut.Scan(null, null, null).Count();
+
+            var items = new List<DynamoScheduler>();
+
+            for (int i = 0; i < 25; i++)
+            {
+                var scheduler = new DynamoScheduler
+                {
+                    InstanceId = "testInstance" + DateTime.UtcNow.Ticks.ToString() + i,
+                    ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
+                    State = "Running"
+                };
+
+                items.Add(scheduler);
+            }
+          
+            _sut.Store(items);
+
+            int finalCount = _sut.Scan(null, null, null).Count();
+
+            Assert.Equal(initialSchedulerCount + 25, finalCount);
+        }
+
+        /// <summary>
+        /// Tests the repository Store method that wraps the Dynamo BatchWriteItem API.
+        /// 26 is enough items for two batches.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void StoreTwentySixEntities()
+        {
+            _testFactory = new DynamoClientFactory();
+            var client = _testFactory.BootStrapDynamo();
+            _sut = new Repository<DynamoScheduler>(client);
+
+            int initialSchedulerCount = _sut.Scan(null, null, null).Count();
+
+            var items = new List<DynamoScheduler>();
+
+            for (int i = 0; i < 26; i++)
+            {
+                var scheduler = new DynamoScheduler
+                {
+                    InstanceId = "testInstance" + DateTime.UtcNow.Ticks.ToString() + i,
+                    ExpiresUtc = (SystemTime.Now() + new TimeSpan(0, 10, 0)).UtcDateTime,
+                    State = "Running"
+                };
+
+                items.Add(scheduler);
+            }
+
+            _sut.Store(items);
+
+            int finalCount = _sut.Scan(null, null, null).Count();
+
+            Assert.Equal(initialSchedulerCount + 26, finalCount);
+        }
+
         #region IDisposable implementation
 
         bool _disposedValue = false;

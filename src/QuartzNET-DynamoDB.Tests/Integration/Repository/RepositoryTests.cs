@@ -57,7 +57,7 @@ namespace Quartz.DynamoDB.Tests.Integration.Repository
         /// </summary>
         [Fact]
         [Trait("Category", "Integration")]
-        public void StoreTwentyFiveMultipleEntities()
+        public void StoreTwentyFiveEntities()
         {
             _testFactory = new DynamoClientFactory();
             var client = _testFactory.BootStrapDynamo();
@@ -92,7 +92,7 @@ namespace Quartz.DynamoDB.Tests.Integration.Repository
         /// </summary>
         [Fact]
         [Trait("Category", "Integration")]
-        public void StoreTwentySixMultipleEntities()
+        public void StoreTwentySixEntities()
         {
             _testFactory = new DynamoClientFactory();
             var client = _testFactory.BootStrapDynamo();

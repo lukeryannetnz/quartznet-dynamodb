@@ -3,11 +3,15 @@ environment:
   AWS_ACCESS_KEY_ID: AKID
   AWS_SECRET_ACCESS_KEY: SECRET
   AWS_REGION: us-east-1
+  packageVersion: 0.1.0
+
+init:
+- ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
+- ps: $env:nugetVersion = "$env:packageVersion-beta-$env:appveyor_build_number"
 
 #---------------------------------#
 #       build configuration       #
 #---------------------------------#
-version: '{build}'
 pull_requests:
   do_not_increment_build_number: true
 branches:
@@ -24,9 +28,9 @@ configuration: Release
 build:
   parallel: true                  
   project: src\QuartzNET-DynamoDB.sln   
-  publish_nuget: true 
-  publish_nuget_symbols: true     # generate and publish NuGet symbol packages
-  include_nuget_references: true  # add -IncludeReferencedProjects option while packaging NuGet artifacts
+
+after_build:
+- ps: nuget pack src\QuartzNET-DynamoDB\QuartzNET-DynamoDB.nuspec -IncludeReferencedProjects -version "$env:nugetVersion"
 
 #---------------------------------#
 #       test configuration        #

@@ -325,32 +325,36 @@ namespace Quartz.DynamoDB
 
         public bool RemoveTrigger(TriggerKey triggerKey)
         {
+            return RemoveTrigger(triggerKey, true);
+        }
+
+        private bool RemoveTrigger(TriggerKey triggerKey, bool removeOrphanedJob)
+        {
             bool found;
 
             lock (LockObject)
             {
-                var trigger = this.RetrieveTrigger(triggerKey);
+                var trigger = RetrieveTrigger(triggerKey);
                 found = trigger != null;
 
                 if (found)
                 {
                     _triggerRepository.Delete(triggerKey.ToDictionary());
 
-                    //todo: support orphaned job removal
-                    //					if (removeOrphanedJob)
-                    //					{
-                    //						IJobDetail jobDetail = this.RetrieveJob(trigger.JobKey);
-                    //						IList<IOperableTrigger> trigs = this.GetTriggersForJob(jobDetail.Key);
-                    //						if ((trigs == null
-                    //							|| trigs.Count == 0)
-                    //							&& !jobDetail.Durable)
-                    //						{
-                    //							if (this.RemoveJob(jobDetail.Key))
-                    //							{
-                    //								signaler.NotifySchedulerListenersJobDeleted(jobDetail.Key);
-                    //							}
-                    //						}
-                    //					}
+                    if (removeOrphanedJob)
+                    {
+                        IJobDetail jobDetail = RetrieveJob(trigger.JobKey);
+                        if (jobDetail != null) {
+                            IList<IOperableTrigger> trigs = GetTriggersForJob(jobDetail.Key);
+                            if ((trigs == null || trigs.Count == 0) && !jobDetail.Durable)
+                            {
+                                if (RemoveJob(jobDetail.Key))
+                                {
+                                    _signaler.NotifySchedulerListenersJobDeleted(jobDetail.Key);
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -384,6 +388,7 @@ namespace Quartz.DynamoDB
                     {
                         throw new JobPersistenceException("New trigger is not related to the same job as the old trigger.");
                     }
+
 
                     this.RemoveTrigger(triggerKey);
 

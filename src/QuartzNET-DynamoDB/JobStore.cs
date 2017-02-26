@@ -390,7 +390,8 @@ namespace Quartz.DynamoDB
                     }
 
 
-                    this.RemoveTrigger(triggerKey);
+                    // don't want the "orphaned" job removed in this case since the trigger is being replaced 
+                    this.RemoveTrigger(triggerKey, false);
 
                     try
                     {

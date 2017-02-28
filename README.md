@@ -24,4 +24,4 @@ Feb-2017: V1.0 on nuget.org!
 
 ## Contributing
 
-Please see [contributing.md](/blob/dox/CONTRIBUTING.md).
+Please see [contributing.md](/CONTRIBUTING.md).

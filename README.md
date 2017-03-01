@@ -23,9 +23,9 @@ Add the [nuget package](http://www.nuget.org/packages/QuartzNet-DynamoDB/).
 ### Configure the job store
 Configure quartz.net to use the dynamodb job store. 
 Code:
-```var properties = new NameValueCollection();
-properties[StdSchedulerFactory.PropertyJobStoreType] = typeof(Quartz.DynamoDB.JobStore).AssemblyQualifiedName;
-var schedulerFactory = new StdSchedulerFactory(properties);
+```var properties = new NameValueCollection();  
+properties[StdSchedulerFactory.PropertyJobStoreType] = typeof(Quartz.DynamoDB.JobStore).AssemblyQualifiedName;  
+var schedulerFactory = new StdSchedulerFactory(properties);  
 var scheduler = schedulerFactory.GetScheduler();```
 Configuration: 
 `<configSections>`

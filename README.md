@@ -39,12 +39,9 @@ Read more about configuring job stores in the [quartz.net documentation](https:/
 ### Configure the AWS SDK
 There are a few ways to do this;
 * Access key, secret key and region in the configuration file
-
-`<add key="AWSAccessKey" value="*******" />`
-
-`<add key="AWSSecretKey" value="*************" />`
-
-`<add key="AWSRegion" value="us-west-2" />`
+`<add key="AWSAccessKey" value="*******" />
+<add key="AWSSecretKey" value="*************" />
+<add key="AWSRegion" value="us-west-2" />`
 * A profile specified in the configuration file (or named default)
 * Access key, secret key and region stored in environment variables
 * An EC2 instance profile.

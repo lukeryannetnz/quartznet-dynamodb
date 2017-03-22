@@ -11,7 +11,15 @@ namespace Quartz.DynamoDB
     /// </summary>
     public class DynamoBootstrapper
     {
-        public void BootStrap(IAmazonDynamoDB client)
+        /// <summary>
+        /// This method sets DynamoDB in the required state. It ensures all tables exist
+        /// and creates them if they do not. It will block and wait for the tables to be 
+        /// status ACTIVE before proceeding. 
+        /// 
+        /// Override this method if you wish to customise the manner in which tables are created.
+        /// </summary>
+        /// <param name="client">The dynamodb client to use to communicate to dynamo with.</param>
+        public virtual void BootStrap(IAmazonDynamoDB client)
         {
             if (ShouldCreate(client, DynamoConfiguration.JobDetailTableName))
             {

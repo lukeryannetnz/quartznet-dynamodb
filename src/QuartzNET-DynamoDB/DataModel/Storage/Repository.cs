@@ -11,9 +11,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
     public class Repository<T> : IRepository<T> where T : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType, new()
     {
         private readonly AmazonDynamoDBClient _client;
-
         private readonly Policy _writeRetryPolicy;
-
         private readonly Policy _readRetryPolicy;
 
         public Repository(AmazonDynamoDBClient client)

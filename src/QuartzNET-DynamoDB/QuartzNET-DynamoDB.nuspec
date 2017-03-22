@@ -15,8 +15,8 @@
     </description>
     <tags>Amazon Dynamo DynamoDB NoSQL JobStore Quartz net Quartz.net quartznet scheduler</tags>
      <dependencies>
-      <dependency id="AWSSDK.DynamoDBv2" version="3.3.2.1" />
-      <dependency id="Newtonsoft.Json" version="9.0.1" />
+      <dependency id="AWSSDK.DynamoDBv2" version="3.3.4.3" />
+      <dependency id="Newtonsoft.Json" version="10.0.1" />
       <dependency id="Quartz" version="2.5.0" />
     </dependencies>
   </metadata>

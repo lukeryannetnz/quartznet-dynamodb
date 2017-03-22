@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using Amazon.DynamoDBv2;
 
 namespace Quartz.DynamoDB.Tests.Integration
@@ -12,7 +13,7 @@ namespace Quartz.DynamoDB.Tests.Integration
 
         public DynamoDB.JobStore CreateTestJobStore()
         {
-            var var = new DynamoDB.JobStore();
+            var var = new DynamoDB.JobStore(new TestDynamoBootstrapper());
             var.InstanceName = _instanceName;
 
             return var;
@@ -22,7 +23,7 @@ namespace Quartz.DynamoDB.Tests.Integration
         {
             var client = DynamoDbClientFactory.Create();
             DynamoConfiguration.InstanceName = _instanceName;
-            new DynamoBootstrapper().BootStrap(client);
+            new TestDynamoBootstrapper().BootStrap(client);
 
             return client;
         }

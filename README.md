@@ -5,9 +5,9 @@ Amazon DynamoDB jobstore for Quartz.NET
 
 ## Overview
 
-Quartz.NET Quartz.NET is a full-featured, open source job scheduling system that can be used from smallest apps to large scale enterprise systems.
-
 This library provides a fully functioning Amazon DynamoDB JobStore for Quartz.NET using the AWS SDK Dynamo client. Inspired by Nanoko's Quartz.NET-MongoDB project. It is an adaptation of the original "RAMJobStore".
+
+Quartz.NET Quartz.NET is a full-featured, open source job scheduling system that can be used from smallest apps to large scale enterprise systems.
 
 ## Current State
 * Jul-2016: Work in progress. Functioning! Completing functionality and polishing.

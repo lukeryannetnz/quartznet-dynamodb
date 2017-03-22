@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Polly;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
@@ -127,7 +128,10 @@ namespace Quartz.DynamoDB.DataModel.Storage
                 request.ReturnValues = ReturnValue.ALL_OLD;
             }
 
-            var response = _client.PutItem(request);
+            var policy = Policy<PutItemResponse>.Handle<ProvisionedThroughputExceededException>()
+              .Retry();
+
+            var response = policy.Execute(() => _client.PutItem(request));
 
             if (response.HttpStatusCode != HttpStatusCode.OK)
             {

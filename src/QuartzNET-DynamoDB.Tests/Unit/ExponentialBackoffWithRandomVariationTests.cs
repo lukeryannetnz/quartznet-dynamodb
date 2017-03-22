@@ -7,7 +7,7 @@ namespace Quartz.DynamoDB.Tests.Unit
     public class ExponentialBackoffWithRandomVariationTests
     {
         /// <summary>
-        /// First attempt sleep should be between 1 and 2.
+        /// First attempt sleep duration should be between 1 and 2.
         /// </summary>
         [Fact]
         public void CalculateWaitDurationFirstAttempt()
@@ -18,7 +18,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         }
 
         /// <summary>
-        /// Second attempt sleep should be between 8 and 16.
+        /// Second attempt sleep duration should be between 8 and 16.
         /// </summary>
         [Fact]
         public void CalculateWaitDurationSecondAttempt()
@@ -29,7 +29,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         }
 
         /// <summary>
-        /// Third attempt sleep should be between 27 and 54.
+        /// Third attempt sleep duration should be between 27 and 54.
         /// </summary>
         [Fact]
         public void CalculateWaitDurationThirdAttempt()
@@ -40,7 +40,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         }
 
         /// <summary>
-        /// Fourth attempt sleep should be between 64 and 128.
+        /// Fourth attempt sleep duration should be between 64 and 128.
         /// </summary>
         [Fact]
         public void CalculateWaitDurationFourthAttempt()
@@ -51,7 +51,7 @@ namespace Quartz.DynamoDB.Tests.Unit
         }
 
         /// <summary>
-        /// Fifth attempt sleep should be between 125 and 250.
+        /// Fifth attempt sleep duration should be between 125 and 250.
         /// </summary>
         [Fact]
         public void CalculateWaitDurationFifthAttempt()

@@ -7,9 +7,9 @@ using Amazon.DynamoDBv2.Model;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
-    public class Repository<T> : IRepository<T>, IDisposable where T : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType, new()
+    public class Repository<T> : IRepository<T> where T : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType, new()
     {
-        private AmazonDynamoDBClient _client;
+        private readonly AmazonDynamoDBClient _client;
 
         public Repository(AmazonDynamoDBClient client)
         {

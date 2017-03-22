@@ -94,6 +94,7 @@
     <Compile Include="Unit\DateTimeOffsetConverterTests.cs" />
     <Compile Include="Unit\DynamoJobSerialisationTests.cs" />
     <Compile Include="Unit\DynamoTriggerTests.cs" />
+    <Compile Include="Unit\ExponentialBackoffWithRandomVariationTests.cs" />
     <Compile Include="Unit\JobDataMapConverterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Unit\TriggerSerialisationAbstractTriggerTests.cs" />

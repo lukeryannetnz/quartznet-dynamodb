@@ -129,7 +129,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
             }
 
             var policy = Policy<PutItemResponse>.Handle<ProvisionedThroughputExceededException>()
-              .Retry();
+              .WaitAndRetry(5, ExponentialBackoffWithRandomVariation.CalculateWaitDuration);
 
             var response = policy.Execute(() => _client.PutItem(request));
 

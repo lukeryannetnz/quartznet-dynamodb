@@ -78,6 +78,7 @@
     </Compile>
     <Compile Include="DataModel\DateTimeOffsetConverter.cs" />
     <Compile Include="DataModel\DynamoScheduler.cs" />
+    <Compile Include="DataModel\Storage\ExponentialBackoffWithRandomVariation.cs" />
     <Compile Include="DataModel\UnixEpochDateTimeExtensions.cs" />
     <Compile Include="DataModel\DynamoTrigger.cs" />
     <Compile Include="DynamoBootstrapper.cs" />

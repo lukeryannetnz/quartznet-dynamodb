@@ -7,7 +7,7 @@ environment:
   AWS_ACCESS_KEY_ID: AKID
   AWS_SECRET_ACCESS_KEY: SECRET
   AWS_REGION: us-east-1
-  packageVersion: 1.0
+  packageVersion: 1.1
 
 init:
 - ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"

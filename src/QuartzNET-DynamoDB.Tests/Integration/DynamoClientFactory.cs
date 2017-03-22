@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using Amazon.DynamoDBv2;
 
 namespace Quartz.DynamoDB.Tests.Integration

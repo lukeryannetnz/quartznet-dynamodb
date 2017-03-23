@@ -4,16 +4,26 @@ using System.Linq;
 using System.Net;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Polly;
 
 namespace Quartz.DynamoDB.DataModel.Storage
 {
-    public class Repository<T> : IRepository<T>, IDisposable where T : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType, new()
+    public class Repository<T> : IRepository<T> where T : IInitialisableFromDynamoRecord, IConvertibleToDynamoRecord, IDynamoTableType, new()
     {
-        private AmazonDynamoDBClient _client;
+        private readonly AmazonDynamoDBClient _client;
+        private readonly Policy _writeRetryPolicy;
+        private readonly Policy _readRetryPolicy;
 
         public Repository(AmazonDynamoDBClient client)
         {
             _client = client;
+            _writeRetryPolicy = Policy
+                .Handle<ProvisionedThroughputExceededException>()
+                .WaitAndRetry(5, ExponentialBackoffWithRandomVariation.CalculateWaitDuration);
+
+            _readRetryPolicy = Policy
+             .Handle<ProvisionedThroughputExceededException>()
+             .WaitAndRetry(3, ExponentialBackoffWithRandomVariation.CalculateWaitDuration);
         }
 
         public T Load(Dictionary<string, AttributeValue> key)
@@ -34,7 +44,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
 
             try
             {
-                var response = _client.GetItem(request);
+                var response = _readRetryPolicy.Execute(() => _client.GetItem(request));
 
                 if (response.IsItemSet)
                 {
@@ -96,11 +106,11 @@ namespace Quartz.DynamoDB.DataModel.Storage
                 batchRequest.RequestItems[entity.DynamoTableName].Add(new WriteRequest(new PutRequest(entity.ToDynamo())));
             }
 
-            var response = _client.BatchWriteItem(batchRequest);
+            var response = _writeRetryPolicy.Execute(() => _client.BatchWriteItem(batchRequest));
 
             if (response.HttpStatusCode != HttpStatusCode.OK)
             {
-                throw new JobPersistenceException($"Non 200 response code received from dynamo {response.ToString()}");
+                throw new JobPersistenceException($"Non 200 response code received from dynamo {response}");
             }
         }
 
@@ -127,11 +137,11 @@ namespace Quartz.DynamoDB.DataModel.Storage
                 request.ReturnValues = ReturnValue.ALL_OLD;
             }
 
-            var response = _client.PutItem(request);
+            var response = _writeRetryPolicy.Execute(() => _client.PutItem(request));
 
             if (response.HttpStatusCode != HttpStatusCode.OK)
             {
-                throw new JobPersistenceException($"Non 200 response code received from dynamo {response.ToString()}");
+                throw new JobPersistenceException($"Non 200 response code received from dynamo {response}");
             }
 
             return response.Attributes;
@@ -146,11 +156,11 @@ namespace Quartz.DynamoDB.DataModel.Storage
 
             T entity = new T();
 
-            var response = _client.DeleteItem(new DeleteItemRequest(entity.DynamoTableName, key));
+            var response = _writeRetryPolicy.Execute(() => _client.DeleteItem(new DeleteItemRequest(entity.DynamoTableName, key)));
 
             if (response.HttpStatusCode != HttpStatusCode.OK)
             {
-                throw new JobPersistenceException($"Non 200 response code received from dynamo {response.ToString()}");
+                throw new JobPersistenceException($"Non 200 response code received from dynamo {response}");
             }
         }
 
@@ -183,8 +193,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
 
             try
             {
-                var response = _client.Scan(request);
-                var result = response.Items;
+                var response = _readRetryPolicy.Execute(() => _client.Scan(request));
 
                 foreach (Dictionary<string, AttributeValue> item in response.Items)
                 {
@@ -205,11 +214,11 @@ namespace Quartz.DynamoDB.DataModel.Storage
         {
             T entity = new T();
 
-            var response = _client.DeleteTable(entity.DynamoTableName);
+            var response = _writeRetryPolicy.Execute(() => _client.DeleteTable(entity.DynamoTableName));
 
             if (response.HttpStatusCode != HttpStatusCode.OK)
             {
-                throw new JobPersistenceException($"Non 200 response code received from dynamo {response.ToString()}");
+                throw new JobPersistenceException($"Non 200 response code received from dynamo {response}");
             }
         }
 
@@ -217,12 +226,12 @@ namespace Quartz.DynamoDB.DataModel.Storage
         {
             T entity = new T();
 
-            return _client.DescribeTable(entity.DynamoTableName);
+            return _writeRetryPolicy.Execute(() => _client.DescribeTable(entity.DynamoTableName));
         }
 
         #region IDisposable implementation
 
-        bool _disposedValue = false;
+        bool _disposedValue;
 
         protected virtual void Dispose(bool disposing)
         {
@@ -230,10 +239,7 @@ namespace Quartz.DynamoDB.DataModel.Storage
             {
                 if (disposing)
                 {
-                    if (_client != null)
-                    {
-                        _client.Dispose();
-                    }
+                    _client?.Dispose();
                 }
 
                 _disposedValue = true;

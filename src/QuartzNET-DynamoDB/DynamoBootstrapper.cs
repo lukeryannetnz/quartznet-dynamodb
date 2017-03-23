@@ -11,7 +11,15 @@ namespace Quartz.DynamoDB
     /// </summary>
     public class DynamoBootstrapper
     {
-        public void BootStrap(IAmazonDynamoDB client)
+        /// <summary>
+        /// This method sets DynamoDB in the required state. It ensures all tables exist
+        /// and creates them if they do not. It will block and wait for the tables to be 
+        /// status ACTIVE before proceeding. 
+        /// 
+        /// Override this method if you wish to customise the manner in which tables are created.
+        /// </summary>
+        /// <param name="client">The dynamodb client to use to communicate to dynamo with.</param>
+        public virtual void BootStrap(IAmazonDynamoDB client)
         {
             if (ShouldCreate(client, DynamoConfiguration.JobDetailTableName))
             {
@@ -48,7 +56,7 @@ namespace Quartz.DynamoDB
         {
             if (!TableExists(client, tableName))
             {
-                Console.WriteLine(string.Format("Table {0} doesn't exist.", tableName));
+                Console.WriteLine($"Table {tableName} doesn't exist.");
                 return true;
             }
 
@@ -56,7 +64,7 @@ namespace Quartz.DynamoDB
             {
                 var table = client.DescribeTable(tableName);
 
-                Console.WriteLine(string.Format("Table {0} status {1}", tableName, table.Table.TableStatus));
+                Console.WriteLine($"Table {tableName} status {table.Table.TableStatus}");
 
                 if (table.Table.TableStatus == TableStatus.CREATING
                     || table.Table.TableStatus == TableStatus.UPDATING)
@@ -79,7 +87,7 @@ namespace Quartz.DynamoDB
                 return true;
             }
 
-            throw new System.Exception(string.Format("Not sure if we should create table: {0}. Unknown table status, panic!", tableName));
+            throw new Exception($"Not sure if we should create table: {tableName}. Unknown table status, panic!");
         }
 
         private static void EnsureTableDeleted(IAmazonDynamoDB client, string tableName)
@@ -91,12 +99,12 @@ namespace Quartz.DynamoDB
                     return;
                 }
 
-                Console.WriteLine(string.Format("Waiting for Table {0} to delete.", tableName));
+                Console.WriteLine($"Waiting for Table {tableName} to delete.");
 
                 Thread.Sleep(DynamoConfiguration.BootstrapRetryDelayMilliseconds);
             }
 
-            throw new System.Exception(string.Format("Table {0} not created within a reasonable time. Panic!", tableName));
+            throw new Exception($"Table {tableName} not created within a reasonable time. Panic!");
         }
 
         private static bool TableDeleted(IAmazonDynamoDB client, string tableName)
@@ -128,12 +136,12 @@ namespace Quartz.DynamoDB
                 {
                 }
 
-                Console.WriteLine(string.Format("Waiting for Table {0} to become active.", tableName));
+                Console.WriteLine($"Waiting for Table {tableName} to become active.");
 
                 Thread.Sleep(DynamoConfiguration.BootstrapRetryDelayMilliseconds);
             }
 
-            throw new System.Exception(string.Format("Table {0} not created within a reasonable time. Panic!", tableName));
+            throw new Exception($"Table {tableName} not created within a reasonable time. Panic!");
         }
 
         private static bool TableActive(IAmazonDynamoDB client, string tableName)
@@ -214,7 +222,7 @@ namespace Quartz.DynamoDB
                 }
             };
 
-            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+            Console.WriteLine($"Creating table {createRequest.TableName}.");
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
@@ -250,7 +258,7 @@ namespace Quartz.DynamoDB
                 }
             };
 
-            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+            Console.WriteLine($"Creating table {createRequest.TableName}.");
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
@@ -286,7 +294,7 @@ namespace Quartz.DynamoDB
                 }
             };
 
-            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+            Console.WriteLine($"Creating table {createRequest.TableName}.");
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
@@ -322,7 +330,7 @@ namespace Quartz.DynamoDB
                 }
             };
 
-            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+            Console.WriteLine($"Creating table {createRequest.TableName}.");
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
@@ -368,7 +376,7 @@ namespace Quartz.DynamoDB
                 }
             };
 
-            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+            Console.WriteLine($"Creating table {createRequest.TableName}.");
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
@@ -404,7 +412,7 @@ namespace Quartz.DynamoDB
                 }
             };
 
-            Console.WriteLine(string.Format("Creating table {0}.", createRequest.TableName));
+            Console.WriteLine($"Creating table {createRequest.TableName}.");
 
             // Provisioned-throughput settings are required even though
             // the local test version of DynamoDB ignores them
@@ -414,6 +422,29 @@ namespace Quartz.DynamoDB
             client.CreateTable(createRequest);
 
             EnsureTableActive(client, createRequest.TableName);
+
+            SetTimeToLive(client, DynamoConfiguration.SchedulerTableName, "ExpiresUtcEpoch");
+        }
+
+        /// <summary>
+        /// Enables the time to live feature for the provided table on the given attribute name.
+        /// Note that it may take up to one hour for the change to fully process.
+        /// <see href="https://aws.amazon.com/blogs/developer/time-to-live-support-in-amazon-dynamodb/"/>
+        /// </summary>
+        /// <param name="client">The dynamo client.</param>
+        /// <param name="tableName">The table name to enable ttl on.</param>
+        /// <param name="attributeName">The column to use for TTL, this must contain epoch values.</param>
+        protected virtual void SetTimeToLive(IAmazonDynamoDB client, string tableName, string attributeName)
+        {
+            client.UpdateTimeToLive(new UpdateTimeToLiveRequest
+            {
+                TableName = tableName,
+                TimeToLiveSpecification = new TimeToLiveSpecification
+                {
+                    Enabled = true,
+                    AttributeName = attributeName
+                }
+            });
         }
     }
 }

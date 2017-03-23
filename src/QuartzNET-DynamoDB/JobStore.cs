@@ -21,6 +21,7 @@ namespace Quartz.DynamoDB
     /// </summary>
     public class JobStore : IJobStore, IDisposable
     {
+        private readonly DynamoBootstrapper _bootStrapper;
         private static readonly object LockObject = new object();
         private DynamoDBContext _context;
         private IRepository<DynamoJob> _jobRepository;
@@ -40,6 +41,15 @@ namespace Quartz.DynamoDB
         private TimeSpan _misfireThreshold;
 
         private ISchedulerSignaler _signaler;
+
+        public JobStore() : this(new DynamoBootstrapper())
+        {
+        }
+
+        public JobStore(DynamoBootstrapper bootStrapper)
+        {
+            _bootStrapper = bootStrapper;
+        }
 
         public void Initialize(ITypeLoadHelper loadHelper, ISchedulerSignaler signaler)
         {
@@ -63,7 +73,7 @@ namespace Quartz.DynamoDB
 
             lock (LockObject)
             {
-                new DynamoBootstrapper().BootStrap(client);
+                _bootStrapper.BootStrap(client);
 
                 //_loadHelper = loadHelper;
                 _signaler = signaler;
@@ -996,8 +1006,6 @@ namespace Quartz.DynamoDB
 
                 // multiple instance management. Create a running scheduler for this instance.
                 CreateOrUpdateCurrentSchedulerInstance();
-
-                DeleteExpiredSchedulers();
                 ResetTriggersAssociatedWithNonActiveSchedulers();
 
                 List<IOperableTrigger> result = new List<IOperableTrigger>();
@@ -1458,28 +1466,6 @@ namespace Quartz.DynamoDB
             };
 
             _schedulerRepository.Store(scheduler);
-        }
-
-        /// <summary>
-        /// Deletes any expired scheduler records.
-        /// </summary>
-        private void DeleteExpiredSchedulers()
-        {
-            int epochNow = SystemTime.Now().UtcDateTime.ToUnixEpochTime();
-            var expressionAttributeValues = new Dictionary<string, AttributeValue> { {
-                    ":EpochNow",
-                    new AttributeValue {
-                        N = epochNow.ToString()
-                    }
-                }
-            };
-            var filterExpression = "ExpiresUtcEpoch < :EpochNow";
-            var expiredSchedulers = _schedulerRepository.Scan(expressionAttributeValues, null, filterExpression);
-
-            foreach (var dynamoScheduler in expiredSchedulers)
-            {
-                _schedulerRepository.Delete(dynamoScheduler.Key);
-            }
         }
 
         /// <summary>

@@ -127,7 +127,6 @@ namespace Quartz.DynamoDB
 
         public void Shutdown()
         {
-            // todo: remove scheduler instance from db?
             Dispose();
         }
 

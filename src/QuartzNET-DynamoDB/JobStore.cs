@@ -30,17 +30,19 @@ namespace Quartz.DynamoDB
         private IRepository<DynamoScheduler> _schedulerRepository;
         private IRepository<DynamoTriggerGroup> _triggerGroupRepository;
         private IRepository<DynamoCalendar> _calendarRepository;
-
         private string _instanceId;
-
         /// <summary>
         /// Tracks if dispose has been called to detect redundant (multiple) dispose calls.
         /// </summary>
         private bool _disposedValue = false;
-
         private TimeSpan _misfireThreshold;
-
         private ISchedulerSignaler _signaler;
+        /// <summary>
+        /// Allows for cleanup operations to be run periodically. Typically these are executed from
+        /// within AcquireNextTriggers which is called in a tight loop by the scheduler. Typically
+        /// they are expensive in terms of dynamo throughput too.
+        /// </summary>
+        private readonly Dictionary<string, PeriodicExecutionTracker> _periodicExecutionTrackers;
 
         public JobStore() : this(new DynamoBootstrapper())
         {
@@ -49,6 +51,17 @@ namespace Quartz.DynamoDB
         public JobStore(DynamoBootstrapper bootStrapper)
         {
             _bootStrapper = bootStrapper;
+            _periodicExecutionTrackers = new Dictionary<string, PeriodicExecutionTracker>
+            {
+                {
+                    "CreateOrUpdateCurrentSchedulerInstance",
+                    new PeriodicExecutionTracker(TimeSpan.FromMinutes(5))
+                },
+                {
+                    "ResetTriggersAssociatedWithNonActiveSchedulers",
+                    new PeriodicExecutionTracker(TimeSpan.FromMinutes(10))
+                }
+            };
         }
 
         public void Initialize(ITypeLoadHelper loadHelper, ISchedulerSignaler signaler)
@@ -354,7 +367,8 @@ namespace Quartz.DynamoDB
                     if (removeOrphanedJob)
                     {
                         IJobDetail jobDetail = RetrieveJob(trigger.JobKey);
-                        if (jobDetail != null) {
+                        if (jobDetail != null)
+                        {
                             IList<IOperableTrigger> trigs = GetTriggersForJob(jobDetail.Key);
                             if ((trigs == null || trigs.Count == 0) && !jobDetail.Durable)
                             {
@@ -1458,6 +1472,14 @@ namespace Quartz.DynamoDB
         /// </summary>
         private void CreateOrUpdateCurrentSchedulerInstance()
         {
+            if (!_periodicExecutionTrackers["CreateOrUpdateCurrentSchedulerInstance"].ShouldExecute())
+            {
+                Debug.WriteLine("Skipping execution of CreateOrUpdateCurrentSchedulerInstance");
+                return;
+            }
+
+            Debug.WriteLine("Executing CreateOrUpdateCurrentSchedulerInstance");
+
             var scheduler = new DynamoScheduler
             {
                 InstanceId = _instanceId,
@@ -1473,6 +1495,14 @@ namespace Quartz.DynamoDB
         /// </summary>
         private void ResetTriggersAssociatedWithNonActiveSchedulers()
         {
+            if (!_periodicExecutionTrackers["ResetTriggersAssociatedWithNonActiveSchedulers"].ShouldExecute())
+            {
+                Debug.WriteLine("Skipping execution of ResetTriggersAssociatedWithNonActiveSchedulers");
+                return;
+            }
+
+            Debug.WriteLine("Executing ResetTriggersAssociatedWithNonActiveSchedulers");
+
             var activeSchedulers = _schedulerRepository.Scan(null, null, string.Empty);
 
             //todo: this will be slow. do the query based on an index.

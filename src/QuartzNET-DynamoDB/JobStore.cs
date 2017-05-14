@@ -1233,11 +1233,11 @@ namespace Quartz.DynamoDB
 
                     DateTimeOffset? prevFireTime = trigger.GetPreviousFireTimeUtc();
 
-                    Debug.WriteLine("Triggering Trigger! Previous Fire Time: {0}. Next Fire Time: {1}. Repeat Interval: {2}.  Calendar: {3}. Times Triggered: {4}", trigger.GetPreviousFireTimeUtc(), trigger.GetNextFireTimeUtc(), ((SimpleTriggerImpl)trigger).RepeatInterval, trigger.CalendarName, ((SimpleTriggerImpl)trigger).TimesTriggered);
+                    Debug.WriteLine("Triggering Trigger! Previous Fire Time: {0}. Next Fire Time: {1}.  Calendar: {2}.", trigger.GetPreviousFireTimeUtc(), trigger.GetNextFireTimeUtc(), trigger.CalendarName);
 
                     trigger.Triggered(cal);
                     Debug.WriteLine("Triggered Trigger! Previous Fire Time: {0}. Next Fire Time: {1}.", trigger.GetPreviousFireTimeUtc(), trigger.GetNextFireTimeUtc());
-                    storedTrigger.Trigger = (SimpleTriggerImpl)trigger;
+                    storedTrigger.Trigger = (AbstractTrigger)trigger;
                     storedTrigger.State = DynamoTriggerState.Executing;
 
                     _triggerRepository.Store(storedTrigger);

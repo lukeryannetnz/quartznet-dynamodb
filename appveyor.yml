@@ -41,7 +41,7 @@ build:
   project: src\QuartzNET-DynamoDB.sln   
 
 after_build:
-- ps: nuget pack src\QuartzNET-DynamoDB\QuartzNET-DynamoDB.nuspec -IncludeReferencedProjects -version "$env:nugetVersion"
+- ps: nuget pack $env:APPVEYOR_BUILD_FOLDER\src\QuartzNET-DynamoDB\QuartzNET-DynamoDB.csproj -IncludeReferencedProjects -version "$env:nugetVersion" -BasePath $env:APPVEYOR_BUILD_FOLDER\src\QuartzNET-DynamoDB
 
 #---------------------------------#
 #       test configuration        #

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFramework>netstandard1.3</TargetFramework>
     <Authors>Luke Ryan, Dhruv Dhir</Authors>
     <Company />
     <Product />
@@ -23,5 +23,45 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <TreatSpecificWarningsAsErrors />
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\DateTimeOffsetConverter.cs" Link="DataModel\DateTimeOffsetConverter.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\DynamoCalendar.cs" Link="DataModel\DynamoCalendar.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\DynamoJob.cs" Link="DataModel\DynamoJob.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\DynamoJobGroup.cs" Link="DataModel\DynamoJobGroup.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\DynamoJobGroupState.cs" Link="DataModel\DynamoJobGroupState.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\DynamoJobState.cs" Link="DataModel\DynamoJobState.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\DynamoScheduler.cs" Link="DataModel\DynamoScheduler.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\DynamoTrigger.cs" Link="DataModel\DynamoTrigger.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\DynamoTriggerGroup.cs" Link="DataModel\DynamoTriggerGroup.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\DynamoTriggerGroupState.cs" Link="DataModel\DynamoTriggerGroupState.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\DynamoTriggerState.cs" Link="DataModel\DynamoTriggerState.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\Storage\AttributeValueHelper.cs" Link="DataModel\Storage\AttributeValueHelper.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\Storage\ExponentialBackoffWithRandomVariation.cs" Link="DataModel\Storage\ExponentialBackoffWithRandomVariation.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\Storage\IConvertibleToDynamoRecord.cs" Link="DataModel\Storage\IConvertibleToDynamoRecord.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\Storage\IDynamoTableType.cs" Link="DataModel\Storage\IDynamoTableType.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\Storage\IInitialisableFromDynamoRecord.cs" Link="DataModel\Storage\IInitialisableFromDynamoRecord.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\Storage\IRepository.cs" Link="DataModel\Storage\IRepository.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\Storage\JobDataMapConverter.cs" Link="DataModel\Storage\JobDataMapConverter.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\Storage\QuartzKeyExtensionMethods.cs" Link="DataModel\Storage\QuartzKeyExtensionMethods.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\Storage\Repository.cs" Link="DataModel\Storage\Repository.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DataModel\UnixEpochDateTimeExtensions.cs" Link="DataModel\UnixEpochDateTimeExtensions.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DynamoBootstrapper.cs" Link="DynamoBootstrapper.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DynamoConfiguration.cs" Link="DynamoConfiguration.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\DynamoDbClientFactory.cs" Link="DynamoDbClientFactory.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\JobStore.cs" Link="JobStore.cs" />
+    <Compile Include="..\QuartzNET-DynamoDB\PeriodicExecutionTracker.cs" Link="PeriodicExecutionTracker.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DataModel\Storage\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.4.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+    <PackageReference Include="Polly" Version="5.1.0" />
+    <PackageReference Include="Quartz" Version="3.0.0-alpha2" />
+  </ItemGroup>
 
 </Project>

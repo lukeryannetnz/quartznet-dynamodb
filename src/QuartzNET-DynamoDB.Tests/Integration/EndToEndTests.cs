@@ -5,6 +5,7 @@
     using System.Threading;
 
     using Quartz.Impl;
+    using Quartz.Job;
 
     using Xunit;
 

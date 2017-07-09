@@ -93,6 +93,7 @@
     <Compile Include="Integration\JobStore\JobsAndTriggersAddTests.cs" />
     <Compile Include="Integration\JobStore\TriggerResumeTests.cs" />
     <Compile Include="Integration\TestDynamoBootstrapper.cs" />
+    <Compile Include="TestJobStore.cs" />
     <Compile Include="Unit\DateTimeOffsetConverterTests.cs" />
     <Compile Include="Unit\DynamoJobSerialisationTests.cs" />
     <Compile Include="Unit\DynamoTriggerTests.cs" />

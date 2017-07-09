@@ -72,12 +72,12 @@
             return trigger;
         }
 
-        private static IScheduler CreateDynamoBackedScheduler()
+        private IScheduler CreateDynamoBackedScheduler()
         {
             var properties = new NameValueCollection
             {
                 [StdSchedulerFactory.PropertyJobStoreType] =
-                                     typeof(DynamoDB.JobStore).AssemblyQualifiedName
+                                     typeof(TestJobStore).AssemblyQualifiedName
             };
             var schedulerFactory = new StdSchedulerFactory(properties);
 

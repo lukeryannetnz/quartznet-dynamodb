@@ -22,11 +22,8 @@
         [Fact]
         public void Bug65()
         {
-            var scheduler = CreateDynamoBackedScheduler();
-
+            IScheduler scheduler = CreateDynamoBackedScheduler();
             IJobDetail job = CreateNoOpJob();
-
-            // Trigger the job to run now, and then repeat every 10 seconds
             ITrigger trigger = CreateOneSecondTrigger();
 
             scheduler.ScheduleJob(job, trigger);
@@ -49,7 +46,6 @@
         {
             var randomName = Guid.NewGuid().ToString();
 
-            // define the job and tie it to our HelloJob class
             var job = JobBuilder.Create<NoOpJob>()
                 .WithIdentity("TestJob" + randomName, "TestJobGroup")
                 .Build();
@@ -72,7 +68,7 @@
             return trigger;
         }
 
-        private IScheduler CreateDynamoBackedScheduler()
+        private static IScheduler CreateDynamoBackedScheduler()
         {
             var properties = new NameValueCollection
             {

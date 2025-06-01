@@ -89,8 +89,8 @@ namespace Quartz.DynamoDB.DataModel
 		public void InitialiseFromDynamoRecord (System.Collections.Generic.Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue> record)
 		{
 			InstanceId = record ["InstanceId"].S;
-			ExpiresUtcEpoch = record["ExpiresUtcEpoch"].NULL ? (int?)null : int.Parse(record["ExpiresUtcEpoch"].N);
-			State = record["State"].NULL ? string.Empty : record["State"].S;
+			ExpiresUtcEpoch = record["ExpiresUtcEpoch"].NULL.Value ? (int?)null : int.Parse(record["ExpiresUtcEpoch"].N);
+			State = record["State"].NULL.Value ? string.Empty : record["State"].S;
 		}
 
 		public System.Collections.Generic.Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue> ToDynamo ()

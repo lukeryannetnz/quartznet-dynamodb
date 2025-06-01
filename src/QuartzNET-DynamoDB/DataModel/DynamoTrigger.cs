@@ -49,7 +49,7 @@ namespace Quartz.DynamoDB.DataModel
                         var calendarTrigger = new CalendarIntervalTriggerImpl();
                         Trigger = calendarTrigger;
 
-                        calendarTrigger.PreserveHourOfDayAcrossDaylightSavings = record["PreserveHourOfDayAcrossDaylightSavings"].BOOL;
+                        calendarTrigger.PreserveHourOfDayAcrossDaylightSavings = record["PreserveHourOfDayAcrossDaylightSavings"].BOOL.Value;
                         calendarTrigger.RepeatInterval = int.Parse(record["RepeatInterval"].N);
                         calendarTrigger.RepeatIntervalUnit = (IntervalUnit)int.Parse(record["RepeatIntervalUnit"].N);
                         calendarTrigger.TimesTriggered = int.Parse(record["TimesTriggered"].N);
@@ -74,7 +74,7 @@ namespace Quartz.DynamoDB.DataModel
                         var daysOfWeek = record["DaysOfWeek"].L
                             .Select(dow => (DayOfWeek)Enum.Parse(typeof(DayOfWeek), dow.S));
 
-                        dailyTrigger.DaysOfWeek = new Quartz.Collection.HashSet<DayOfWeek>(daysOfWeek);
+                        dailyTrigger.DaysOfWeek = new HashSet<DayOfWeek>(daysOfWeek);
 
                         int endTimeOfDayHour = int.Parse(record["EndTimeOfDay_Hour"].N);
                         int endTimeOfDayMin = int.Parse(record["EndTimeOfDay_Minute"].N);

@@ -12,6 +12,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RunCodeAnalysis>false</RunCodeAnalysis> <!-- Set to false initially, can be enabled later if needed with updated analyzers -->
     <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- Suppress missing XML comment warnings for now -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -19,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.1" /> <!-- From prompt, will attempt update later -->
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.301" />
     <PackageReference Include="Common.Logging" Version="3.4.1" />     <!-- From prompt, will attempt update later -->
     <PackageReference Include="Common.Logging.Core" Version="3.4.1" />  <!-- From prompt, will attempt update later -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />    <!-- From prompt, will attempt update later -->
